@@ -29,6 +29,12 @@ ind.AMp     = 22;
 ind.AM      = 23;
 
 ind.R       = 24;
+%indices for astr. Ca2+
+ind.ck      = 25;
+ind.sk      = 26;
+ind.hk      = 27;
+ind.ik      = 28;
+ind.eetk    = 29;
 
 %% Astrocyte indices
 flu.R_s     = 1;%R_tot- R_k;
@@ -60,6 +66,18 @@ flu.J_BK_k  =22;
 flu.E_BK_k  =23;
 flu.w_inf   =24;
 flu.phi_w   =25;
+
+%astrocyte fluxes by Hannah
+flu.J_ip3    =26;
+flu.J_ERleak =27;
+flu.J_pump   =28;
+%indices for astr. Ca2+
+flu.ck      = 29;
+flu.sk      = 30;
+flu.hk      = 31;
+flu.ik      = 32;
+flu.eetk    = 33;
+flu.vh_3      = 34;
 
 %% SMC-pointers
 

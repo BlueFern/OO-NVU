@@ -22,7 +22,7 @@ tijdoff = dfdtoff+ length(dfdt);
 inputoff= tijdoff+ length(t);
 
 
-time = DATA(:,tijdoff+1);
+time = DATA(:,length(DATA(1,:))-2);
 
 % plots report
 

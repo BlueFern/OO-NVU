@@ -26,6 +26,15 @@ dy(ind.N_HCO3_s) = - dy(ind.N_HCO3_k);                                          
 dy(ind.K_p     ) = AC(flu.J_BK_k) / (VR_pa*state(ind.R_k)) + (SMC(flu.J_KIR_i))/(VR_ps);     % uM s-1
 dy(ind.w_k     ) = AC(flu.phi_w) * (AC(flu.w_inf) - state(ind.w_k));                            % s-1
 
+
+% %astr. DE for Ca2+ (Hannah)
+dy(ind.ck)=B_cyt*(AC(flu.J_ip3)-AC(flu.J_pump)+AC(flu.J_ERleak)); % astrocytic calcium concentration
+dy(ind.sk)=-1/VR_ERcyt*dy(ind.ck); % ER calcium concentration
+dy(ind.hk)=k_on*(k_inh-(AC(flu.ck)+k_inh)*AC(flu.hk));  %the action of  the IP3 receptors that have not been inactivated by Calcium
+dy(ind.ik)=r_h*G-k_deg*AC(flu.ik);  %IP3 concentration
+dy(ind.eetk)=V_eet*(AC(flu.ck)-ck_min)-k_eet*AC(flu.eetk);  %EET concentration
+
+
 % Smooth muscle cell
 dy(ind.Ca_i)    = SMC(flu.Ca_coup_i) + SMC(flu.rho_i) * (SMC(flu.J_CICR_i) + SMC(flu.J_IP3_i) + SMC(flu.J_leak_i) - SMC(flu.J_SRuptake_i) - SMC(flu.J_extrusion_i)...
     - SMC(flu.J_VOCC_i) + SMC(flu.J_NaCa_i) + 0.1*SMC(flu.J_stretch_i));

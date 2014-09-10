@@ -7,7 +7,8 @@ Temp        = 300           ;% [K]
 unitcon    = 10^(3)         ;% [-]            Factor to convert equations to another unit
 
 %% Constants of Ostby, the values come from CELL ML
- 
+%test change
+
 L_p         = 2.1e-9        ;% [m uM-1s-1]
 R_tot       = 8.79e-8       ;% [m]
 X_k         = 12.41e-3      ;% [uMm]
@@ -128,6 +129,35 @@ m4s			= 0.389;
 G_R			= 955;
 v_rest		= -31.1;
 k_j			= 0.1;
+
+%Constants by Hannah's model
+B_cyt    = 0.0244; %DL       buffering in cytosol 
+VR_ERcyt = 0.185; %DL        ratio of ER volume to cytosolic volume
+J_max    = 2880; %uMs-1      max IP3 production rate
+K_I      = 0.03; %uM         IP3 dissociation constant
+K_act   = 0.17; %uM         dissociation constant for Ca2+
+k_on     = 2; %uMs-1         Rate of Ca2+ binding to IP3 receptors
+k_inh    = 0.1;  %uM         dissociation constant for Ca2+ binding
+P_L      = 5.2; %uM          concentration factor based on steady state calcium balance
+V_max    = 20; %uMs-1        max pumping constant for ATP dependent calcium pump
+k_pump   = 0.24; %uM         dissociation constant for the pump
+r_h      = 4.8; %uMs-1       max rate of IP3 production 
+k_deg    = 1.25; % s-1       rate constant for IP3 degrdation
+rho      = 0.4; %            ratio of G-protein bound to total glutamate receptors  !!!! Niet in thesis!
+K_G      = 8.82; %uM         G-protein dissociation constant
+sig      = 1.235*10e-3; %uM  ratio of activities of bound and unbound receptors
+ck_min   = 0.1; %uM          minimum Ca2+ concentration for EET production
+V_eet    = 72; %uM           rate constant for EET production
+k_eet    = 7.2; %uM          rate constant for EET degrdation
+G        = (rho+sig)/(K_G+rho+sig);
+eet_shift = 2; %mVuM-1
+vh_4     = 14.5; %mV
+vh_5     = 8; %mV       
+vh_6     = -15; %mV
+Ca_3     = 0.4; %uM
+Ca_4     = 0.15; %uM
+psi_h    = 2.664; %s-1
+
 
 
 

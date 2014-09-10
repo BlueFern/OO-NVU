@@ -15,6 +15,8 @@ function STATES = InitCond()
     STATES(ind.K_p)     = 3e3;         % uM,  [K+] in de perivascular space
     STATES(ind.w_k)     = 0.1815e-3;    % [-]  BK-Channel open probability
    
+   
+    
     STATES(ind.Ca_i)    = 0.1;            % calcium concentration in cytosol
     STATES(ind.s_i)     = 0.1;            % calcium concentration in sacroplasmatic reticulum
     STATES(ind.v_i)     = -60;            % mV celmembrane of SMC
@@ -34,5 +36,12 @@ function STATES = InitCond()
     
     STATES(ind.R)       = 15e-6;
 
+          %Hannah:
+    STATES(ind.ck)      =0.05e-3;       %uM Bennet 2008
+    STATES(ind.sk)      =0.1e-3;
+    STATES(ind.hk)      =0.1e-3;
+    STATES(ind.ik)      =0.01e-3;       %uM Bennet 2008
+    STATES(ind.eetk)    =0.1e-3;
+%     
         
 end
