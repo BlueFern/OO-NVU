@@ -35,8 +35,8 @@ output.info.completiontime = toc;
 fprintf('ODE solution time: %.3f seconds\n', output.info.completiontime)
 
 %% Plot statement:
-plot_all()
-hold all
+%plot_all()
+%hold all
 
 %% save figures & parameters
 save_all()

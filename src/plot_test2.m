@@ -1,7 +1,7 @@
 close all
 figure(1)
 hold on
-plot(time,state(ind.ck),'r','Linewidth',1.5)
+plot(time,state(:,acoff+flu.Na_k),'r','Linewidth',1.5)
 figure(2)
 plot(time,DATA(:,acoff+flu.ck),'Linewidth',1.5)
 

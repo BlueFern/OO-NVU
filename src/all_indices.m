@@ -77,7 +77,8 @@ flu.sk      = 30;
 flu.hk      = 31;
 flu.ik      = 32;
 flu.eetk    = 33;
-flu.vh_3      = 34;
+flu.vh_3    = 34;
+flu.G_pr    = 35;
 
 %% SMC-pointers
 

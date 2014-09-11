@@ -44,7 +44,7 @@ function [out] = getRef(t,name)
  pulse_end   = 200;
  
  elseif strcmp('rho',name)
-     out = createPulse(t,pulse_start,pulse_end,0.1,0.7,1,1); %[-] fraction between zero and one
+     out = createPulse(t,t0,t2,0.1,0.7,1,1); %[-] fraction between zero and one
  elseif strcmp('J_K_s',name)
      out = createPulse(t,pulse_start,pulse_end,1,8,1); % [microMs-1]
     

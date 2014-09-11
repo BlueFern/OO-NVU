@@ -31,7 +31,7 @@ dy(ind.w_k     ) = AC(flu.phi_w) * (AC(flu.w_inf) - state(ind.w_k));            
 dy(ind.ck)=B_cyt*(AC(flu.J_ip3)-AC(flu.J_pump)+AC(flu.J_ERleak)); % astrocytic calcium concentration
 dy(ind.sk)=-1/VR_ERcyt*dy(ind.ck); % ER calcium concentration
 dy(ind.hk)=k_on*(k_inh-(AC(flu.ck)+k_inh)*AC(flu.hk));  %the action of  the IP3 receptors that have not been inactivated by Calcium
-dy(ind.ik)=r_h*G-k_deg*AC(flu.ik);  %IP3 concentration
+dy(ind.ik)=r_h*AC(flu.G_pr)-k_deg*AC(flu.ik);  %IP3 concentration
 dy(ind.eetk)=V_eet*(AC(flu.ck)-ck_min)-k_eet*AC(flu.eetk);  %EET concentration
 
 
