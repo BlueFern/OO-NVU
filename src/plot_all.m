@@ -1,15 +1,15 @@
 DATA = csvread(csvfilename);
-
+close all
 all_indices();
 all_constants();
 
 linestylle = ':';
 
-a = zeros(1,25);
+a = zeros(1,35);%25
 s = zeros(1,25);
 e = zeros(1,17);
-f= zeros(1,24);
-dfdt= zeros(1,24);
+f= zeros(1,27); %24
+dfdt= zeros(1,29);%24
 t= zeros(1,1);
 % input= zeros(1,2);
 

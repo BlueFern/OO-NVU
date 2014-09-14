@@ -2,7 +2,7 @@ function [NE,AC,SMC,EC] = all_fluxes (t,state)
 %% load the constants for the fluxes and pointers:
     all_indices();
     all_constants();
-    global stretch_ch only_Koenig
+    global stretch_ch only_Koenig NVU
 %% Calculate the fluxes for the Astrocyte (AC)
 
 % Below all the additional equations are calculated and stores in AC, SMC
@@ -30,13 +30,6 @@ AC(flu.Na_s  ) = negCheck(state(ind.N_Na_s)  ,AC(flu.R_s));     % uM
 AC(flu.K_s   ) = negCheck(state(ind.N_K_s)   ,AC(flu.R_s));     % uM
 AC(flu.HCO3_s) = negCheck(state(ind.N_HCO3_s),AC(flu.R_s));     % uM
 AC(flu.Cl_s  ) = negCheck(AC(flu.N_Cl_s)     ,AC(flu.R_s));     % uM
-
-% %Hannah:
-% AC(flu.ck)     = negCheck(state(ind.ck)  ,state(ind.R_k));
-% AC(flu.sk)     = negCheck(state(ind.sk)  ,state(ind.R_k));
-% AC(flu.hk)     = negCheck(state(ind.hk)  ,state(ind.R_k));
-% AC(flu.ik)     = negCheck(state(ind.ik)  ,state(ind.R_k));
-% AC(flu.eetk)   = negCheck(state(ind.eetk),state(ind.R_k));
 
 AC(flu.ck)     = state(ind.ck);
 AC(flu.sk)     = state(ind.sk);
@@ -81,13 +74,20 @@ AC(flu.J_BK_k)   = g_BK_k / Farad * state(ind.w_k)*(AC(flu.v_k)-AC(flu.E_BK_k))*
 %Hannah/NVU
  AC(flu.vh_3)     = -vh_5/2*tanh((AC(flu.ck)-Ca_3)/Ca_4);
  
-% AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+v_6)/(v_4)));  %NVU
-  AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k)+eet_shift*AC(flu.eetk))-AC(flu.vh_3))/(vh_4))); %NVU+EET&CA2+
-% AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+eet_shift*AC(flu.eetk)+v_6)/vh_4)); %NVU+EET
-% AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k))-AC(flu.vh_3))/(vh_4)))  %NVU+Ca2+
+ if NVU == 1
+     AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+v_6)/(v_4)));  %NVU
+     AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
+ elseif NVU == 2
+     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k)+eet_shift*AC(flu.eetk))-AC(flu.vh_3))/(vh_4))); %NVU+EET&CA2+
+     AC(flu.phi_w)    = psi_h*cosh((AC(flu.v_k)-AC(flu.vh_3))/(2*vh_4));  %NVU+Ca2+
+ elseif NVU == 3
+     AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+eet_shift*AC(flu.eetk)+v_6)/vh_4)); %NVU+EET
+     AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
+ else
+     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k))-AC(flu.vh_3))/(vh_4)))  %NVU+Ca2+
+     AC(flu.phi_w)    = psi_h*cosh((AC(flu.v_k)-AC(flu.vh_3))/(2*vh_4));  %NVU+Ca2+
+ end
 
-%AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
- AC(flu.phi_w)    = psi_h*cosh((AC(flu.v_k)-AC(flu.vh_3))/(2*vh_4));  %NVU+Ca2+
 
 %astrocyte fluxes by Hannah
 

@@ -40,7 +40,7 @@ function STATES = InitCond()
     STATES(ind.ck)      =0.05e-3;       %uM Bennet 2008
     STATES(ind.sk)      =0.1e-3;
     STATES(ind.hk)      =0.1e-3;
-    STATES(ind.ik)      =0.01e-3;       %uM Bennet 2008
+    STATES(ind.ik)      =0.01e-3;       %uM Bennet 2008 0.16 uM according to Hadvield David
     STATES(ind.eetk)    =0.1e-3;
 %     
         
