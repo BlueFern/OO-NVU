@@ -79,6 +79,7 @@ flu.ik      = 32;
 flu.eetk    = 33;
 flu.vh_3    = 34;
 flu.G_pr    = 35;
+flu.B_cyt   = 36; %L&E
 
 %% SMC-pointers
 

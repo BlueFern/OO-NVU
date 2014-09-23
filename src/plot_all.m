@@ -5,12 +5,12 @@ all_constants();
 
 linestylle = ':';
 
-a = zeros(1,35);%25
+a = zeros(1,36);%25 %35 Farr
 s = zeros(1,25);
 e = zeros(1,17);
 f= zeros(1,27); %24
 dfdt= zeros(1,29);%24
-t= zeros(1,1);
+t= zeros(3,1);
 % input= zeros(1,2);
 
 acoff   =          0;
@@ -22,10 +22,12 @@ tijdoff = dfdtoff+ length(dfdt);
 inputoff= tijdoff+ length(t);
 
 
-time = DATA(:,length(DATA(1,:))-2);
+time = DATA(:,length(DATA(1,:))-3);
 
 % plots report
 
+min(DATA(:,acoff+flu.J_BK_k)./(DATA(:,stoff+ind.R_k)))
+   
 total=4;
 
 
@@ -153,7 +155,7 @@ set(gcf,'Name','DFDT')
 set(gcf,'Position', [24 62 1616 904],...
         'PaperPosition', [0.634517 6.34517 20.3046 15.2284]...
         );
-subplot(5,2,1)
+subplot(3,3,1)
 plot(time, state(:,ind.Ca_i) )
 h6(1) = gca();
 xlabel('time in s')
@@ -161,7 +163,7 @@ ylabel('Ca_i in uM')
 title('SMC [Ca^{2+}]')
 hold all
 
-subplot(5,2,2)
+subplot(3,3,2)
 plot(time, state(:,ind.Ca_j) )
 h6(2) = gca();
 xlabel('time in s')
@@ -169,7 +171,7 @@ ylabel('Ca_j in uM')
 title('EC [Ca^{2+}]')
 hold all
 
-subplot(5,2,3)
+subplot(3,3,3)
 plot(time, state(:,ind.I_i) )
 h6(8) = gca();
 xlabel('time in s')
@@ -177,7 +179,7 @@ ylabel('I_i in uM')
 title('SMC [IP_{3}]')
 hold all
 
-subplot(5,2,4)
+subplot(3,3,4)
 plot(time, state(:,ind.I_j) )
 h6(9) = gca();
 xlabel('time in s')
@@ -185,7 +187,7 @@ ylabel('I_j in uM')
 title('EC [IP_{3}]')
 hold all
 
-subplot(5,2,5)
+subplot(3,3,5)
 plot(time, state(:,ind.s_i) )
 h6(3) = gca();
 xlabel('time in s')
@@ -193,7 +195,7 @@ ylabel('s_i in uM')
 title('SR [Ca^{2+}]')
 hold all
 
-subplot(5,2,6)
+subplot(3,3,6)
 plot(time, state(:,ind.s_j) )
 h6(4) = gca();
 xlabel('time in s')
@@ -201,7 +203,7 @@ ylabel('s_j in uM')
 title('ER [Ca^{2+}]')
 hold all
 
-subplot(5,2,7)
+subplot(3,3,7)
 plot(time, state(:,ind.v_i) )
 h6(5) = gca();
 xlabel('time in s')
@@ -209,7 +211,7 @@ ylabel('v_i in mV')
 title('SMC membrane voltage')
 hold all
 
-subplot(5,2,8)
+subplot(3,3,8)
 plot(time, state(:,ind.v_j) )
 h6(6) = gca();
 xlabel('time in s')
@@ -217,7 +219,7 @@ ylabel('v_j in mV')
 title('EC membrane voltage')
 hold all
 
-subplot(5,2,9)
+subplot(3,3,9)
 plot(time, state(:,ind.w_i) )
 h6(7) = gca();
 xlabel('time in s')

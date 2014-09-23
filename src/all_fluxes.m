@@ -72,19 +72,19 @@ AC(flu.J_BK_k)   = g_BK_k / Farad * state(ind.w_k)*(AC(flu.v_k)-AC(flu.E_BK_k))*
 
      %[-]
 %Hannah/NVU
- AC(flu.vh_3)     = -vh_5/2*tanh((AC(flu.ck)-Ca_3)/Ca_4);
+  AC(flu.vh_3)     = vh_5/2*tanh((AC(flu.ck)-Ca_3)/Ca_4);
  
  if NVU == 1
      AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+v_6)/(v_4)));  %NVU
      AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
  elseif NVU == 2
-     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k)+eet_shift*AC(flu.eetk))-AC(flu.vh_3))/(vh_4))); %NVU+EET&CA2+
+     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k)+(eet_shift*AC(flu.eetk))-AC(flu.vh_3)))/(vh_4))); %NVU+EET&CA2+
      AC(flu.phi_w)    = psi_h*cosh((AC(flu.v_k)-AC(flu.vh_3))/(2*vh_4));  %NVU+Ca2+
  elseif NVU == 3
      AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+eet_shift*AC(flu.eetk)+v_6)/vh_4)); %NVU+EET
      AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
  else
-     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k))-AC(flu.vh_3))/(vh_4)))  %NVU+Ca2+
+     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k))-AC(flu.vh_3))/(vh_4)));  %NVU+Ca2+
      AC(flu.phi_w)    = psi_h*cosh((AC(flu.v_k)-AC(flu.vh_3))/(2*vh_4));  %NVU+Ca2+
  end
 
@@ -95,6 +95,11 @@ AC(flu.J_ERleak)=P_L*(1-AC(flu.ck)/AC(flu.sk)); %calcium leak flux from ER to th
 AC(flu.J_pump)=V_max*AC(flu.ck)^2/(AC(flu.ck)^2+k_pump^2); %ATP dependant calcium flux from cytoplasm to ER
 AC(flu.J_ip3)=J_max*((AC(flu.ik)/(AC(flu.ik)+K_I))*(AC(flu.ck)/(AC(flu.ck)+K_act))*AC(flu.hk))^3*(1-AC(flu.ck)/AC(flu.sk)); %calcium flux from ER to cytosolic by IP3 receptors!
 AC(flu.G_pr)=(getRef(t,'rho')+sig)/(K_G+getRef(t,'rho')+sig);
+if NVU ==1
+    AC(flu.B_cyt)= 0.0244; %NVU
+else
+    AC(flu.B_cyt)=(1+BK_end+(K_ex*B_ex)/(K_ex+AC(flu.ck))^2)^-1;  %Loes and Evert determined extra equation
+end
 
 %% SMC
 

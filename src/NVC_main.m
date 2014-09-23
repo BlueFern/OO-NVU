@@ -10,7 +10,7 @@ t_end = 500;
 startpulse  = 200;  % (s) 
 lengthpulse = 200;  % (s) 
 CASE        = 2;    % (see all_constants.m for details)
-J_PLC 		= 0.18;  % (muM s-1) EC agonist concentration  
+J_PLC 		= 0.18;  % %0.4 (muM s-1) EC agonist concentration  
 C_Hillmann  = 1;    % scaling factor for the Hai&Murphy rate constants (see all_constants.m for details)
 stretch_ch  = 'ON'; % choose 'ON'/'OFF' to activate/deactivate stretch-activated channels in EC and SMC
 only_Koenig = 'OFF';% choose 'ON'/'OFF' to simulate only the Koenigsberger model (other sub-models will still be considered, but the KIR channel is set to 0)
@@ -35,11 +35,11 @@ output.info.completiontime = toc;
 fprintf('ODE solution time: %.3f seconds\n', output.info.completiontime)
 
 %% Plot statement:
-% plot_all()
-% hold all
+plot_all()
+hold all
 
 %% save figures & parameters
-save_all()
+%save_all()
 
 
 % to create .tikz figures:

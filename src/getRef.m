@@ -40,8 +40,8 @@ function [out] = getRef(t,name)
 
 %% Hannah's Input
 
- pulse_start = 100;
- pulse_end   = 200;
+%  pulse_start = 100;
+%  pulse_end   = 200;
  
  elseif strcmp('rho',name)
      out = createPulse(t,t0,t2,0.1,0.7,1,1); %[-] fraction between zero and one
