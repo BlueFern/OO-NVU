@@ -57,7 +57,7 @@
     \put(0.06158077,0.13934726){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{\footnotesize ER}}}%
     \put(0.06158077,0.4674038){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{\footnotesize SR}}}%
     \put(0.70663382,1.14873888){\color[rgb]{0,0,0}\makebox(0,0)[rb]{\smash{\footnotesize NE}}}%
-    \put(0.70605305,1.04975681){\color[rgb]{0,0,0}\makebox(0,0)[rb]{\smash{\footnotesize SC}}}%
+    \put(0.70605305,1.09368046){\color[rgb]{0,0,0}\makebox(0,0)[rb]{\smash{\footnotesize SC}}}%
     \put(0.70652672,0.84855824){\color[rgb]{0,0,0}\makebox(0,0)[rb]{\smash{\footnotesize AC}}}%
     \put(0.35552918,1.10640889){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{K}$}}}%
     \put(0.45560905,1.10640889){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{Na}$}}}%
@@ -86,10 +86,10 @@
     \put(0.52228093,0.48740302){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{\tiny stroke
 }}}%
     \put(0.15823476,0.85959424){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{ER_{uptake_{k}}}$}}}%
-    \put(0.10169475,0.86333243){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{ER_{leak_{k}}}$}}}%
+    \put(0.10169475,0.85865971){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{ER_{leak_{k}}}$}}}%
     \put(0.05855968,1.04817475){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$\rho$}}}%
     \put(0.08487998,1.01285876){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{ }}}%
-    \put(0.0426675,0.86518428){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{IP3_{k}}$}}}%
+    \put(0.04640568,0.86518428){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{J$_{IP3_{k}}$}}}%
     \put(0.07581939,0.79833689){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{$J_{KIR}$}}}%
     \put(0.22359571,0.61399779){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{$J_{NaK}$}}}%
     \put(0.30421239,0.61399779){\color[rgb]{0.12941176,0.47058824,0.40392157}\makebox(0,0)[lb]{\smash{$J_{K}$}}}%
