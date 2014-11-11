@@ -30,11 +30,11 @@ ind.AM      = 23;
 
 ind.R       = 24;
 %indices for astr. Ca2+
-ind.ck      = 25;
-ind.sk      = 26;
-ind.hk      = 27;
-ind.ik      = 28;
-ind.eetk    = 29;
+ind.Ca_k    = 25;  % [microM] - calcium concentration in the Astrocyte cytosol
+ind.s_k     = 26;  % [microM] - calcium concentration in the Astrocyte endoplasmic reticulum 
+ind.h_k     = 27;  % [dim.less] - fraction/action of ... ? :-)
+ind.I_k     = 28;  % [microM] - IP3 concentration in the Astrocyte cytosol
+ind.eet_k   = 29;  % [microM] - EET concentration in the Astrocyte cytosol
 
 %% Astrocyte indices
 flu.R_s     = 1;%R_tot- R_k;
