@@ -27,17 +27,15 @@ dy(ind.K_p     ) = AC(flu.J_BK_k) / (VR_pa*state(ind.R_k)) + (SMC(flu.J_KIR_i))/
 dy(ind.w_k     ) = AC(flu.phi_w) * (AC(flu.w_inf) - state(ind.w_k));                            % s-1
 
 
-% %astr. DE for Ca2+ (Hannah)
-%dy(ind.ck)=B_cyt*(AC(flu.J_ip3)-AC(flu.J_pump)+AC(flu.J_ERleak)); % FARR astrocytic calcium concentration
-dy(ind.ck)=AC(flu.B_cyt)*(AC(flu.J_ip3)-AC(flu.J_pump)+AC(flu.J_ERleak)); %L&E astrocytic calcium concentration
-dy(ind.sk)=-1/VR_ERcyt*dy(ind.ck); % ER calcium concentration
-dy(ind.hk)=k_on*(k_inh-(AC(flu.ck)+k_inh)*AC(flu.hk));  %the action of  the IP3 receptors that have not been inactivated by Calcium
-dy(ind.ik)=r_h*AC(flu.G_pr)-k_deg*AC(flu.ik);  %IP3 concentration
-%dy(ind.eetk)=V_eet*(AC(flu.ck)-ck_min)-k_eet*AC(flu.eetk);  % FARR EET concentration
-if AC(flu.ck)> ck_min
-    dy(ind.eetk)=V_eet*(AC(flu.ck)-ck_min)-k_eet*AC(flu.eetk);  % L&E EET concentration
+%astr. DE for Ca2+ by Farr
+dy(ind.Ca_k)=AC(flu.B_cyt)*(AC(flu.J_ip3)-AC(flu.J_pump)+AC(flu.J_ERleak)); %L&E astrocytic calcium concentration
+dy(ind.s_k)=-1/VR_ERcyt*dy(ind.Ca_k); % ER calcium concentration
+dy(ind.h_k)=k_on*(k_inh-(state(ind.Ca_k)+k_inh)*state(ind.h_k)); 
+dy(ind.I_k)=r_h*AC(flu.G_pr)-k_deg*state(ind.I_k);  
+if state(ind.Ca_k)> ck_min
+    dy(ind.EET_k)=V_eet*(state(ind.Ca_k)-ck_min)-k_eet*state(ind.EET_k);  
 else 
-    dy(ind.eetk)= -k_eet*AC(flu.eetk);              %L&E
+    dy(ind.EET_k)= -k_eet*state(ind.EET_k);              
 end
 
 % Smooth muscle cell

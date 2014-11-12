@@ -5,7 +5,7 @@ all_constants();
 
 linestylle = ':';
 
-a = zeros(1,36);%25 %35 Farr
+a = zeros(1,31);%25 %31 Farr
 s = zeros(1,25);
 e = zeros(1,17);
 f= zeros(1,27); %24

@@ -1,0 +1,47 @@
+function STATES = InitCond()
+    % Below the initial conditions of the differential equation are given.
+    % They are chosen, such that the system is in steady state at t=0
+    
+    all_indices()
+    
+    STATES(ind.R_k)     = 0.061e-6;     
+    STATES(ind.N_Na_k)  = 0.99796e-3;  
+    STATES(ind.N_K_k)   = 5.52782e-3;   
+    STATES(ind.N_HCO3_k)= 0.58804e-3;  
+    STATES(ind.N_Cl_k)  = 0.32879e-3;   
+    STATES(ind.N_Na_s)  = 4.301041e-3;  
+    STATES(ind.N_K_s)   = 0.0807e-3;    
+    STATES(ind.N_HCO3_s)= 0.432552e-3;  
+    STATES(ind.K_p)     = 3e3;         
+    STATES(ind.w_k)     = 0.1815e-3;   
+   
+   
+    
+    STATES(ind.Ca_i)    = 0.1;            
+    STATES(ind.s_i)     = 0.1;            
+    STATES(ind.v_i)     = -60;            
+    STATES(ind.w_i)     = 0.1;            
+    STATES(ind.I_i)     = 0.1;            
+    
+    STATES(ind.K_i)     = 100e3;            
+    
+    STATES(ind.Ca_j)    = 0.1;            
+    STATES(ind.s_j)     = 0.1;           
+    STATES(ind.v_j)     = -75;           
+    STATES(ind.I_j)     = 0.1;            
+    
+    STATES(ind.Mp)      = 0.25;
+    STATES(ind.AMp)     = 0.25;
+    STATES(ind.AM)      = 0.25;
+    
+    STATES(ind.R)       = 15e-6;
+
+          %Hannah:
+    STATES(ind.Ca_k)      =0.05e-3;       
+    STATES(ind.s_k)      =0.1e-3;         
+    STATES(ind.h_k)      =0.1e-3;        
+    STATES(ind.I_k)      =0.01e-3;          
+    STATES(ind.EET_k)    =0.1e-3;         
+%     
+        
+end

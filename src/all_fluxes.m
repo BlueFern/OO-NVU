@@ -9,9 +9,9 @@ function [NE,AC,SMC,EC] = all_fluxes (t,state)
 % and EC
 NE=[];
 
-AC(flu.R_s)    = R_tot - state(ind.R_k);                               % m
+AC(flu.R_s)    = R_tot - state(ind.R_k);                               
 
-AC(flu.N_Cl_s) = state(ind.N_Na_s) + state(ind.N_K_s) - state(ind.N_HCO3_s);   % uMm
+AC(flu.N_Cl_s) = state(ind.N_Na_s) + state(ind.N_K_s) - state(ind.N_HCO3_s);    
 
 % AC(flu.Na_k  ) = negCheck(state(ind.N_Na_k)  ,6.1e-8);  % uM
 % AC(flu.K_k   ) = negCheck(state(ind.N_K_k)   ,6.1e-8);  % uM
@@ -30,11 +30,6 @@ AC(flu.Na_s  ) = negCheck(state(ind.N_Na_s)  ,AC(flu.R_s));     % uM
 AC(flu.K_s   ) = negCheck(state(ind.N_K_s)   ,AC(flu.R_s));     % uM
 AC(flu.HCO3_s) = negCheck(state(ind.N_HCO3_s),AC(flu.R_s));     % uM
 AC(flu.Cl_s  ) = negCheck(AC(flu.N_Cl_s)     ,AC(flu.R_s));     % uM
-
-AC(flu.sk)     = state(ind.sk);
-AC(flu.hk)     = state(ind.hk);
-AC(flu.ik)     = state(ind.ik);
-AC(flu.eetk)   = state(ind.eetk);
 
 AC(flu.E_Na_k ) = (R_gas * Temp) / (z_Na * Farad) * log(AC(flu.Na_s)/AC(flu.Na_k)); % V
 AC(flu.E_K_k )  = (R_gas * Temp) / (z_K  * Farad) * log(AC(flu.K_s )/AC(flu.K_k )); % V
@@ -77,10 +72,10 @@ AC(flu.J_BK_k)   = g_BK_k / Farad * state(ind.w_k)*(AC(flu.v_k)-AC(flu.E_BK_k))*
      AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+v_6)/(v_4)));  %NVU
      AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
  elseif NVU == 2
-     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k)+(eet_shift*AC(flu.eetk))-AC(flu.vh_3)))/(vh_4))); %NVU+EET&CA2+
+     AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k)+(eet_shift*state(ind.EET_k))-AC(flu.vh_3)))/(vh_4))); %NVU+EET&CA2+
      AC(flu.phi_w)    = psi_h*cosh((AC(flu.v_k)-AC(flu.vh_3))/(2*vh_4));  %NVU+Ca2+
  elseif NVU == 3
-     AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+eet_shift*AC(flu.eetk)+v_6)/vh_4)); %NVU+EET
+     AC(flu.w_inf)    = 0.5*(1+tanh((AC(flu.v_k)+eet_shift*state(ind.EET_k)+v_6)/vh_4)); %NVU+EET
      AC(flu.phi_w)    = psi_w*cosh((AC(flu.v_k)+v_6)/(2*v_4));      %NVU
  else
      AC(flu.w_inf) =0.5*(1+tanh(((AC(flu.v_k))-AC(flu.vh_3))/(vh_4)));  %NVU+Ca2+
@@ -90,9 +85,9 @@ AC(flu.J_BK_k)   = g_BK_k / Farad * state(ind.w_k)*(AC(flu.v_k)-AC(flu.E_BK_k))*
 
 %astrocyte fluxes by Hannah
 
-AC(flu.J_ERleak)=P_L*(1-state(ind.Ca_k)/AC(flu.sk)); %calcium leak flux from ER to the cytosol
-AC(flu.J_pump)=V_max*state(ind.Ca_k)^2/(state(ind.Ca_k)^2+k_pump^2); %ATP dependant calcium flux from cytoplasm to ER
-AC(flu.J_ip3)=J_max*((AC(flu.ik)/(AC(flu.ik)+K_I))*(state(ind.Ca_k)/(state(ind.Ca_k)+K_act))*AC(flu.hk))^3*(1-state(ind.Ca_k)/AC(flu.sk)); %calcium flux from ER to cytosolic by IP3 receptors!
+AC(flu.J_ERleak)=P_L*(1-state(ind.Ca_k)/state(ind.s_k)); 
+AC(flu.J_pump)=V_max*state(ind.Ca_k)^2/(state(ind.Ca_k)^2+k_pump^2); 
+AC(flu.J_ip3)=J_max*((state(ind.I_k)/(state(ind.I_k)+K_I))*(state(ind.Ca_k)/(state(ind.Ca_k)+K_act))*state(ind.h_k))^3*(1-state(ind.Ca_k)/state(ind.s_k)); 
 AC(flu.G_pr)=(getRef(t,'rho')+sig)/(K_G+getRef(t,'rho')+sig);
 if NVU ==1
     AC(flu.B_cyt)= 0.0244; %NVU
@@ -132,7 +127,7 @@ end
 
 if strcmp(only_Koenig,'OFF') == 1
    SMC(flu.v_KIR_i)    = z_1 * state(ind.K_p)/unitcon + z_2;                                               % mV
-   SMC(flu.G_KIR_i)    = exp( z_5 * state(ind.v_i) + z_3 * state(ind.K_p)/unitcon + z_4 ); %exp( z_5 * state(ind.v_i) + z_3 * state(ind.K_p)/unitcon + z_4 );                     % pS pF-1 =s-1
+   SMC(flu.G_KIR_i)    = exp( z_5 * state(ind.v_i) + z_3 * state(ind.K_p)/unitcon + z_4 );                      % pS pF-1 =s-1
    SMC(flu.J_KIR_i)    = F_il/gam * SMC(flu.G_KIR_i)*(state(ind.v_i)-SMC(flu.v_KIR_i));                                % mV s-1
 elseif strcmp(only_Koenig,'ON') == 1
    SMC(flu.v_KIR_i)    = 0;
