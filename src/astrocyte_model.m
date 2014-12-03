@@ -10,7 +10,7 @@ misc.input_f = @input_f;
 misc.input_rho = @input_rho;
 
 
-    function du = rhs(t, u, J_KIR_i)
+    function [du, K_p] = rhs(t, u, J_KIR_i)
         R_k = u(idx.R_k, :);
         K_p = u(idx.K_p, :);
                 

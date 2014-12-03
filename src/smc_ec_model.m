@@ -4,7 +4,7 @@ p = parse_inputs(varargin{:});
 
 f_rhs = @rhs;
 
-    function du = rhs(~, u, R, h, K_p)
+    function [du, Ca_i, J_KIR_i] = rhs(~, u, R, h, K_p)
         Ca_i = u(idx.Ca_i, :);
         s_i = u(idx.s_i, :);
         v_i = u(idx.v_i, :);
