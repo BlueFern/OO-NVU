@@ -10,6 +10,7 @@ u0 = initial_conditions(idx);
 
 misc.input_f = @input_f;
 misc.input_rho = @input_rho;
+misc.flux_ft = @flux_ft;
 
     
     function du = rhs(t, u, J_KIR_i)
@@ -40,15 +41,16 @@ misc.input_rho = @input_rho;
         R_s = p.R_tot - R_k;
                       
         % First scale concentrations to get proper concentrations,
-        K_s = max(N_K_s ./ R_s, 0);
-        Na_s = max(N_Na_s ./ R_s, 0);
-        Cl_s = max(N_Cl_s ./ R_s, 0);
-        HCO3_s = max(N_HCO3_s ./ R_s, 0);
+        fix = @(x) max(1e-180, x);
+        K_s = fix(N_K_s ./ R_s);
+        Na_s = fix(N_Na_s ./ R_s);
+        Cl_s = fix(N_Cl_s ./ R_s);
+        HCO3_s = fix(N_HCO3_s ./ R_s);
         
-        Na_k = max(N_Na_k ./ R_k, 0);
-        K_k = max(N_K_k ./ R_k, 0);
-        Cl_k = max(N_Cl_k ./ R_k, 0);
-        HCO3_k = max(N_HCO3_k ./ R_k, 0);
+        Na_k = fix(N_Na_k ./ R_k);
+        K_k = fix(N_K_k ./ R_k);
+        Cl_k = fix(N_Cl_k ./ R_k);
+        HCO3_k = fix(N_HCO3_k ./ R_k);
         
         assert(all(K_s >= 0))
         assert(all(Na_s >= 0))
@@ -89,14 +91,16 @@ misc.input_rho = @input_rho;
         J_BK_k = p.g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction;
         J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
         
-        
         J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k) * p.C_correction;
         J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
-        J_KCC1_k = p.C_input * p.g_KCC1_k / p.F * p.R_g * p.T / p.F * ...
+        J_KCC1_k = flux_ft(t) * p.g_KCC1_k / p.F * p.R_g * p.T / p.F * ...
             log((K_s .* Cl_s) ./ (K_k .* Cl_k)) * p.C_correction;
-        J_NKCC1_k = p.C_input * p.g_NKCC1_k / p.F * p.R_g * p.T / p.F * ...
+        J_NKCC1_k = flux_ft(t) * p.g_NKCC1_k / p.F * p.R_g * p.T / p.F * ...
             log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2)) * ...
             p.C_correction;
+        
+        
+        
         J_IP3 = p.J_max * (...
             i_k ./ (i_k + p.K_I) .* ...
             c_k ./ (c_k + p.K_act) .* h_k).^3 .* (1 - c_k ./ s_k);
@@ -122,6 +126,7 @@ misc.input_rho = @input_rho;
         du(idx.N_K_k, :) = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - ...
             J_BK_k;
         du(idx.N_Na_k, :) = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
+
         du(idx.N_HCO3_k, :) = 2*J_NBC_k;
         du(idx.N_Cl_k, :) = du(idx.N_Na_k, :) + du(idx.N_K_k, :) - ...
             du(idx.N_HCO3_k, :);
@@ -133,6 +138,7 @@ misc.input_rho = @input_rho;
         
         du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - p.k_eet * eet_k;
         du(idx.w_k, :) = phi_w .* (w_inf - w_k);
+       
         du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps;
         du(idx.N_K_s, :) = p.k_C * input_f(t) - du(idx.N_K_k, :) + J_BK_k;
         du(idx.N_Na_s, :) = -p.k_C * input_f(t) - du(idx.N_Na_k, :);
@@ -141,11 +147,12 @@ misc.input_rho = @input_rho;
 
     function f = input_f(t)
         f = zeros(size(t));
-        f(p.t_0 <= t & t < p.t_1) = ...
+        ii = p.t_0 <= t & t < p.t_1;
+        f(ii) = ...
             p.F_input * factorial(p.alpha + p.beta - 1) / ...
             (factorial(p.alpha - 1) * factorial(p.beta - 1)) * ...
-            ((1 - (t - p.t_0)) / p.delta_t)^(p.beta - 1) * ...
-            ((t - p.t_0) / p.delta_t)^(p.alpha - 1);
+            (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
+            ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
         f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
     end
 
@@ -153,6 +160,12 @@ misc.input_rho = @input_rho;
         rho = (p.Amp - p.base) * ( ...
             0.5 * tanh((t - p.t_0) / p.theta_L) - ...
             0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
+    end
+
+    function out = flux_ft(t)
+        out = ( ...
+            0.5 * tanh((t - p.t_0) / 0.0005) - ...
+            0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
     end
 end
 
@@ -212,7 +225,7 @@ parser.addParameter('VR_pa', 0.001);
 parser.addParameter('VR_ps', 0.001);
 
 % Other parameters
-parser.addParameter('F', 9.649e4); %C mol^-1
+parser.addParameter('F', 9.65e4); %C mol^-1
 parser.addParameter('R_g', 8.315); %J mol^-1 K^-1
 parser.addParameter('T', 300); % K
 parser.addParameter('g_K_k', 40); %mho m^-2

@@ -15,8 +15,8 @@ u0 = [u0_ast; u0_smc_ec; u0_mech];
 rhs(0, u0);
 f_rhs = @rhs;
 tic
-odeopts = odeset('MaxStep', 0.1, 'RelTol', 1e-3, 'AbsTol', 1e-3);
-[T, U] = ode15s(f_rhs, linspace(0, 500, 100), u0, odeopts);
+odeopts = odeset('MaxStep', 1, 'RelTol', 1e-3, 'AbsTol', 1e-3);
+[T, U] = ode15s(f_rhs, [0 500], u0, odeopts);
 toc
     function du = rhs(t, u)
         du = zeros(size(u));
