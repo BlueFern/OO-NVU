@@ -1,7 +1,8 @@
-function [f_rhs, idx, p] = mechanical_model(varargin)
+function [f_rhs, u0, idx, p] = mechanical_model(varargin)
 
 p = parse_inputs(varargin{:});
 idx = indices();
+u0 = initial_conditions(idx);
 f_rhs = @rhs;
 
     function [du, R, h] = rhs(~, u, Ca_i)
@@ -50,8 +51,8 @@ parser.addParameter('K_7', 0.1);
 parser.addParameter('gamma_cross', 17); %uM^-3 s^-1
 
 parser.addParameter('eta', 1e4); %Pa s
-parser.addParameter('R_0_passive', 20); % um
-parser.addParameter('h_0_passive', 3); % um
+parser.addParameter('R_0_passive', 20e-6); % m
+parser.addParameter('h_0_passive', 3e-6); % m
 parser.addParameter('P_T', 4000); % Pa
 parser.addParameter('E_passive', 66e3); % Pa
 parser.addParameter('E_active', 233e3); % Pa
@@ -61,3 +62,11 @@ parser.parse(varargin{:});
 params = parser.Results;
 
 end
+function u0 = initial_conditions(idx)
+u0 = zeros(length(fieldnames(idx)), 1);
+u0(idx.Mp) = .25;
+u0(idx.AMp) = .25;
+u0(idx.AM) = .25;
+u0(idx.R) = 15e-6;
+end
+        
