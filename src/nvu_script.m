@@ -68,12 +68,12 @@ xlabel('Time')
 ylabel('\mu m')
 title('[Radius]')
 
-%% Now adjust a parameter, and run again
+%% Now adjust a parameter (J_PLC), and run again
 
 % Adjust a parameter
 nv.smcec.params.J_PLC = 0.18;
 nv.simulate()
-
+clf
 plot(nv.T, nv.out('Ca_i'))
 
 %% Now run for a bit longer
