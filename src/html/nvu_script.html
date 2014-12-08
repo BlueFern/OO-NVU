@@ -1,0 +1,212 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Demonstration script for new NVU model</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-12-09"><meta name="DC.source" content="nvu_script.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Demonstration script for new NVU model</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Construct NVU</a></li><li><a href="#2">Run a basic simulation and plot some things</a></li><li><a href="#3">Now adjust a parameter, and run again</a></li><li><a href="#4">Now run for a bit longer</a></li></ul></div><h2>Construct NVU<a name="1"></a></h2><p>The NVU consists of a number of submodules, implemented as MATLAB classes, presently an astrocyte, a lumped SMC/EC model, and a model of the wall mechanics. The parameters of each of these submodules are specified when the modules are constructed, here in the call to NVU</p><p>NVU is the glue that binds the modules together.</p><pre class="codeinput"><span class="comment">% Default tolerances work just fine</span>
+odeopts = odeset(<span class="string">'Vectorized'</span>, 1);
+nv = NVU(Astrocyte(), <span class="keyword">...</span>
+    WallMechanics(), <span class="keyword">...</span>
+    SMCEC(<span class="string">'J_PLC'</span>, 0.4), <span class="keyword">...</span>
+    <span class="string">'odeopts'</span>, odeopts);
+
+<span class="comment">% The different modules are</span>
+nv.smcec
+nv.astrocyte
+nv.wall
+</pre><pre class="codeoutput">
+ans = 
+
+  SMCEC with properties:
+
+     params: [1x1 struct]
+         u0: [10x1 double]
+      index: [1x1 struct]
+      n_out: 33
+    idx_out: [1x1 struct]
+
+
+ans = 
+
+  Astrocyte with properties:
+
+     params: [1x1 struct]
+         u0: [15x1 double]
+      index: [1x1 struct]
+      n_out: 5
+    idx_out: [1x1 struct]
+
+
+ans = 
+
+  WallMechanics with properties:
+
+     params: [1x1 struct]
+         u0: [4x1 double]
+      index: [1x1 struct]
+      n_out: 2
+    idx_out: [1x1 struct]
+
+</pre><h2>Run a basic simulation and plot some things<a name="2"></a></h2><p>Run simulation</p><pre class="codeinput">nv.simulate()
+
+<span class="comment">% To get a list of the things you can retrieve as output for a particular</span>
+<span class="comment">% module, do the following:</span>
+nv.astrocyte.varnames()
+
+<span class="comment">% Plot, e.g. Ca_i</span>
+plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
+</pre><pre class="codeoutput">Elapsed time is 30.227056 seconds.
+
+ans = 
+
+    'R_k'
+    'K_p'
+    'N_Na_k'
+    'N_K_k'
+    'N_Cl_k'
+    'N_HCO3_k'
+    'N_Na_s'
+    'N_K_s'
+    'N_HCO3_s'
+    'w_k'
+    'i_k'
+    'c_k'
+    'h_k'
+    's_k'
+    'eet_k'
+    'ft'
+    'v_k'
+    'J_BK_k'
+    'K_s'
+    'K_p'
+
+</pre><img vspace="5" hspace="5" src="nvu_script_01.png" alt=""> <h2>Now adjust a parameter, and run again<a name="3"></a></h2><pre class="codeinput"><span class="comment">% Adjust a parameter</span>
+nv.smcec.params.J_PLC = 0.18;
+nv.simulate()
+
+hold <span class="string">on</span>
+plot(nv.T, nv.out(<span class="string">'Ca_i'</span>), <span class="string">'r'</span>)
+</pre><pre class="codeoutput">Elapsed time is 6.198223 seconds.
+</pre><img vspace="5" hspace="5" src="nvu_script_02.png" alt=""> <h2>Now run for a bit longer<a name="4"></a></h2><pre class="codeinput">nv.T = linspace(0, 1000, 2000);
+nv.simulate();
+clf
+plot(nv.T, nv.out(<span class="string">'Ca_i'</span>), <span class="string">'r'</span>)
+</pre><pre class="codeoutput">Elapsed time is 6.611986 seconds.
+</pre><img vspace="5" hspace="5" src="nvu_script_03.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Demonstration script for new NVU model
+
+%% Construct NVU
+% The NVU consists of a number of submodules, implemented as MATLAB
+% classes, presently an astrocyte, a lumped SMC/EC model, and a model of
+% the wall mechanics. The parameters of each of these submodules are
+% specified when the modules are constructed, here in the call to NVU
+%
+% NVU is the glue that binds the modules together.
+
+% Default tolerances work just fine
+odeopts = odeset('Vectorized', 1);
+nv = NVU(Astrocyte(), ...
+    WallMechanics(), ...
+    SMCEC('J_PLC', 0.4), ...
+    'odeopts', odeopts);
+
+% The different modules are
+nv.smcec
+nv.astrocyte
+nv.wall
+%% Run a basic simulation and plot some things
+% Run simulation
+nv.simulate()
+
+% To get a list of the things you can retrieve as output for a particular 
+% module, do the following:
+nv.astrocyte.varnames()
+
+% Plot, e.g. Ca_i
+plot(nv.T, nv.out('Ca_i'))
+
+%% Now adjust a parameter, and run again
+
+% Adjust a parameter
+nv.smcec.params.J_PLC = 0.18;
+nv.simulate()
+
+hold on
+plot(nv.T, nv.out('Ca_i'), 'r')
+
+%% Now run for a bit longer
+nv.T = linspace(0, 1000, 2000);
+nv.simulate();
+clf
+plot(nv.T, nv.out('Ca_i'), 'r')
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

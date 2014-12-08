@@ -39,4 +39,12 @@ nv.simulate()
 hold on
 plot(nv.T, nv.out('Ca_i'), 'r')
 
+%% Now run for a bit longer
+nv.T = linspace(0, 1000, 2000);
+nv.simulate();
+clf
+plot(nv.T, nv.out('Ca_i'), 'r')
+
+
+
 
