@@ -3,14 +3,18 @@ classdef Astrocyte
         params
         u0
         index
+        n_out
+        idx_out
     end
     methods
         function self = Astrocyte(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
+            [self.idx_out, self.n_out] = output_indices();
         end
-        function du = rhs(self, t, u, J_KIR_i)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i)
+            t = t(:).';
             p = self.params;
             idx = self.index;
             
@@ -55,7 +59,7 @@ classdef Astrocyte
             % Scaling ODE
             du(idx.R_k, :) = p.L_p * ( ...
                 Na_k + K_k + Cl_k + HCO3_k - ...
-                Na_s - Cl_s - K_s - HCO3_s + p.X_k / R_k);
+                Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
             
             % Nernst potentials
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
@@ -73,7 +77,7 @@ classdef Astrocyte
             
             v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + ...
                 p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + ...
-                p.g_BK_k * w_k * E_BK_k - ...
+                p.g_BK_k * w_k .* E_BK_k - ...
                 J_NaK_k * p.F / p.C_correction) ./ ...
                 (p.g_Na_k + p.g_K_k + p.g_Cl_k + p.g_NBC_k + ...
                 p.g_BK_k * w_k);
@@ -85,11 +89,11 @@ classdef Astrocyte
             
             J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k) * p.C_correction;
             J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
-            J_KCC1_k = self.flux_ft(t) * p.g_KCC1_k / p.F * p.R_g * ...
-                p.T / p.F * ...
+            J_KCC1_k = self.flux_ft(t) .* p.g_KCC1_k / p.F * p.R_g * ...
+                p.T / p.F .* ...
                 log((K_s .* Cl_s) ./ (K_k .* Cl_k)) * p.C_correction;
             J_NKCC1_k = self.flux_ft(t) * p.g_NKCC1_k / p.F * p.R_g * ...
-                p.T / p.F * log((Na_s .* K_s .* Cl_s.^2) ./ ...
+                p.T / p.F .* log((Na_s .* K_s .* Cl_s.^2) ./ ...
                 (Na_k .* K_k .* Cl_k.^2)) * p.C_correction;
             
             
@@ -128,7 +132,7 @@ classdef Astrocyte
             
             du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak);
             du(idx.s_k, :) = -1 / p.VR_ER_cyt * du(idx.c_k, :);
-            du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) * h_k);
+            du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
             du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
             
             du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - ...
@@ -142,8 +146,17 @@ classdef Astrocyte
             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
                 du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+            if nargout == 2
+               Uout = zeros(self.n_out, size(u, 2));
+               Uout(self.idx_out.ft, :) = self.input_f(t);
+               Uout(self.idx_out.v_k, :) = v_k;
+               Uout(self.idx_out.K_s, :) = K_s;
+               Uout(self.idx_out.K_p, :) = K_p;
+               Uout(self.idx_out.J_BK_k, :) = J_BK_k;
+               varargout = {Uout};
+            end
         end        
-        function K_p = output(self, ~, u)
+        function K_p = shared(self, ~, u)
             K_p = u(self.index.K_p, :);
         end
         function f = input_f(self, t)
@@ -168,10 +181,12 @@ classdef Astrocyte
             out = ( ...
                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
                 0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
+            out = out(:).';
         end
-    end
-    
-    
+        function names = varnames(self)
+            names = [fieldnames(self.index); fieldnames(self.idx_out)];
+        end
+    end    
 end
 
 function idx = indices()
@@ -190,6 +205,14 @@ idx.c_k = 12;
 idx.h_k = 13;
 idx.s_k = 14;
 idx.eet_k = 15;
+end
+function [idx, n] = output_indices()
+idx.ft = 1;
+idx.v_k = 2;
+idx.J_BK_k = 3;
+idx.K_s = 4;
+idx.K_p = 5;
+n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)
 parser = inputParser();

@@ -3,14 +3,17 @@ classdef SMCEC
         params
         u0
         index
+        n_out
+        idx_out
     end
     methods
         function self = SMCEC(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
+            [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, J_KIR_i] = rhs(self, t, u, R, h, K_p)
+        function [du, varargout] = rhs(self, t, u, R, h, K_p)
             p = self.params;
             idx = self.index;
             
@@ -43,7 +46,7 @@ classdef SMCEC
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
             J_K_i = p.G_K_i * w_i .* (v_i - p.v_K_i);
             
-            J_KIR_i = self.output(t, u, K_p);
+            J_KIR_i = self.shared(t, u, K_p);
             
             J_degrad_i = p.k_d_i * I_i;
             
@@ -64,7 +67,7 @@ classdef SMCEC
             
             J_BK_Ca_j = 0.2 * (1 + tanh( ...
                 ((log10(Ca_j) - p.c) .* (v_j - p.bb_j) - p.a_1_j) ./ ...
-                (p.m_3b_j * (v_j + p.a_2_j*(log10(Ca_j) - p.c) - p.bb_j)^2 + ...
+                (p.m_3b_j * (v_j + p.a_2_j*(log10(Ca_j) - p.c) - p.bb_j).^2 + ...
                 p.m_4b_j)));
             J_SK_Ca_j = 0.3 * (1 + tanh((log10(Ca_j) - p.m_3s_j) / p.m_4s_j));
             J_K_j = p.G_tot_j * (v_j - p.v_K_j) .* (J_BK_Ca_j + J_SK_Ca_j);
@@ -100,15 +103,57 @@ classdef SMCEC
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
             du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;
+            
+            if nargout == 2
+                Uout = zeros(self.n_out, size(u, 2));
+                Uout(self.idx_out.V_coup_i, :) = V_coup_i;
+                Uout(self.idx_out.J_Ca_coup_i, :) = J_Ca_coup_i;
+                Uout(self.idx_out.J_IP3_coup_i, :) = J_IP3_coup_i;
+                Uout(self.idx_out.J_stretch_i, :) = J_stretch_i;
+                Uout(self.idx_out.J_IP3_i, :) = J_IP3_i;
+                Uout(self.idx_out.J_SR_uptake_i, :) = J_SR_uptake_i;
+                Uout(self.idx_out.J_CICR_i, :) = J_CICR_i;
+                Uout(self.idx_out.J_extrusion_i, :) = J_extrusion_i;
+                Uout(self.idx_out.J_SR_leak_i, :) = J_SR_leak_i;
+                Uout(self.idx_out.J_VOCC_i, :) = J_VOCC_i;
+                Uout(self.idx_out.J_NaCa_i, :) = J_NaCa_i;
+                Uout(self.idx_out.J_NaK_i, :) = J_NaK_i;
+                Uout(self.idx_out.J_Cl_i, :) = J_Cl_i;
+                Uout(self.idx_out.J_K_i, :) = J_K_i;
+                Uout(self.idx_out.J_KIR_i, :) = J_KIR_i;
+                Uout(self.idx_out.K_act_i, :) = K_act_i;
+                Uout(self.idx_out.J_degrad_i, :) = J_degrad_i;
+                
+                Uout(self.idx_out.V_coup_j, :) = -V_coup_i;
+                Uout(self.idx_out.J_Ca_coup_j, :) = -J_Ca_coup_i;
+                Uout(self.idx_out.J_IP3_coup_j, :) = -J_IP3_coup_i;
+                Uout(self.idx_out.J_stretch_j, :) = J_stretch_j;
+                Uout(self.idx_out.J_0_j, :) = p.J_0_j;
+                Uout(self.idx_out.J_IP3_j, :) = J_IP3_j;
+                Uout(self.idx_out.J_ER_uptake_j, :) = J_ER_uptake_j;
+                Uout(self.idx_out.J_CICR_j, :) = J_CICR_j;
+                Uout(self.idx_out.J_extrusion_j, :) = J_extrusion_j;
+                Uout(self.idx_out.J_ER_leak_j, :) = J_ER_leak_j;
+                Uout(self.idx_out.J_cation_j, :) = J_cation_j;
+                Uout(self.idx_out.J_BK_Ca_j, :) = J_BK_Ca_j;
+                Uout(self.idx_out.J_SK_Ca_j, :) = J_SK_Ca_j;
+                Uout(self.idx_out.J_K_j, :) = J_K_j;
+                Uout(self.idx_out.J_R_j, :) = J_R_j;
+                Uout(self.idx_out.J_degrad_j, :) = J_degrad_j;
+                varargout{1} = Uout; 
+            end
         end
-        function [J_KIR_i, Ca_i] = output(self, ~, u, K_p)
+        function [J_KIR_i, Ca_i] = shared(self, ~, u, K_p)
             p = self.params;
             idx = self.index;
             v_i = u(idx.v_i, :);
             Ca_i = u(idx.Ca_i, :);
             v_KIR_i = p.z_1 * K_p - p.z_2;
             g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
-            J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i * (v_i - v_KIR_i);
+            J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
+        end
+        function names = varnames(self)
+            names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
         
         
@@ -126,6 +171,45 @@ idx.Ca_j = 7;
 idx.s_j = 8;
 idx.v_j = 9;
 idx.I_j = 10;
+end
+
+function [idx, n] = output_indices()
+idx.V_coup_i = 1;
+idx.J_Ca_coup_i = 2;
+idx.J_IP3_coup_i = 3;
+idx.J_stretch_i = 4;
+idx.J_IP3_i = 5;
+idx.J_SR_uptake_i = 6;
+idx.J_CICR_i = 7;
+idx.J_extrusion_i = 8;
+idx.J_SR_leak_i = 9;
+idx.J_VOCC_i = 10;
+idx.J_NaCa_i = 11;
+idx.J_NaK_i = 12;
+idx.J_Cl_i = 13;
+idx.J_K_i = 14;
+idx.J_KIR_i = 15;
+idx.K_act_i = 16;
+idx.J_degrad_i = 17;
+
+idx.V_coup_j = 18;
+idx.J_Ca_coup_j = 19;
+idx.J_IP3_coup_j = 20;
+idx.J_stretch_j = 21;
+idx.J_0_j = 22;
+idx.J_IP3_j = 23;
+idx.J_ER_uptake_j = 24;
+idx.J_CICR_j = 25;
+idx.J_extrusion_j = 26;
+idx.J_ER_leak_j = 27;
+idx.J_cation_j = 28;
+idx.J_BK_Ca_j = 29;
+idx.J_SK_Ca_j = 30;
+idx.J_K_j = 31;
+idx.J_R_j = 32;
+idx.J_degrad_j = 33;
+
+n = numel(fieldnames(idx));
 end
 
 function params = parse_inputs(varargin)

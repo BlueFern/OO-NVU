@@ -3,19 +3,22 @@ classdef WallMechanics
         params
         u0
         index
+        n_out
+        idx_out
     end
     methods
         function self = WallMechanics(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
+            [self.idx_out, self.n_out] = output_indices();
         end
-        function du = rhs(self, t, u, Ca_i)
+        function [du, varargout] = rhs(self, t, u, Ca_i)
             idx = self.index;
             p = self.params;
             % We make the output function compute these so as to avoid
             % duplicating equations
-            [R, h] = self.output(t, u);
+            [R, h] = self.shared(t, u);
             
             Mp = u(idx.Mp, :);
             AMp = u(idx.AMp, :);
@@ -35,22 +38,35 @@ classdef WallMechanics
             
             du(idx.R, :) = p.R_0_passive / p.eta * ( R * p.P_T ./ h - ...
                 E .* (R - R_0) ./ R_0);
+            
+            if nargout == 2
+               Uout = zeros(self.n_out, size(u, 2));
+               Uout(self.idx_out.M, :) = M;
+               Uout(self.idx_out.F_r, :) = F_r;
+               varargout{1} = Uout;
+            end
         end
-        function [R, h] = output(self, ~, u)
+        function [R, h] = shared(self, ~, u)
             R = u(self.index.R, :);
             h = 0.1 * R;
         end     
+        function names = varnames(self)
+            names = [fieldnames(self.index); fieldnames(self.idx_out)];
+        end
     end 
 end
-
-
-
 
 function idx = indices()
 idx.Mp = 1;
 idx.AMp = 2;
 idx.AM = 3;
 idx.R = 4;
+end
+
+function [idx, n] = output_indices()
+idx.M = 1;
+idx.F_r = 2;
+n = numel(fieldnames(idx));
 end
 
 function params = parse_inputs(varargin)
