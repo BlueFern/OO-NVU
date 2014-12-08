@@ -1,41 +1,48 @@
-function [f_rhs, u0, misc_ast, T, U] = nvu()
-[f_ast, u0_ast, idx_ast, p_ast, misc_ast] = astrocyte_model('P_L', 0.0804);
-[f_smc_ec, u0_smc_ec, idx_smc_ec, p_smc_ec] = smc_ec_model('J_PLC', 0.4);
-[f_mech, u0_mech, idx_mech, p_mech] = mechanical_model();
-
-na = length(u0_ast);
-nse = length(u0_smc_ec);
-nmech = length(u0_mech);
-
-i_a = 1:na;
-i_se = (1:nse) + na;
-i_mech = (1:nmech) + na + nse; 
-
-u0 = [u0_ast; u0_smc_ec; u0_mech];
-rhs(0, u0);
-f_rhs = @rhs;
-tic
-odeopts = odeset('MaxStep', 1, 'RelTol', 1e-3, 'AbsTol', 1e-3);
-[T, U] = ode15s(f_rhs, [0 500], u0, odeopts);
-toc
-    function du = rhs(t, u)
-        du = zeros(size(u));
-        
-        % Get state variables for each sub-model
-        u_a = u(i_a);
-        u_se = u(i_se);
-        u_mech = u(i_mech);
-        
-        % Evaluate mechanical model first
-        Ca_i = u_se(idx_smc_ec.Ca_i);
-        [du(i_mech), R, h] = f_mech(t, u_mech, Ca_i);
-
-        % Now SMC/EC 
-        K_p = u_a(idx_ast.K_p, :);
-        [du(i_se), J_KIR_i] = f_smc_ec(t, u_se, R, h, K_p);
-        
-        % Now the astrocyte model
-        du(i_a) = f_ast(t, u_a, J_KIR_i);
+classdef NVU < handle
+    properties
+        astrocyte
+        wall
+        smcec
+        i_astrocyte
+        i_wall
+        i_smcec
+        n
     end
-
+    methods 
+        function self = NVU(varargin)
+            self.astrocyte = Astrocyte();
+            self.wall = WallMechanics();
+            self.smcec = SMCEC('J_PLC', 0.4);
+            na = length(fieldnames(self.astrocyte.index));
+            nw = length(fieldnames(self.wall.index));
+            ns = length(fieldnames(self.smcec.index));
+            self.i_astrocyte = 1:na;
+            self.i_smcec = na + (1:ns);
+            self.i_wall = na + ns + (1:nw);
+            self.n = na + ns + nw;
+        end
+        function du = rhs(self, t, u)
+            % Separate out the model components
+            ua = u(self.i_astrocyte, :);
+            us = u(self.i_smcec, :);
+            uw = u(self.i_wall, :);
+            
+            % Evaluate the coupling pieces needed for RHS evaluation
+            K_p = self.astrocyte.output(t, ua);
+            [J_KIR_i, Ca_i] = self.smcec.output(t, us, K_p);
+            [R, h] = self.wall.output(t, uw);
+            
+            du = zeros(size(u));
+            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i);
+            du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i);
+            du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p);
+        end
+        function out = u0(self)
+            out = zeros(self.n, 1);
+            out(self.i_astrocyte) = self.astrocyte.u0;
+            out(self.i_smcec) = self.smcec.u0;
+            out(self.i_wall) = self.wall.u0;
+        end
+        
+    end
 end
