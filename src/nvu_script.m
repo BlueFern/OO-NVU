@@ -30,20 +30,60 @@ nv.astrocyte.varnames()
 % Plot, e.g. Ca_i
 plot(nv.T, nv.out('Ca_i'))
 
+%% Recreate the wall plot from previous code
+
+subplot(3, 2, 1)
+plot(nv.T, nv.out('M'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[M]')
+
+subplot(3, 2, 2)
+plot(nv.T, nv.out('Mp'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[Mp]')
+
+subplot(3, 2, 3)
+plot(nv.T, nv.out('AMp'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[AMp]')
+
+subplot(3, 2, 4)
+plot(nv.T, nv.out('AM'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[AM]')
+
+subplot(3, 2, 5)
+plot(nv.T, nv.out('F_r'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('F_r')
+
+subplot(3, 2, 6)
+plot(nv.T, nv.out('R'))
+xlabel('Time')
+ylabel('\mu m')
+title('[Radius]')
+
 %% Now adjust a parameter, and run again
 
 % Adjust a parameter
 nv.smcec.params.J_PLC = 0.18;
 nv.simulate()
 
-hold on
-plot(nv.T, nv.out('Ca_i'), 'r')
+plot(nv.T, nv.out('Ca_i'))
 
 %% Now run for a bit longer
 nv.T = linspace(0, 1000, 2000);
 nv.simulate();
 clf
-plot(nv.T, nv.out('Ca_i'), 'r')
+plot(nv.T, nv.out('Ca_i'))
+
+
+
 
 
 

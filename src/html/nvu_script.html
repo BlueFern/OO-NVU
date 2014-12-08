@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Demonstration script for new NVU model</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Construct NVU</a></li><li><a href="#2">Run a basic simulation and plot some things</a></li><li><a href="#3">Now adjust a parameter, and run again</a></li><li><a href="#4">Now run for a bit longer</a></li></ul></div><h2>Construct NVU<a name="1"></a></h2><p>The NVU consists of a number of submodules, implemented as MATLAB classes, presently an astrocyte, a lumped SMC/EC model, and a model of the wall mechanics. The parameters of each of these submodules are specified when the modules are constructed, here in the call to NVU</p><p>NVU is the glue that binds the modules together.</p><pre class="codeinput"><span class="comment">% Default tolerances work just fine</span>
+  </style></head><body><div class="content"><h1>Demonstration script for new NVU model</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Construct NVU</a></li><li><a href="#2">Run a basic simulation and plot some things</a></li><li><a href="#3">Recreate the wall plot from previous code</a></li><li><a href="#4">Now adjust a parameter, and run again</a></li><li><a href="#5">Now run for a bit longer</a></li></ul></div><h2>Construct NVU<a name="1"></a></h2><p>The NVU consists of a number of submodules, implemented as MATLAB classes, presently an astrocyte, a lumped SMC/EC model, and a model of the wall mechanics. The parameters of each of these submodules are specified when the modules are constructed, here in the call to NVU</p><p>NVU is the glue that binds the modules together.</p><pre class="codeinput"><span class="comment">% Default tolerances work just fine</span>
 odeopts = odeset(<span class="string">'Vectorized'</span>, 1);
 nv = NVU(Astrocyte(), <span class="keyword">...</span>
     WallMechanics(), <span class="keyword">...</span>
@@ -118,7 +118,7 @@ nv.astrocyte.varnames()
 
 <span class="comment">% Plot, e.g. Ca_i</span>
 plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
-</pre><pre class="codeoutput">Elapsed time is 30.227056 seconds.
+</pre><pre class="codeoutput">Elapsed time is 9.750751 seconds.
 
 ans = 
 
@@ -143,19 +143,53 @@ ans =
     'K_s'
     'K_p'
 
-</pre><img vspace="5" hspace="5" src="nvu_script_01.png" alt=""> <h2>Now adjust a parameter, and run again<a name="3"></a></h2><pre class="codeinput"><span class="comment">% Adjust a parameter</span>
+</pre><img vspace="5" hspace="5" src="nvu_script_01.png" alt=""> <h2>Recreate the wall plot from previous code<a name="3"></a></h2><pre class="codeinput">subplot(3, 2, 1)
+plot(nv.T, nv.out(<span class="string">'M'</span>))
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Fraction [-]'</span>)
+title(<span class="string">'[M]'</span>)
+
+subplot(3, 2, 2)
+plot(nv.T, nv.out(<span class="string">'Mp'</span>))
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Fraction [-]'</span>)
+title(<span class="string">'[Mp]'</span>)
+
+subplot(3, 2, 3)
+plot(nv.T, nv.out(<span class="string">'AMp'</span>))
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Fraction [-]'</span>)
+title(<span class="string">'[AMp]'</span>)
+
+subplot(3, 2, 4)
+plot(nv.T, nv.out(<span class="string">'AM'</span>))
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Fraction [-]'</span>)
+title(<span class="string">'[AM]'</span>)
+
+subplot(3, 2, 5)
+plot(nv.T, nv.out(<span class="string">'F_r'</span>))
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Fraction [-]'</span>)
+title(<span class="string">'F_r'</span>)
+
+subplot(3, 2, 6)
+plot(nv.T, nv.out(<span class="string">'R'</span>))
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'\mu m'</span>)
+title(<span class="string">'[Radius]'</span>)
+</pre><img vspace="5" hspace="5" src="nvu_script_02.png" alt=""> <h2>Now adjust a parameter, and run again<a name="4"></a></h2><pre class="codeinput"><span class="comment">% Adjust a parameter</span>
 nv.smcec.params.J_PLC = 0.18;
 nv.simulate()
 
-hold <span class="string">on</span>
-plot(nv.T, nv.out(<span class="string">'Ca_i'</span>), <span class="string">'r'</span>)
-</pre><pre class="codeoutput">Elapsed time is 6.198223 seconds.
-</pre><img vspace="5" hspace="5" src="nvu_script_02.png" alt=""> <h2>Now run for a bit longer<a name="4"></a></h2><pre class="codeinput">nv.T = linspace(0, 1000, 2000);
+plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
+</pre><pre class="codeoutput">Elapsed time is 1.996343 seconds.
+</pre><img vspace="5" hspace="5" src="nvu_script_03.png" alt=""> <h2>Now run for a bit longer<a name="5"></a></h2><pre class="codeinput">nv.T = linspace(0, 1000, 2000);
 nv.simulate();
 clf
-plot(nv.T, nv.out(<span class="string">'Ca_i'</span>), <span class="string">'r'</span>)
-</pre><pre class="codeoutput">Elapsed time is 6.611986 seconds.
-</pre><img vspace="5" hspace="5" src="nvu_script_03.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
+</pre><pre class="codeoutput">Elapsed time is 2.141654 seconds.
+</pre><img vspace="5" hspace="5" src="nvu_script_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Demonstration script for new NVU model
 
@@ -189,20 +223,60 @@ nv.astrocyte.varnames()
 % Plot, e.g. Ca_i
 plot(nv.T, nv.out('Ca_i'))
 
+%% Recreate the wall plot from previous code
+
+subplot(3, 2, 1)
+plot(nv.T, nv.out('M'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[M]')
+
+subplot(3, 2, 2)
+plot(nv.T, nv.out('Mp'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[Mp]')
+
+subplot(3, 2, 3)
+plot(nv.T, nv.out('AMp'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[AMp]')
+
+subplot(3, 2, 4)
+plot(nv.T, nv.out('AM'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[AM]')
+
+subplot(3, 2, 5)
+plot(nv.T, nv.out('F_r'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('F_r')
+
+subplot(3, 2, 6)
+plot(nv.T, nv.out('R'))
+xlabel('Time')
+ylabel('\mu m')
+title('[Radius]')
+
 %% Now adjust a parameter, and run again
 
 % Adjust a parameter
 nv.smcec.params.J_PLC = 0.18;
 nv.simulate()
 
-hold on
-plot(nv.T, nv.out('Ca_i'), 'r')
+plot(nv.T, nv.out('Ca_i'))
 
 %% Now run for a bit longer
 nv.T = linspace(0, 1000, 2000);
 nv.simulate();
 clf
-plot(nv.T, nv.out('Ca_i'), 'r')
+plot(nv.T, nv.out('Ca_i'))
+
+
+
 
 
 
