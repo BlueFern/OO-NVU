@@ -63,10 +63,10 @@ ylabel('Fraction [-]')
 title('F_r')
 
 subplot(3, 2, 6)
-plot(nv.T, nv.out('R'))
+plot(nv.T, 1e6 * nv.out('R'))
 xlabel('Time')
 ylabel('\mu m')
-title('[Radius]')
+title('Radius')
 
 %% Now adjust a parameter (J_PLC), and run again
 
