@@ -1,4 +1,4 @@
-classdef SMCEC
+classdef SMCEC < handle
     properties
         params
         u0

@@ -65,6 +65,7 @@ classdef NVU < handle
             self.u0(self.i_wall) = self.wall.u0;
         end
         function simulate(self)
+            self.init_conds()
             f = @(t, u) self.rhs(t, u);
             tic
             [self.T, self.U] = ode15s(f, self.T, self.u0, self.odeopts);

@@ -1,4 +1,4 @@
-classdef Astrocyte
+classdef Astrocyte < handle
     properties
         params
         u0

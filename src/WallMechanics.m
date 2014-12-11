@@ -1,4 +1,4 @@
-classdef WallMechanics
+classdef WallMechanics < handle
     properties
         params
         u0
