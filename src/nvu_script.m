@@ -120,3 +120,45 @@ plot(nv.T, 1e6 * nv.out('R'))
 xlabel('Time')
 ylabel('\mu m')
 title('Radius')
+
+%% Disable one of the variables
+% It is straightforward to disable one of the variables. This sets its ODE
+% to du/dt = 0, so it remains at its initial condition for the duration of
+% the simulation.
+nv.wall.enabled(nv.wall.index.R) = false;
+nv.simulate()
+subplot(3, 2, 1)
+plot(nv.T, nv.out('M'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[M]')
+
+subplot(3, 2, 2)
+plot(nv.T, nv.out('Mp'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[Mp]')
+
+subplot(3, 2, 3)
+plot(nv.T, nv.out('AMp'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[AMp]')
+
+subplot(3, 2, 4)
+plot(nv.T, nv.out('AM'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('[AM]')
+
+subplot(3, 2, 5)
+plot(nv.T, nv.out('F_r'))
+xlabel('Time')
+ylabel('Fraction [-]')
+title('F_r')
+
+subplot(3, 2, 6)
+plot(nv.T, 1e6 * nv.out('R'))
+xlabel('Time')
+ylabel('\mu m')
+title('Radius')

@@ -5,12 +5,14 @@ classdef Astrocyte < handle
         index
         n_out
         idx_out
+        enabled
     end
     methods
         function self = Astrocyte(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
+            self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
         function [du, varargout] = rhs(self, t, u, J_KIR_i)
@@ -146,6 +148,7 @@ classdef Astrocyte < handle
             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
                 du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+            du = bsxfun(@times, self.enabled, du);
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));
                Uout(self.idx_out.ft, :) = self.input_f(t);

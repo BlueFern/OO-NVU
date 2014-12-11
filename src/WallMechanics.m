@@ -5,12 +5,14 @@ classdef WallMechanics < handle
         index
         n_out
         idx_out
+        enabled
     end
     methods
         function self = WallMechanics(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
+            self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
         function [du, varargout] = rhs(self, t, u, Ca_i)
@@ -38,6 +40,7 @@ classdef WallMechanics < handle
             
             du(idx.R, :) = p.R_0_passive / p.eta * ( R * p.P_T ./ h - ...
                 E .* (R - R_0) ./ R_0);
+            du = bsxfun(@times, self.enabled, du);
             
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));

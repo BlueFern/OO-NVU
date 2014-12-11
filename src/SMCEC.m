@@ -5,12 +5,14 @@ classdef SMCEC < handle
         index
         n_out
         idx_out
+        enabled
     end
     methods
         function self = SMCEC(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
+            self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
         function [du, varargout] = rhs(self, t, u, R, h, K_p)
@@ -103,6 +105,7 @@ classdef SMCEC < handle
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
             du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;
+            du = bsxfun(@times, self.enabled, du);
             
             if nargout == 2
                 Uout = zeros(self.n_out, size(u, 2));

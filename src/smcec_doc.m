@@ -19,11 +19,13 @@
 % to other components of the NVU model. The function form is
 %%
 %
-%     function [J_KIR_i, Ca_i] = shared(self, ~, u)
+%     function [J_KIR_i, Ca_i] = shared(self, ~, u, K_p)
 %
 %%
 % If additional variables are required to pass to other model components,
-% this is the method that you will need to edit.
+% this is the method that you will need to edit. Note that for this model,
+% it requires |K_p|, so the shared method of the astrocyte should be called
+% first. 
 
 A = SMCEC();
 
