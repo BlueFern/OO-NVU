@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>Demonstration script for new NVU model</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-12-09"><meta name="DC.source" content="nvu_script.m"><style type="text/css">
+      --><title>Demonstration script for new NVU model</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-12-11"><meta name="DC.source" content="nvu_script.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,7 +66,7 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><h1>Demonstration script for new NVU model</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Construct NVU</a></li><li><a href="#2">Run a basic simulation and plot some things</a></li><li><a href="#3">Recreate the wall plot from previous code</a></li><li><a href="#4">Now adjust a parameter (J_PLC), and run again</a></li><li><a href="#5">Now run for a bit longer</a></li></ul></div><h2>Construct NVU<a name="1"></a></h2><p>The NVU consists of a number of submodules, implemented as MATLAB classes, presently an astrocyte, a lumped SMC/EC model, and a model of the wall mechanics. The parameters of each of these submodules are specified when the modules are constructed, here in the call to NVU</p><p>NVU is the glue that binds the modules together.</p><pre class="codeinput"><span class="comment">% Default tolerances work just fine</span>
+  </style></head><body><div class="content"><h1>Demonstration script for new NVU model</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Construct NVU</a></li><li><a href="#2">Run a basic simulation and plot some things</a></li><li><a href="#3">Recreate the wall plot from previous code</a></li><li><a href="#4">Adjust a parameter (J_PLC), change an initial condition, and run again</a></li><li><a href="#5">Now run for a bit longer</a></li></ul></div><h2>Construct NVU<a name="1"></a></h2><p>The NVU consists of a number of submodules, implemented as MATLAB classes, presently an astrocyte, a lumped SMC/EC model, and a model of the wall mechanics. The parameters of each of these submodules are specified when the modules are constructed, here in the call to NVU</p><p>NVU is the glue that binds the modules together.</p><pre class="codeinput"><span class="comment">% Default tolerances work just fine</span>
 odeopts = odeset(<span class="string">'Vectorized'</span>, 1);
 nv = NVU(Astrocyte(), <span class="keyword">...</span>
     WallMechanics(), <span class="keyword">...</span>
@@ -118,7 +118,7 @@ nv.astrocyte.varnames()
 
 <span class="comment">% Plot, e.g. Ca_i</span>
 plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
-</pre><pre class="codeoutput">Elapsed time is 9.732933 seconds.
+</pre><pre class="codeoutput">Elapsed time is 8.353859 seconds.
 
 ans = 
 
@@ -178,17 +178,26 @@ plot(nv.T, 1e6 * nv.out(<span class="string">'R'</span>))
 xlabel(<span class="string">'Time'</span>)
 ylabel(<span class="string">'\mu m'</span>)
 title(<span class="string">'Radius'</span>)
-</pre><img vspace="5" hspace="5" src="nvu_script_02.png" alt=""> <h2>Now adjust a parameter (J_PLC), and run again<a name="4"></a></h2><pre class="codeinput"><span class="comment">% Adjust a parameter</span>
+</pre><img vspace="5" hspace="5" src="nvu_script_02.png" alt=""> <h2>Adjust a parameter (J_PLC), change an initial condition, and run again<a name="4"></a></h2><pre class="codeinput"><span class="comment">% Adjust a parameter</span>
 nv.smcec.params.J_PLC = 0.18;
+
+<span class="comment">% This line is quite long-winded, you can do it in two steps below:</span>
+nv.astrocyte.u0(nv.astrocyte.index.K_p) = 12;
+
+<span class="comment">% Alternative way -- has the same effect. These objects are passed by</span>
+<span class="comment">% reference so you can do this</span>
+a = nv.astrocyte;
+a.u0(a.index.K_p) = 12;
+
 nv.simulate()
 clf
 plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
-</pre><pre class="codeoutput">Elapsed time is 2.059238 seconds.
+</pre><pre class="codeoutput">Elapsed time is 1.608859 seconds.
 </pre><img vspace="5" hspace="5" src="nvu_script_03.png" alt=""> <h2>Now run for a bit longer<a name="5"></a></h2><pre class="codeinput">nv.T = linspace(0, 1000, 2000);
 nv.simulate();
 clf
 plot(nv.T, nv.out(<span class="string">'Ca_i'</span>))
-</pre><pre class="codeoutput">Elapsed time is 2.163794 seconds.
+</pre><pre class="codeoutput">Elapsed time is 1.739868 seconds.
 </pre><img vspace="5" hspace="5" src="nvu_script_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 %% Demonstration script for new NVU model
@@ -261,10 +270,19 @@ xlabel('Time')
 ylabel('\mu m')
 title('Radius')
 
-%% Now adjust a parameter (J_PLC), and run again
+%% Adjust a parameter (J_PLC), change an initial condition, and run again
 
 % Adjust a parameter
 nv.smcec.params.J_PLC = 0.18;
+
+% This line is quite long-winded, you can do it in two steps below:
+nv.astrocyte.u0(nv.astrocyte.index.K_p) = 12;
+
+% Alternative way REPLACE_WITH_DASH_DASH has the same effect. These objects are passed by
+% reference so you can do this
+a = nv.astrocyte;
+a.u0(a.index.K_p) = 12;
+
 nv.simulate()
 clf
 plot(nv.T, nv.out('Ca_i'))

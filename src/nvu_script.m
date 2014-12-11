@@ -68,13 +68,13 @@ xlabel('Time')
 ylabel('\mu m')
 title('Radius')
 
-%% Now adjust a parameter (J_PLC), change an initial conditions, and run again
+%% Adjust a parameter (J_PLC), change an initial condition, and run again
 
 % Adjust a parameter
 nv.smcec.params.J_PLC = 0.18;
 
 % This line is quite long-winded, you can do it in two steps below:
-nv.astrocyte.u0(nv.astrocyte.index.K_p = 12);
+nv.astrocyte.u0(nv.astrocyte.index.K_p) = 12;
 
 % Alternative way -- has the same effect. These objects are passed by
 % reference so you can do this
