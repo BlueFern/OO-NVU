@@ -156,6 +156,16 @@ classdef Astrocyte < handle
                Uout(self.idx_out.K_s, :) = K_s;
                Uout(self.idx_out.K_p, :) = K_p;
                Uout(self.idx_out.J_BK_k, :) = J_BK_k;
+               Uout(self.idx_out.rho, :) = self.input_rho(t);
+               Uout(self.idx_out.B_cyt, :) = B_cyt;               
+               Uout(self.idx_out.G, :) = G;               
+               Uout(self.idx_out.v_3, :) = v_3;
+               Uout(self.idx_out.w_inf, :) = w_inf;
+               Uout(self.idx_out.phi_w, :) = phi_w;
+               Uout(self.idx_out.J_IP3, :) = J_IP3;
+               Uout(self.idx_out.J_pump, :) = J_pump;
+               Uout(self.idx_out.J_ER_leak, :) = J_ER_leak;
+               
                varargout = {Uout};
             end
         end        
@@ -215,6 +225,16 @@ idx.v_k = 2;
 idx.J_BK_k = 3;
 idx.K_s = 4;
 idx.K_p = 5;
+idx.rho = 6;
+idx.B_cyt = 7;
+idx.G = 8;
+idx.v_3 = 9;
+idx.w_inf = 10;
+idx.phi_w = 11;
+idx.J_IP3 = 12;
+idx.J_pump = 13;
+idx.J_ER_leak = 14;
+                    
 n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)
