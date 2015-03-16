@@ -1,4 +1,4 @@
-%% Demonstration script for 00-NVU model
+%% Demonstration script for 00-NVU model + Calcium Model
 % This script runs the NVU Model under pre-defined base conditions. The
 % purpose of this script is to give a quick overview of the outcomes of the
 % code for first time viewers. 
