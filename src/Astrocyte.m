@@ -122,7 +122,7 @@ classdef Astrocyte < handle
                 p.VR_ps - p.R_decay*(K_p - p.K_p_min);
             % Differential Equations in the Synaptic Cleft
             du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
-                du(idx.N_K_k, :) + J_BK_k;
+                du(idx.N_K_k, :) - J_BK_k;
             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
                 du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
@@ -228,8 +228,8 @@ parser.addParameter('delta_t', 10); % s
 parser.addParameter('k_C', 7.35e-5); %uM m s^-1
 
 % Perivascular space
-parser.addParameter('VR_pa', 0.0005);% [-]
-parser.addParameter('VR_ps', 0.1);% [-]
+parser.addParameter('VR_pa', 0.001);% [-]
+parser.addParameter('VR_ps', 0.001);% [-]
 parser.addParameter('R_decay', 0.05);% s^-1
 parser.addParameter('K_p_min', 3e3);% uM
 
