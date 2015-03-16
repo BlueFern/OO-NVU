@@ -64,7 +64,7 @@ subplot(1,2,2)
 plot(nv.T, 0.001*nv.out('K_s'))
 title('[K^+] in synaptic cleft: K_s'); xlabel('Time [s]'); ylabel('[K^+]_s [mM]'); grid on
 
-figure(4)
+figure(4) % Plot variables from the Smooth Muscle Cell
 suptitle('Smooth Muscle Cell')
 subplot(2,2,1)
 plot(nv.T, nv.out('Ca_i'))
@@ -79,7 +79,7 @@ subplot(2,2,4)
 plot(nv.T,  nv.out('J_KIR_i'))
 title('K^+ flux through the KIR channel: J\_KIR\_i'); xlabel('Time [s]'); ylabel('K^+ flux [\muM m/s]'); grid on
 
-figure(5)
+figure(5)% Plot variables from the Endothlial Cell
 suptitle('Endothlial Cell')
 subplot(2,2,1)
 plot(nv.T, nv.out('Ca_j'))
@@ -91,3 +91,11 @@ subplot(2,2,[3:4])
 plot(nv.T, nv.out('J_IP3_j'))
 title('IP3 release in EC: J\_IP_3\_j'); xlabel('Time [s]'); ylabel(' [\muM/s]'); grid on
 
+figure(6) % Plot the new Calcium Equation Variables
+suptitle('Calcium Equation Variables')
+subplot(1,2,1)
+plot(nv.T, nv.out('s_k'))
+title('[Ca^{2+}] in astrocytic ER: s_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
+subplot(1,2,2)
+plot(nv.T, nv.out('c_k'))
+title('[Ca^{2+}] in astrocytic Cytosole: c_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on

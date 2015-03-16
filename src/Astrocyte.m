@@ -39,6 +39,12 @@ classdef Astrocyte < handle
             N_HCO3_s = u(idx.N_HCO3_s, :);
                    
             w_k = u(idx.w_k, :);
+            
+            i_k = u(idx.i_k, :);
+            c_k = u(idx.c_k, :);
+            h_k = u(idx.h_k, :);
+            s_k = u(idx.s_k, :);
+            eet_k = u(idx.eet_k, :);
 
             du = zeros(size(u));
             
@@ -63,7 +69,7 @@ classdef Astrocyte < handle
             du(idx.R_k, :) = p.L_p * ( ...
                 Na_k + K_k + Cl_k + HCO3_k - ...
                 Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
-            
+                                    
             % Nernst potentials
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
             E_Na_k = p.R_g * p.T / (p.z_Na * p.F) * log(Na_s ./ Na_k);
@@ -99,12 +105,25 @@ classdef Astrocyte < handle
                 p.T / p.F .* log((Na_s .* K_s .* Cl_s.^2) ./ ...
                 (Na_k .* K_k .* Cl_k.^2)) * p.C_correction;
             
+            %% Calcium Equations
+            % Flux
+            J_IP3 = p.J_max * (...
+                i_k ./ (i_k + p.K_I) .* ...
+                c_k ./ (c_k + p.K_act) .* h_k).^3 .* (1 - c_k ./ s_k);
+            J_ER_leak = p.P_L * (1 - c_k ./ s_k);
+            J_pump = p.V_max * c_k.^2 ./ (c_k.^2 + p.k_pump^2);
+         
+            % Other equations
+            B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
+                (p.K_ex + c_k).^2);
+            G = (self.input_rho(t) + p.delta) ./ ...
+                (p.K_G + self.input_rho(t) + p.delta);
+            v_3 = -p.v_5 / 2 * tanh((c_k - p.Ca_3) / p.Ca_4)+p.v_7;
             
-            % Aditional equations
+            %% Parent Calcium equations
             w_inf = 0.5 * ...
-                (1 + tanh((v_k + p.v_6) / p.v_4));
-            
-            phi_w = p.psi_w * cosh((v_k + p.v_6) / (2*p.v_4));
+                (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4));
+            phi_w = p.psi_w * cosh((v_k - v_3) / (2*p.v_4));
             
             %% Conservation Equations
             % Differential Equations in the Astrocyte
@@ -115,7 +134,13 @@ classdef Astrocyte < handle
             du(idx.N_HCO3_k, :) = 2*J_NBC_k;
             du(idx.N_Cl_k, :) = du(idx.N_Na_k, :) + du(idx.N_K_k, :) - ...
                 du(idx.N_HCO3_k, :);
-           
+            % Differential Calcium Equations in Astrocyte
+            du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak);
+            du(idx.s_k, :) = -1 / p.VR_ER_cyt * du(idx.c_k, :);
+            du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
+            du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
+            du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - ...
+                p.k_eet * eet_k;
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
@@ -134,8 +159,15 @@ classdef Astrocyte < handle
                Uout(self.idx_out.K_s, :) = K_s;
                Uout(self.idx_out.K_p, :) = K_p;
                Uout(self.idx_out.J_BK_k, :) = J_BK_k;
+               Uout(self.idx_out.rho, :) = self.input_rho(t);
+               Uout(self.idx_out.B_cyt, :) = B_cyt;               
+               Uout(self.idx_out.G, :) = G;               
+               Uout(self.idx_out.v_3, :) = v_3;
                Uout(self.idx_out.w_inf, :) = w_inf;
                Uout(self.idx_out.phi_w, :) = phi_w;
+               Uout(self.idx_out.J_IP3, :) = J_IP3;
+               Uout(self.idx_out.J_pump, :) = J_pump;
+               Uout(self.idx_out.J_ER_leak, :) = J_ER_leak;
               
                varargout = {Uout};
             end
@@ -188,6 +220,11 @@ idx.N_Na_s = 7;
 idx.N_K_s = 8;
 idx.N_HCO3_s = 9;
 idx.w_k = 10;
+idx.i_k = 11;
+idx.c_k = 12;
+idx.h_k = 13;
+idx.s_k = 14;
+idx.eet_k = 15;
 end
 function [idx, n] = output_indices()
 % Index of all other output parameters
@@ -223,6 +260,30 @@ parser.addParameter('F_input', 2.5); % s
 parser.addParameter('alpha', 2);% [-]
 parser.addParameter('beta', 5);% [-]
 parser.addParameter('delta_t', 10); % s
+
+% Calcium in the Astrocyte Equations Constants
+parser.addParameter('Amp', 0.7);
+parser.addParameter('base', 0.1);
+parser.addParameter('theta_L', 1);
+parser.addParameter('theta_R', 1);
+parser.addParameter('delta', 1.235e-2); %THIS MAY BE WRONG
+
+parser.addParameter('VR_ER_cyt', 0.185)
+parser.addParameter('k_on', 2); %uM s^-1
+parser.addParameter('K_inh', 0.1); %uM
+parser.addParameter('r_h', 4.8); % uM
+parser.addParameter('k_deg', 1.25); % s^-1
+parser.addParameter('V_eet', 72); % uM
+parser.addParameter('k_eet', 7.2); % uM
+parser.addParameter('c_k_min', 0.1); % uM
+
+parser.addParameter('v_7', -15e-3); %V
+
+parser.addParameter('Ca_3', 0.4);
+parser.addParameter('Ca_4', 0.15);
+parser.addParameter('eet_shift', 2e-3);
+
+parser.addParameter('K_I', 0.03); % uM
 
 % Synpatic cleft
 parser.addParameter('k_C', 7.35e-5); %uM m s^-1
@@ -294,4 +355,9 @@ u0(idx.N_K_s) = 0.0807e-3;
 u0(idx.N_HCO3_s) = 0.432552e-3;
 u0(idx.K_p) = 3e3;
 u0(idx.w_k) = 0.1815e-3;
+u0(idx.c_k) = 0.05e-3;
+u0(idx.s_k) = 400;
+u0(idx.h_k) = 0.1e-3;
+u0(idx.i_k) = 0.01e-3;
+u0(idx.eet_k) = 0.1e-3;
 end
