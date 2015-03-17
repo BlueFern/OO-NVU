@@ -187,13 +187,6 @@ classdef Astrocyte < handle
                 ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
             f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
         end
-        function rho = input_rho(self, t)
-            % Input signal; the smooth pulse function rho
-            p = self.params;
-            rho = (p.Amp - p.base) * ( ...
-                0.5 * tanh((t - p.t_0) / p.theta_L) - ...
-                0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
-        end
         function out = flux_ft(self, t)
             % C_input Block function to switch channel on and off
             p = self.params;
@@ -233,15 +226,8 @@ idx.v_k = 2;
 idx.J_BK_k = 3;
 idx.K_s = 4;
 idx.K_p = 5;
-idx.rho = 6;
-idx.B_cyt = 7;
-idx.G = 8;
-idx.v_3 = 9;
-idx.w_inf = 10;
-idx.phi_w = 11;
-idx.J_IP3 = 12;
-idx.J_pump = 13;
-idx.J_ER_leak = 14;
+idx.w_inf = 6;
+idx.phi_w = 7;
                     
 n = numel(fieldnames(idx));
 end
