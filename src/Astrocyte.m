@@ -20,7 +20,7 @@ classdef Astrocyte < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, J_KIR_i)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, J_Na_n)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -121,15 +121,17 @@ classdef Astrocyte < handle
             du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
                 p.VR_ps - p.R_decay*(K_p - p.K_p_min);
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
-                du(idx.N_K_k, :) - J_BK_k;
-            du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
-                du(idx.N_Na_k, :);
+%             du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
+%                 du(idx.N_K_k, :) - J_BK_k;
+%             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
+%                 du(idx.N_Na_k, :);
+            du(idx.N_K_s, :) = J_Na_n - du(idx.N_K_k, :) + J_BK_k;
+            du(idx.N_Na_s, :) = -J_Na_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+            
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));
-               Uout(self.idx_out.ft, :) = self.input_f(t);
                Uout(self.idx_out.v_k, :) = v_k;
                Uout(self.idx_out.K_s, :) = K_s;
                Uout(self.idx_out.K_p, :) = K_p;
@@ -142,18 +144,6 @@ classdef Astrocyte < handle
         end        
         function K_p = shared(self, ~, u)
             K_p = u(self.index.K_p, :);
-        end
-        function f = input_f(self, t)
-            % The neuronal K+ input signal
-            p = self.params;
-            f = zeros(size(t));
-            ii = p.t_0 <= t & t < p.t_1;
-            f(ii) = ...
-                p.F_input * p.gab / ...
-                (p.ga * p.gb) * ...
-                (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
-                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
-            f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
         end
         function out = flux_ft(self, t)
             % C_input Block function to switch channel on and off
@@ -184,13 +174,12 @@ idx.w_k = 10;
 end
 function [idx, n] = output_indices()
 % Index of all other output parameters
-idx.ft = 1;
-idx.v_k = 2;
-idx.J_BK_k = 3;
-idx.K_s = 4;
-idx.K_p = 5;
-idx.w_inf = 6;
-idx.phi_w = 7;
+idx.v_k = 1;
+idx.J_BK_k = 2;
+idx.K_s = 3;
+idx.K_p = 4;
+idx.w_inf = 5;
+idx.phi_w = 6;
                     
 n = numel(fieldnames(idx));
 end
@@ -205,13 +194,6 @@ parser.addParameter('R_tot', 8.79e-8); % m
 parser.addParameter('startpulse', 200); % s
 parser.addParameter('lengthpulse', 200); % s
 parser.addParameter('lengtht1', 10); % s
-parser.addParameter('F_input', 2.5); % s
-parser.addParameter('alpha', 2);% [-]
-parser.addParameter('beta', 5);% [-]
-parser.addParameter('delta_t', 10); % s
-
-% Synpatic cleft
-parser.addParameter('k_C', 7.35e-5); %uM m s^-1
 
 % Perivascular space
 parser.addParameter('VR_pa', 0.001);% [-]
@@ -261,10 +243,6 @@ params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k;
 params.t_0 = params.startpulse;
 params.t_1 = params.t_0 + params.lengtht1;
 params.t_2 = params.t_0 + params.lengthpulse;
-params.t_3 = params.t_1 + params.lengthpulse;
-params.gab = factorial(params.alpha + params.beta - 1);
-params.ga = factorial(params.alpha - 1);
-params.gb = factorial(params.beta - 1);
 end
 function u0 = initial_conditions(idx)
 % Inital estimations of parameters from experimental data
