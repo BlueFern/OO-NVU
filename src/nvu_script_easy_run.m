@@ -31,14 +31,38 @@ nv.simulate()
 % simulation are given in the documentation pages of the individual model
 % components.
 
-figure(1) % Plot the Radius
+figure(1)
+suptitle('The Input Signal')
+subplot(4,1,1)
+plot(nv.T, nv.out('ft'))
+title('Input signal from the neuron into the synaptic cleft')
+xlabel('Time [s]'); ylabel('Input Signal f(t) [-]')
+
+subplot(4,1,2)
+plot(nv.T, nv.out('v_k'))
+title('Membrane Potential of the astrocyte')
+xlabel('Time [s]');ylabel('v_k [mV]')
+
+subplot(4,1,3)
+[ax,p1,p2] = plotyy(nv.T, nv.out('J_BK_k'), nv.T, nv.out('J_KIR_i'));
+title('The contribution of the BK- and KIR-channel to K_p')
+xlabel('Time [s]');
+ylabel(ax(1), 'J_{BK_k} [\muM ms^{-1}]'); ylabel(ax(2), 'J_{KIR_i} [\muM s^{-1}]') 
+
+subplot(4,1,4)
+plot(nv.T, nv.out('K_p'))
+title('Potassium concentration in perivascular space')
+xlabel('Time [s]');ylabel('K_p [\muM]')
+
+%%
+figure(2) % Plot the Radius
 plot(nv.T, 1e6 * nv.out('R'))
 title('Radius (R)');   xlabel('time (s)'); ylabel('(\mum)'); grid on
 
-figure(2) % Plot variables from the Astrocyte 
+figure(3) % Plot variables from the Astrocyte 
 suptitle('Astrocyte')
 subplot(3,2,1)
-plot(nv.T, 0.001*nv.out('N_K_k')./(nv.out('R_k')))
+plot(nv.T, nv.out('N_K_k')./(nv.out('R_k')))
 title('Potassium in AC (K_k)');   xlabel('Time [s]'); ylabel('[K^+]   (mM)') ; grid on
 subplot(3,2,2)
 plot(nv.T, 0.001*nv.out('N_Na_k')./(nv.out('R_k')))
@@ -56,7 +80,7 @@ subplot(3,2,6)
 plot(nv.T, (nv.out('J_BK_k'))'./(nv.out('R_k')))
 title('K^+ flux through the BK channel in AC (J\_BK\_k/R\_k)');   xlabel('Time [s]'); ylabel('K^+ flux [\muM/s]'); grid on
 
-figure(3) % Plot variables from the Perivascular Space and Synaptic Cleft
+figure(4) % Plot variables from the Perivascular Space and Synaptic Cleft
 subplot(1,2,1)
 plot(nv.T, 0.001*nv.out('K_p'))
 title('Potassium in the Perivascular Space (K_p)');   xlabel('Time [s]'); ylabel('[K^+]  (mM)'); grid on
@@ -64,7 +88,7 @@ subplot(1,2,2)
 plot(nv.T, 0.001*nv.out('K_s'))
 title('[K^+] in synaptic cleft: K_s'); xlabel('Time [s]'); ylabel('[K^+]_s [mM]'); grid on
 
-figure(4)
+figure(5)
 suptitle('Smooth Muscle Cell')
 subplot(2,2,1)
 plot(nv.T, nv.out('Ca_i'))
@@ -79,7 +103,7 @@ subplot(2,2,4)
 plot(nv.T,  nv.out('J_KIR_i'))
 title('K^+ flux through the KIR channel: J\_KIR\_i'); xlabel('Time [s]'); ylabel('K^+ flux [\muM m/s]'); grid on
 
-figure(5)
+figure(6)
 suptitle('Endothlial Cell')
 subplot(2,2,1)
 plot(nv.T, nv.out('Ca_j'))
