@@ -5,6 +5,7 @@ classdef Astrocyte < handle
     %   Please refer to the relevient sections in the documentation for 
     %   full information on the equations and variable names.
     % Test commit 2
+    
     properties
         params
         u0
@@ -22,6 +23,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices();
         end
         function [du, varargout] = rhs(self, t, u, J_KIR_i, R)
+            global trpv_switch
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -87,7 +89,7 @@ classdef Astrocyte < handle
                 K_s ./ (K_s + p.K_K_s);
             
             % Membrane voltage
-            v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + p.g_TRPV_k * E_TRPV_k* z_k + ...
+            v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + p.g_TRPV_k * z_k  .* E_TRPV_k + ...
                 p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + ...
                 p.g_BK_k * w_k .* E_BK_k - ...
                 J_NaK_k * p.F / p.C_correction) ./ ...
@@ -116,7 +118,7 @@ classdef Astrocyte < handle
                 c_k ./ (c_k + p.K_act) .* h_k).^3 .* (1 - c_k ./ s_k);
             J_ER_leak = p.P_L * (1 - c_k ./ s_k);
             J_pump = p.V_max * c_k.^2 ./ (c_k.^2 + p.k_pump^2);
-            J_TRPV_k = - p.g_TRPV_k/p.F * z_k *(v_k - E_TRPV_k) *... %TRPV4
+            J_TRPV_k = - p.g_TRPV_k/p.F * z_k .*(v_k - E_TRPV_k) *... %TRPV4
                p.C_correction ;
             
             % Other equations
@@ -133,8 +135,8 @@ classdef Astrocyte < handle
             
              %% TRPV Channel open probabilty equations
             H_Ca_k = c_k./p.gam_cai_k+p.Ca_p./p.gam_cae_k;
-            zinf_k=(1./(1+exp(-(((R-p.R_0_passive)./(p.R_0_passive))-p.epshalf_k)/p.kappa_k))).*((1/(1+H_Ca_k)).*(H_Ca_k+tanh((v_k-p.v1_TRPV_k)/p.v2_TRPV_k))); %Define epsilon
-            t_Ca_k= p.t_TRPV_k./Ca_p;
+            zinf_k=(1./(1+exp(-(((R-p.R_0_passive_k)./(p.R_0_passive_k))-p.epshalf_k)./p.kappa_k))).*((1./(1+H_Ca_k)).*(H_Ca_k+tanh((v_k-p.v1_TRPV_k)./p.v2_TRPV_k))); %Define epsilon
+            t_Ca_k= p.t_TRPV_k./p.Ca_p;
             
             %% Conservation Equations
             % Differential Equations in the Astrocyte
@@ -150,7 +152,7 @@ classdef Astrocyte < handle
             du(idx.s_k, :) = -1 / p.VR_ER_cyt *( du(idx.c_k, :)- J_TRPV_k);
             du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
             du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
-            du(idx.z_k,:) = (zinf_k-z_k)/(t_Ca_k*Ca_p) ; %TRPV
+            du(idx.z_k,:) = trpv_switch*(zinf_k-z_k)/(t_Ca_k*p.Ca_p) ; %TRPV
             du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - ...
                 p.k_eet * eet_k;
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
@@ -310,7 +312,7 @@ parser.addParameter('kappa_k', 0.1);
 parser.addParameter('v1_TRPV_k', 120); %mV
 parser.addParameter('v2_TRPV_k', 13); %mV
 parser.addParameter('t_TRPV_k', 0.9); %mV
-
+parser.addParameter('R_0_passive_k', 20e-6)
 % Synpatic cleft
 parser.addParameter('k_C', 7.35e-5); %uM m s^-1
 
