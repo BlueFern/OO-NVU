@@ -39,7 +39,7 @@ title('Input signal from the neuron into the synaptic cleft')
 xlabel('Time [s]'); ylabel('Input Signal f(t) [-]')
 
 subplot(4,1,2)
-plot(nv.T, nv.out('v_k'))
+plot(nv.T, nv.out('v_k')*1e3)
 title('Membrane Potential of the astrocyte')
 xlabel('Time [s]');ylabel('v_k [mV]')
 
