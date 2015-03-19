@@ -4,6 +4,7 @@ classdef Astrocyte < handle
     %   Currently there is no content under the Neuron sub-section
     %   Please refer to the relevient sections in the documentation for 
     %   full information on the equations and variable names.
+    % Test commit 2
     properties
         params
         u0
