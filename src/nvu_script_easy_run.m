@@ -51,8 +51,12 @@ plot(nv.T, 0.001*nv.out('N_Na_k')./(nv.out('R_k')))
 title('Sodium in AC (Na_k)');   xlabel('Time [s]'); ylabel('[Na^+]   (mM)'); grid on
 subplot(3,2,3)
 hold all;
-plot(nv.T, 0.001*nv.out('N_HCO3_k')./(nv.out('R_k')))
-title('HCO_3 in AC (HCO3_k)');   xlabel('Time [s]'); ylabel('[HCO_3]   (mM)'); grid on
+% plot(nv.T, 0.001*nv.out('N_HCO3_k')./(nv.out('R_k')))
+% title('HCO_3 in AC (HCO3_k)');   xlabel('Time [s]'); ylabel('[HCO_3]   (mM)'); grid on
+% subplot(3,2,4)
+% hold all;
+plot(nv.T, nv.out('v_k'))
+title('Membrane Voltage Astrocyte');   xlabel('Time [s]'); ylabel('[v_k]   (mV)'); grid on
 subplot(3,2,4)
 hold all;
 plot(nv.T, 0.001*nv.out('N_Cl_k')./(nv.out('R_k')))

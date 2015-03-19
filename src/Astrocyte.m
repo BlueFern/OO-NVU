@@ -148,8 +148,8 @@ classdef Astrocyte < handle
             du(idx.N_Cl_k, :) = du(idx.N_Na_k, :) + du(idx.N_K_k, :) - ...
                 du(idx.N_HCO3_k, :);
             % Differential Calcium Equations in Astrocyte
-            du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak) + J_TRPV_k; %TRPV added
-            du(idx.s_k, :) = -1 / p.VR_ER_cyt *( du(idx.c_k, :)- J_TRPV_k);
+            du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak) + (J_TRPV_k./ (p.VR_pa)); %TRPV added
+            du(idx.s_k, :) = -du(idx.c_k, :) ./(p.VR_ER_cyt) + (J_TRPV_k./(p.VR_ER_cyt* p.VR_pa));
             du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
             du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
             du(idx.z_k,:) = trpv_switch*(zinf_k-z_k)/(t_Ca_k*p.Ca_p) ; %TRPV
@@ -301,7 +301,7 @@ parser.addParameter('eet_shift', 2e-3);
 
 parser.addParameter('K_I', 0.03); % uM
 %TRPV4
-parser.addParameter('Ca_p', 5); %uM
+parser.addParameter('Ca_p', 2000); %uM
 parser.addParameter('g_TRPV_k',(50 * 1e-12)/3.7e-9);%mho m^-2
 parser.addParameter('C_astr_k', 40);%pF
 parser.addParameter('gamma_k', 834.3);%mV/uM
@@ -390,5 +390,5 @@ u0(idx.s_k) = 400;
 u0(idx.h_k) = 0.1e-3;
 u0(idx.i_k) = 0.01e-3;
 u0(idx.eet_k) = 0.1e-3;
-u0(idx.z_k) = 0.1e-3;
+u0(idx.z_k) = 0;
 end
