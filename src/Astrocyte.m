@@ -22,7 +22,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices();
         end
         function [du, varargout] = rhs(self, t, u, J_KIR_i, R)
-            global trpv_switch
+            
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -117,7 +117,7 @@ classdef Astrocyte < handle
                 c_k ./ (c_k + p.K_act) .* h_k).^3 .* (1 - c_k ./ s_k);
             J_ER_leak = p.P_L * (1 - c_k ./ s_k);
             J_pump = p.V_max * c_k.^2 ./ (c_k.^2 + p.k_pump^2);
-            J_TRPV_k = - p.g_TRPV_k/p.F * z_k .*(v_k - E_TRPV_k) *... %TRPV4
+            J_TRPV_k = -0.5* p.g_TRPV_k/p.F * z_k .*(v_k - E_TRPV_k) *... %TRPV4
                p.C_correction ;
             
             % Other equations
@@ -151,7 +151,7 @@ classdef Astrocyte < handle
             du(idx.s_k, :) = -du(idx.c_k, :) ./(p.VR_ER_cyt) + (J_TRPV_k./(p.VR_ER_cyt* p.VR_pa));
             du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
             du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
-            du(idx.z_k,:) = trpv_switch*(zinf_k-z_k)/(t_Ca_k*p.Ca_p) ; %TRPV
+            du(idx.z_k,:) = p.trpv_switch.*((zinf_k-z_k)/(t_Ca_k*p.Ca_p)) ; %TRPV
             du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - ...
                 p.k_eet * eet_k;
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
@@ -204,9 +204,9 @@ classdef Astrocyte < handle
         function rho = input_rho(self, t)
             % Input signal; the smooth pulse function rho
             p = self.params;
-            rho = (p.Amp - p.base) * ( ...
+            rho = p.glu_switch.*((p.Amp - p.base) * ( ...
                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
-                0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
+               0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base);
         end
         function out = flux_ft(self, t)
             % C_input Block function to switch channel on and off
@@ -275,6 +275,7 @@ parser.addParameter('F_input', 2.5); % s
 parser.addParameter('alpha', 2);% [-]
 parser.addParameter('beta', 5);% [-]
 parser.addParameter('delta_t', 10); % s
+parser.addParameter('glu_switch', 1); % 
 
 % Calcium in the Astrocyte Equations Constants
 parser.addParameter('Amp', 0.7);
@@ -300,7 +301,7 @@ parser.addParameter('eet_shift', 2e-3);
 
 parser.addParameter('K_I', 0.03); % uM
 %TRPV4
-parser.addParameter('Ca_p', 2000); %uM
+parser.addParameter('Ca_p', 5); %uM
 parser.addParameter('g_TRPV_k',(50 * 1e-12)/3.7e-9);%mho m^-2
 parser.addParameter('C_astr_k', 40);%pF
 parser.addParameter('gamma_k', 834.3);%mV/uM
@@ -312,6 +313,8 @@ parser.addParameter('v1_TRPV_k', 120); %mV
 parser.addParameter('v2_TRPV_k', 13); %mV
 parser.addParameter('t_TRPV_k', 0.9); %mV
 parser.addParameter('R_0_passive_k', 20e-6)
+parser.addParameter('trpv_switch', 1)
+
 % Synpatic cleft
 parser.addParameter('k_C', 7.35e-5); %uM m s^-1
 
