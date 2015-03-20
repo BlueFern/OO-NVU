@@ -4,8 +4,7 @@ classdef Astrocyte < handle
     %   Currently there is no content under the Neuron sub-section
     %   Please refer to the relevient sections in the documentation for 
     %   full information on the equations and variable names.
-    % Test commit 2
-    
+
     properties
         params
         u0
@@ -334,7 +333,7 @@ parser.addParameter('g_NKCC1_k', 5.54e-2); % mho m^-2
 parser.addParameter('J_NaK_max', 1.42e-3); % uM m s^-1
 parser.addParameter('K_Na_k', 10000); % uM
 parser.addParameter('K_K_s', 1500); % uM
-parser.addParameter('G_BK_k', 4.3e3); % pS
+parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
 parser.addParameter('A_ef_k', 3.7e-9); % m2
 parser.addParameter('C_correction', 1e3); % [-]
 parser.addParameter('J_max', 2880); %uM s^-1

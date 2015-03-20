@@ -34,16 +34,39 @@ nv.simulate()
 % simulation are given in the documentation pages of the individual model
 % components.
 
-figure(1) % Plot the Radius
-hold all;
+figure(1)
+suptitle('The Input Signal')
+subplot(4,1,1)
+plot(nv.T, nv.out('ft'))
+title('Input signal from the neuron into the synaptic cleft')
+xlabel('Time [s]'); ylabel('Input Signal f(t) [-]')
+
+subplot(4,1,2)
+plot(nv.T, nv.out('v_k')*1e3)
+title('Membrane Potential of the astrocyte')
+xlabel('Time [s]');ylabel('v_k [mV]')
+
+subplot(4,1,3)
+[ax,p1,p2] = plotyy(nv.T, nv.out('J_BK_k'), nv.T, nv.out('J_KIR_i'));
+title('The contribution of the BK- and KIR-channel to K_p')
+xlabel('Time [s]');
+ylabel(ax(1), 'J_{BK_k} [\muM ms^{-1}]'); ylabel(ax(2), 'J_{KIR_i} [\muM s^{-1}]') 
+
+subplot(4,1,4)
+plot(nv.T, nv.out('K_p'))
+title('Potassium concentration in perivascular space')
+xlabel('Time [s]');ylabel('K_p [\muM]')
+
+%%
+figure(2) % Plot the Radius
 plot(nv.T, 1e6 * nv.out('R'))
 title('Radius (R)');   xlabel('time (s)'); ylabel('(\mum)'); grid on
-legend('TRPV4 deactivated','TRPV4 activated')
-figure(2) % Plot variables from the Astrocyte 
-%suptitle('Astrocyte')
+
+figure(3) % Plot variables from the Astrocyte 
+suptitle('Astrocyte')
 subplot(3,2,1)
-hold all;
-plot(nv.T, 0.001*nv.out('N_K_k')./(nv.out('R_k')))
+plot(nv.T, nv.out('N_K_k')./(nv.out('R_k')))
+
 title('Potassium in AC (K_k)');   xlabel('Time [s]'); ylabel('[K^+]   (mM)') ; grid on
 subplot(3,2,2)
 hold all;
@@ -70,7 +93,8 @@ hold all;
 plot(nv.T, (nv.out('J_BK_k'))'./(nv.out('R_k')))
 title('K^+ flux through the BK channel in AC (J\_BK\_k/R\_k)');   xlabel('Time [s]'); ylabel('K^+ flux [\muM/s]'); grid on
 legend('TRPV4 deactivated','TRPV4 activated')
-figure(3) % Plot variables from the Perivascular Space and Synaptic Cleft
+
+figure(4) % Plot variables from the Perivascular Space and Synaptic Cleft
 subplot(1,2,1)
 hold all;
 plot(nv.T, 0.001*nv.out('K_p'))
@@ -80,8 +104,9 @@ hold all;
 plot(nv.T, 0.001*nv.out('K_s'))
 title('[K^+] in synaptic cleft: K_s'); xlabel('Time [s]'); ylabel('[K^+]_s [mM]'); grid on
 legend('TRPV4 deactivated','TRPV4 activated')
-figure(4) % Plot variables from the Smooth Muscle Cell
-%suptitle('Smooth Muscle Cell')
+
+figure(5)
+suptitle('Smooth Muscle Cell')
 subplot(2,2,1)
 hold all;
 plot(nv.T, nv.out('Ca_i'))
@@ -99,8 +124,9 @@ hold all;
 plot(nv.T,  nv.out('J_KIR_i'))
 title('K^+ flux through the KIR channel: J\_KIR\_i'); xlabel('Time [s]'); ylabel('K^+ flux [\muM m/s]'); grid on
 legend('TRPV4 deactivated','TRPV4 activated')
-figure(5)% Plot variables from the Endothlial Cell
-%suptitle('Endothlial Cell')
+
+figure(6)
+suptitle('Endothlial Cell')
 subplot(2,2,1)
 hold all;
 plot(nv.T, nv.out('Ca_j'))
@@ -114,7 +140,8 @@ hold all;
 plot(nv.T, nv.out('J_IP3_j'))
 title('IP3 release in EC: J\_IP_3\_j'); xlabel('Time [s]'); ylabel(' [\muM/s]'); grid on
 legend('TRPV4 deactivated','TRPV4 activated')
-figure(6) % Plot the new Calcium Equation Variables
+
+figure(7) % Plot the new Calcium Equation Variables
 %suptitle('Calcium Equation Variables')
 subplot(1,2,1)
 hold all;
