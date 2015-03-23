@@ -94,8 +94,8 @@ for foo = [0,1]
         title('Membrane Voltage Astrocyte');   xlabel('Time [s]'); ylabel('[v_k]   (mV)'); grid on
         subplot(3,2,4)
         hold all;
-        plot(nv.T, 0.001*nv.out('N_Cl_k')./(nv.out('R_k')))
-        title('Chlorine in AC (Cl_k)');   xlabel('Time [s]'); ylabel('[Cl]   (mM)'); grid on
+        plot(nv.T, nv.out('Ca_p'))
+        title('Calcium in PVS');   xlabel('Time [s]'); ylabel('[Ca]   (mM)'); grid on
         subplot(3,2,5)
         hold all;
         plot(nv.T, nv.out('w_k'))
@@ -164,5 +164,65 @@ for foo = [0,1]
         plot(nv.T, nv.out('c_k'))
         title('[Ca^{2+}] in astrocytic Cytosole: c_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
         legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+       
+        figure(8) % Plot variables from the Astrocyte 
+        %suptitle('Astrocyte')
+        positionVector1=[ 0.05, 0.8-0.03, 0.4 ,0.2];
+        subplot('Position',positionVector1)
+        hold all;
+        plot(nv.T, 0.001*nv.out('K_s'))
+        %title('Potassium in SC(K_s)');   
+        xlabel('Time [s]'); ylabel('[K^+]_s  (mM)') ; grid on
+        
+        positionVector2=[ 0.5, 0.8-0.03, 0.4, 0.2];
+        subplot('Position',positionVector2)
+        hold all;
+        plot(nv.T, 1000*nv.out('v_k'))
+        %title('Membrane Voltage Astrocyte'); 
+        xlabel('Time [s]'); ylabel('[v_k]   (mV)'); grid on
+        
+        positionVector3=[ 0.05, 0.55-0.03,0.4,0.2];
+        subplot('Position',positionVector3)
+        hold all;
+        plot(nv.T, nv.out('i_k'))
+        %title('IP3');  
+        xlabel('Time [s]'); ylabel('[IP3]   (microM)'); grid on
+        
+        positionVector4=[ 0.5, 0.55-0.03,0.4,0.2];
+        subplot('Position',positionVector4)
+        hold all;
+        plot(nv.T, 0.001*nv.out('K_p'))
+        %title('Potassium in the Perivascular Space (K_p)');  
+        xlabel('Time [s]'); ylabel('[K+]   (mM)'); grid on
+        
+        positionVector5=[ 0.05, 0.30-0.03,0.4,0.2];
+        subplot('Position',positionVector5)
+        hold all;
+        plot(nv.T, nv.out('c_k'))
+        %title('[Ca^{2+}] in astrocytic Cytosole: c_k'); 
+        xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
+        
+        positionVector6=[ 0.5, 0.30-0.03,0.4,0.2];
+        subplot('Position',positionVector6)
+        hold all;
+        plot(nv.T, nv.out('Ca_i'))
+        %title('[Ca^{2+}] in smooth muscle cell: Ca_i');
+        xlabel('Time [s]'); ylabel('[Ca^{2+}]_i [\muM]'); grid on
+        
+        positionVector7=[ 0.05, 0.05-0.03,0.4,0.2];
+        subplot('Position',positionVector7)
+        hold all;
+        plot(nv.T, nv.out('eet_k'))
+        %title('EET');   
+        xlabel('Time [s]'); ylabel('[EET]   (microM)'); grid on
+        
+        positionVector8=[ 0.5, 0.05-0.03,0.4,0.2];
+        subplot('Position',positionVector8)
+        plot(nv.T, 1e6 * nv.out('R'))
+        hold all;
+        %title('Radius (R)');  
+        xlabel('time (s)'); ylabel('(\mum) Radius'); grid on
+        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+    
     end
 end
