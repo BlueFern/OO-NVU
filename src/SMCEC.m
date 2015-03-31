@@ -152,13 +152,13 @@ classdef SMCEC < handle
                 varargout{1} = Uout; 
             end
         end
-        function [J_KIR_i, Ca_i] = shared(self, ~, u, K_p)
+        function [J_KIR_i, Ca_i] = shared(self, t, u, K_p)
             p = self.params;
             idx = self.index;
             v_i = u(idx.v_i, :);
             Ca_i = u(idx.Ca_i, :);
             v_KIR_i = p.z_1 * K_p - p.z_2;
-            g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
+            g_KIR_i = exp(p.z_5 .* v_i + p.z_3 .* K_p - p.z_4);
             J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
         end
         function names = varnames(self)

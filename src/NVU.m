@@ -52,7 +52,8 @@ classdef NVU < handle
             
             % Evaluate the coupling quantities to be passed between
             % submodels as coupling
-            K_p = self.astrocyte.shared(t, ua);
+           
+            [K_p] = self.astrocyte.shared(t, ua);
             [J_KIR_i, Ca_i] = self.smcec.shared(t, us, K_p);
             [R, h] = self.wall.shared(t, uw);
             

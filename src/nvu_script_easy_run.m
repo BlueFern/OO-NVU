@@ -18,17 +18,17 @@ clear; clc; close all
 
 %% Options 
 % First the options need to be set for the ODE solver (currently |ode15s|) 
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-3, 'MaxStep', 1, 'Vectorized', 1);
 
 nv = NVU(Astrocyte(), ...
     WallMechanics(), ...
     SMCEC(), ...
     'odeopts', odeopts);
-
+ 
 %%
-for foo = [0,1]
-    nv.astrocyte.params.glu_switch = foo;
-    
+for foo = [1]
+    nv.astrocyte.params.input_switch = foo;
+   
     for pie = [0,1]
         nv.astrocyte.params.trpv_switch = pie;
         %% Run a basic simulation
@@ -43,9 +43,9 @@ for foo = [0,1]
         %suptitle('The Input Signal')
         subplot(4,1,1)
         hold all;
-        plot(nv.T, nv.out('ft'))
-        title('Input signal from the neuron into the synaptic cleft')
-        xlabel('Time [s]'); ylabel('Input Signal f(t) [-]')
+        plot(nv.T, nv.out('B_cyt'))
+        title('--')
+        xlabel('Time [s]'); ylabel('prob.')
 
         subplot(4,1,2)
         hold all;
@@ -98,8 +98,8 @@ for foo = [0,1]
         title('Calcium in PVS');   xlabel('Time [s]'); ylabel('[Ca]   (mM)'); grid on
         subplot(3,2,5)
         hold all;
-        plot(nv.T, nv.out('w_k'))
-        title('Open probability of the BK Channel in AC (N_K_k)');   xlabel('Time [s]'); ylabel('(-)'); grid on
+        plot(nv.T, (nv.out('J_TRPV_k'))'./(nv.out('R_k')))
+        title('J_TRPV');   xlabel('Time [s]'); ylabel('(-)'); grid on
         subplot(3,2,6)
         hold all;
         plot(nv.T, (nv.out('J_BK_k'))'./(nv.out('R_k')))
@@ -222,6 +222,47 @@ for foo = [0,1]
         hold all;
         %title('Radius (R)');  
         xlabel('time (s)'); ylabel('(\mum) Radius'); grid on
+        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        
+        figure(9)
+        %suptitle('The Input Signal')
+        subplot(3,2,1)
+        hold all;
+        plot(nv.T, nv.out('J_TRPV_k'))
+        title('TRPV flux')
+        xlabel('Time [s]'); ylabel('[\muM m s-1]')
+
+        subplot(3,2,2)
+        hold all;
+        plot(nv.T, nv.out('J_BK_k'))
+        title(' BK flux')
+        xlabel('Time [s]'); ylabel('[\muM m s-1]')
+
+        subplot(3,2,3)
+        hold all;
+        plot(nv.T, nv.out('z_k'));
+        title('openprobability TRPV')
+        xlabel('Time [s]');
+        ylabel('[-]') 
+        
+        subplot(3,2,4)
+        hold all;
+        plot(nv.T, nv.out('w_k'));
+        title('openprobability BK')
+        xlabel('Time [s]');
+        ylabel('[-]') 
+
+        
+        subplot(3,2,5)
+        hold all;
+        plot(nv.T, nv.out('E_TRPV_k')*1000)
+        title('Nernst potential TRPV')
+        xlabel('Time [s]');ylabel('mV')
+        subplot(3,2,6)
+        hold all;
+        plot(nv.T, nv.out('E_BK_k')*1000)
+        title('Nernst potential BK')
+        xlabel('Time [s]');ylabel('mV')
         legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
     
     end

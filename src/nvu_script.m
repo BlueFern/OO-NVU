@@ -12,12 +12,15 @@
 % Options for the ODE solver (currently |ode15s|) are provided by
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
+clear all
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
 nv = NVU(Astrocyte(), ...
     WallMechanics(), ...
     SMCEC('J_PLC', 0.18), ...
     'odeopts', odeopts);
+
+nv.simulate()
 %%
 % Other parameters you can set are 
 %
@@ -50,12 +53,15 @@ plot(nv.T, nv.out('Ca_i'))
 xlabel('time (s)')
 ylabel('[Ca^{2+}] (\muM)')
 
+plot(nv.T, nv.out('R'))
+xlabel('time (s)')
+ylabel('R (m)')
 %% Changing parameters, initial conditions, simulation time
 % Changing parameters and inintial conditions involves adjusting properties
 % of the model components of the |NVU| object.
 %
 % Parameters can be adjusted directly like so:
-nv.smcec.params.J_PLC = 0.4;
+nv.smcec.params.J_PLC = 0.04;
 
 %%
 % Initial conditions can also be done in a single statement, but you end up
