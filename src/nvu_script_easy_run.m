@@ -27,7 +27,7 @@ nv = NVU(Astrocyte(), ...
  
 %%
 for foo = [1]
-    nv.astrocyte.params.input_switch = foo;
+    nv.astrocyte.params.CAP_switch = foo;
    
     for pie = [0,1]
         nv.astrocyte.params.trpv_switch = pie;
@@ -43,7 +43,7 @@ for foo = [1]
         %suptitle('The Input Signal')
         subplot(4,1,1)
         hold all;
-        plot(nv.T, nv.out('B_cyt'))
+        plot(nv.T, nv.out('I_TRPV_k'))
         title('--')
         xlabel('Time [s]'); ylabel('prob.')
 
@@ -65,13 +65,13 @@ for foo = [1]
         plot(nv.T, nv.out('K_p'))
         title('Potassium concentration in perivascular space')
         xlabel('Time [s]');ylabel('K_p [\muM]')
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
         %%
         figure(2) % Plot the Radius
         plot(nv.T, 1e6 * nv.out('R'))
         hold all;
         title('Radius (R)');   xlabel('time (s)'); ylabel('(\mum)'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
         
         figure(3) % Plot variables from the Astrocyte 
         %suptitle('Astrocyte')
@@ -95,16 +95,16 @@ for foo = [1]
         subplot(3,2,4)
         hold all;
         plot(nv.T, nv.out('Ca_p'))
-        title('Calcium in PVS');   xlabel('Time [s]'); ylabel('[Ca]   (mM)'); grid on
+        title('Calcium in PVS');   xlabel('Time [s]'); ylabel('[Ca]   (\muM)'); grid on
         subplot(3,2,5)
         hold all;
-        plot(nv.T, (nv.out('J_TRPV_k'))'./(nv.out('R_k')))
-        title('J_TRPV');   xlabel('Time [s]'); ylabel('(-)'); grid on
+        plot(nv.T, 1e-3*nv.out('I_TRPV_k'))
+        title('I_TRPV_k');   xlabel('Time [s]'); ylabel('(-)'); grid on
         subplot(3,2,6)
         hold all;
         plot(nv.T, (nv.out('J_BK_k'))'./(nv.out('R_k')))
         title('K^+ flux through the BK channel in AC (J\_BK\_k/R\_k)');   xlabel('Time [s]'); ylabel('K^+ flux [\muM/s]'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
 
         figure(4) % Plot variables from the Perivascular Space and Synaptic Cleft
         subplot(1,2,1)
@@ -115,7 +115,7 @@ for foo = [1]
         hold all;
         plot(nv.T, 0.001*nv.out('K_s'))
         title('[K^+] in synaptic cleft: K_s'); xlabel('Time [s]'); ylabel('[K^+]_s [mM]'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
 
         figure(5)
         %suptitle('Smooth Muscle Cell')
@@ -135,7 +135,7 @@ for foo = [1]
         hold all;
         plot(nv.T,  nv.out('J_KIR_i'))
         title('K^+ flux through the KIR channel: J\_KIR\_i'); xlabel('Time [s]'); ylabel('K^+ flux [\muM m/s]'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
 
         figure(6)
         %suptitle('Endothlial Cell')
@@ -151,7 +151,7 @@ for foo = [1]
         hold all;
         plot(nv.T, nv.out('J_IP3_j'))
         title('IP3 release in EC: J\_IP_3\_j'); xlabel('Time [s]'); ylabel(' [\muM/s]'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
 
         figure(7) % Plot the new Calcium Equation Variables
         %suptitle('Calcium Equation Variables')
@@ -163,7 +163,7 @@ for foo = [1]
         hold all;
         plot(nv.T, nv.out('c_k'))
         title('[Ca^{2+}] in astrocytic Cytosole: c_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
        
         figure(8) % Plot variables from the Astrocyte 
         %suptitle('Astrocyte')
@@ -222,48 +222,85 @@ for foo = [1]
         hold all;
         %title('Radius (R)');  
         xlabel('time (s)'); ylabel('(\mum) Radius'); grid on
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
         
+%         figure(9)
+%         %suptitle('The Input Signal')
+%         subplot(3,2,1)
+%         hold all;
+%         plot(nv.T, nv.out('J_TRPV_k'))
+%         title('TRPV flux')
+%         xlabel('Time [s]'); ylabel('[\muM m s-1]')
+% 
+%         subplot(3,2,2)
+%         hold all;
+%         plot(nv.T, nv.out('J_BK_k'))
+%         title(' BK flux')
+%         xlabel('Time [s]'); ylabel('[\muM m s-1]')
+% 
+%         subplot(3,2,3)
+%         hold all;
+%         plot(nv.T, nv.out('z_k'));
+%         title('openprobability TRPV')
+%         xlabel('Time [s]');
+%         ylabel('[-]') 
+%         
+%         subplot(3,2,4)
+%         hold all;
+%         plot(nv.T, nv.out('w_k'));
+%         title('openprobability BK')
+%         xlabel('Time [s]');
+%         ylabel('[-]') 
+% 
+%         
+%         subplot(3,2,5)
+%         hold all;
+%         plot(nv.T, nv.out('E_TRPV_k')*1000)
+%         title('Nernst potential TRPV')
+%         xlabel('Time [s]');ylabel('mV')
+%         subplot(3,2,6)
+%         hold all;
+%         plot(nv.T, nv.out('E_BK_k')*1000)
+%         title('Nernst potential BK')
+%         xlabel('Time [s]');ylabel('mV')
+%         legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
         figure(9)
         %suptitle('The Input Signal')
         subplot(3,2,1)
         hold all;
-        plot(nv.T, nv.out('J_TRPV_k'))
-        title('TRPV flux')
-        xlabel('Time [s]'); ylabel('[\muM m s-1]')
+        plot(nv.T,nv.out('E_TRPV_k'))
+        title('E_TRPV_k')
+        xlabel('Time [s]'); ylabel('[V]')
 
         subplot(3,2,2)
         hold all;
-        plot(nv.T, nv.out('J_BK_k'))
-        title(' BK flux')
-        xlabel('Time [s]'); ylabel('[\muM m s-1]')
+       plot(nv.T,nv.out('E_Na_k'))
+        title('E_Na_k')
+        xlabel('Time [s]'); ylabel('[V]')
 
         subplot(3,2,3)
         hold all;
-        plot(nv.T, nv.out('z_k'));
-        title('openprobability TRPV')
-        xlabel('Time [s]');
-        ylabel('[-]') 
+       plot(nv.T, nv.out('E_BK_k'))
+        title('E_BK_k')
+        xlabel('Time [s]'); ylabel('[V]')
         
         subplot(3,2,4)
         hold all;
-        plot(nv.T, nv.out('w_k'));
-        title('openprobability BK')
-        xlabel('Time [s]');
-        ylabel('[-]') 
+       plot(nv.T, nv.out('E_NBC_k'))
+        title('E_NBC_k')
+        xlabel('Time [s]'); ylabel('[V]')
 
         
         subplot(3,2,5)
         hold all;
-        plot(nv.T, nv.out('E_TRPV_k')*1000)
-        title('Nernst potential TRPV')
-        xlabel('Time [s]');ylabel('mV')
+     plot(nv.T, nv.out('E_Cl_k'))
+        title('E_Cl_k')
+        xlabel('Time [s]'); ylabel('[V]')
         subplot(3,2,6)
-        hold all;
-        plot(nv.T, nv.out('E_BK_k')*1000)
-        title('Nernst potential BK')
-        xlabel('Time [s]');ylabel('mV')
-        legend('NO GLU TRPV4 deactivated','NO GLU TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
-    
+       plot(nv.T, nv.out('E_K_k'))
+       hold all;
+        title('E_K_k')
+        xlabel('Time [s]'); ylabel('[V]')
+        legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
     end
 end

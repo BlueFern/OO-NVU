@@ -63,7 +63,7 @@ classdef WallMechanics < handle
 %         end
         function [pR] = inflate(self, t)
 %             t_scalar = t(end,:);
-            pR = 1+ 2*(0.5 .* tanh((t-150)./0.8)-0.5.* tanh((t-160) ./1.9)); %u(self.index.R, :);
+            pR = 1+ 5*(0.5 .* tanh((t-150)./0.8)-0.5.* tanh((t-151) ./1.9)); %u(self.index.R, :);
             
         end   
         function [R, h] = shared(self, ~,u)
