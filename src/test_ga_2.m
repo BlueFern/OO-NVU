@@ -442,7 +442,7 @@ for mu_1 = 1:length(parent_matrix(:,1))
        
        r_mu_1 = rand(1);
        
-       if r_mu_1 <= p_mu_ini %(mu_var)                                      %Decision if Mutation occurs or not
+       if r_mu_1 <= p_mu(mu_var)                                      %Decision if Mutation occurs or not
            
            mu_factor_current    = parent_matrix(mu_1,mu_2 + 4);                %factor which is currently observed
            mu_low_b             = mu_factor_current - p_mu(mu_var);                     %new boundaries are around factor
