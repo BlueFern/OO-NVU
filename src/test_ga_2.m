@@ -2,7 +2,7 @@
 %Initiation of a random population
 
 clear; clc; close all
-%% Options 
+%% Load NVU model
 % First the options need to be set for the ODE solver (currently |ode15s|) 
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
@@ -94,17 +94,7 @@ n_el        = 1;
 el_parII    = 1;
 nr_par      = 16; % # of different parameters
 mu_var      = 1;
-%p_co = 0; %Probability of cross over
-% co = size of parent-matrix
 
-%Mutation Initial values
-
-%p_mu        = 0.2;             %defines how often mutation occur
-%mu_low_b    = 0.8;         %defines the range of mutation
-%mu_up_b     = 1.2;
-%p_el        = 0.005; % Probability that one organism is allowed to skip mutation and live on
-
- 
  
 %% First Generation -> Initiation of a random population
 
@@ -180,7 +170,7 @@ sel_prob = Max_matrix(i,1)./sel_sum_c_k;
 sel_probvec(i,:)= sel_prob;
 end
 
-% cummultative porbability
+% cummultative probability
 sel_cum_probvec = cumsum(sel_probvec);
 
 sel_max_matrix = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, Max_matrix]; %numberd max_matrix with probabilities
@@ -241,7 +231,7 @@ for pp = 1:n/2    %divided by 2, because there are 2 parents
 end 
 
 
-%%Mutation of Parent Matrix
+%% Mutation of Parent Matrix
 
 for mu_1 = 1:size(parent_matrix(:,1))
     
@@ -434,29 +424,33 @@ for mu_1 = 1:length(parent_matrix(:,1))
         mu_mean     = mean(parent_matrix(:,4));    
         mu_current  = parent_matrix(mu_1,4);
        
-       if mu_current >= mu_mean                                                     %makes mutation rate adaptive to quality of fitness of organism
-            p_mu(mu_var) = 0.5 * ((mu_max - mu_current) / (mu_max - mu_mean));      %If organism is fitter than average -> mutation should decrease
+       if mu_current >= mu_mean                                                     %makes mutation rate adaptive to quality of organism's fitness
+            p_mu(mu_var) = 0.15 * ((mu_max - mu_current) / (mu_max - mu_mean));      %If organism is fitter than average -> mutation should decrease
        else 
-            p_mu(mu_var) = 0.5;                                                     %if not mutation rate stays the same
+            p_mu(mu_var) = 0.15;                                                     %if not mutation rate stays the same
        end
        
+%        if mu_current == mu_max                                                      %Otherwise the best organism would not be mutated
+%            p_mu(mu_var) = 0.02;
+%        end
+        
        r_mu_1 = rand(1);
        
        if r_mu_1 <= p_mu(mu_var)                                      %Decision if Mutation occurs or not
            
-           mu_factor_current    = parent_matrix(mu_1,mu_2 + 4);                %factor which is currently observed
-           mu_low_b             = mu_factor_current - p_mu(mu_var);                     %new boundaries are around factor
-           mu_up_b              = mu_factor_current + p_mu(mu_var); 
+%            mu_factor_current    = parent_matrix(mu_1,mu_2 + 4);                %factor which is currently observed
+%            mu_low_b             = mu_factor_current - p_mu(mu_var);                     %new boundaries are around factor
+%            mu_up_b              = mu_factor_current + p_mu(mu_var); 
+%            
+%            if mu_low_b <= mu_low_b_ini                                      %initial boundaries are still important
+%                mu_low_b = 0.8;
+%            end
+%            
+%            if mu_up_b >= mu_up_b_ini 
+%                mu_up_b = 1.2;
+%            end
            
-           if mu_low_b <= mu_low_b_ini                                      %initial boundaries are still important
-               mu_low_b = 0.8;
-           end
-           
-           if mu_up_b >= mu_up_b_ini 
-               mu_up_b = 1.2;
-           end
-           
-                r_mu_2 = mu_low_b + (mu_up_b - mu_low_b)*rand(1,1);                       %randomised mutation factor with boundaries
+                r_mu_2 = mu_low_b_ini + (mu_up_b_ini - mu_low_b_ini)*rand(1,1);                       %randomised mutation factor with boundaries
                 parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                  %Mutation changes parameter at current position
        end
        
@@ -521,6 +515,8 @@ Results_end_mean(ga+1) = mean (parent_matrix(:,4));        %essential for plotti
 
 end
 
+%% Getting Ca2+ 
+
 g = 1;
 
 for g=1:length(parent_matrix(:,1))
@@ -552,8 +548,11 @@ parent_matrix(g,4)          =  results_c_k_gen(g,z);
 parent_matrix(g,nr_par+5)   =  results_R_gen(g,z);
 end
 
+%% Plotting results
+
 Results_end_max(ga+2)  = max(results_c_k_gen(:,z)');        %essential for plotting results
 Results_end_mean(ga+2) = mean(results_c_k_gen(:,z)');       %This is located afeter each generation to save the CA result
+
 
 figure(1)
 v_initial_c_k = linspace(initial_c_k,initial_c_k,nr_generation+2);
