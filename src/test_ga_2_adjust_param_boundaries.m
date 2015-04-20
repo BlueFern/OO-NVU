@@ -18,17 +18,37 @@ initial_c_k = ini_c_k_all(740,:);
       
 T = linspace (0,500,1000); 
  
-%Position in the beginning
+%% Determine the initial condition - User Input
 
-prompt = {  'Enter size of population (if divided by number of organism, result must be out of Z:'
-            'Enter number of organism which are allowed to reproduce:'
-            'Enter the initial probability of cross-over:'
-            'Enter the threshold for elitism:'
-            'Enter the number of generations'
-            'Enter the initial probability of mutation:'
-            'Enter the threshold for elitism:'
-            'Enter the number of generations'
-            'Enter lower boundary of randomisation of k_deg:'
+prompt_1 = {  'Enter size of population (if divided by number of organism, result must be out of Z:',
+            'Enter number of organism which are allowed to reproduce:',
+            'Enter the initial probability of cross-over:',
+            'Enter the threshold for elitism:',
+            'Enter the number of generations',
+            'Enter the initial probability of mutation:',
+            'Do you want to specify the parameter boundaries: [y] [n]'
+};
+        
+dlg_title_1 = 'Ca^{2+} optimization in the astrocyte';
+
+num_lines_1 = 1;
+defaultanswer_1 = {'32','16','0.8','0.005','20','0.1','y'};
+
+x_1 = inputdlg(prompt_1,dlg_title_1,num_lines_1,defaultanswer_1,'on');
+
+num_pop           = str2num(x_1{1});
+nr_parents        = str2num(x_1{2});
+p_co              = str2num(x_1{3});
+p_el              = str2num(x_1{4}); 
+nr_generation     = str2num(x_1{5}); 
+p_mu_ini          = str2num(x_1{6}); 
+answer            = x_1{7};
+yes               = 'y'
+
+check = strcmp(answer,yes);
+
+if check == 1
+prompt_2 = {'Enter lower boundary of randomisation of k_deg:'
             'Enter upper boundary of randomisation of k_deg:'
            
             'Enter lower boundary of randomisation of k_on:'
@@ -51,8 +71,45 @@ prompt = {  'Enter size of population (if divided by number of organism, result 
             
             'Enter lower boundary of randomisation of K_ex:'
             'Enter upper boundary of randomisation of K_ex:'
-            
-            'Enter lower boundary of randomisation of B_ex:'
+                        
+};
+
+dlg_title_2 = 'Ca^{2+} optimization in the astrocyte';
+
+num_lines_2 = 1;
+defaultanswer_2 = { '0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2',...
+                    '0.8','1.2','0.8','1.2','0.8','1.2'};
+
+x = inputdlg(prompt_2,dlg_title_2,num_lines_2,defaultanswer_2,'on');
+
+
+
+mu_low_b_k_deg      = str2num(x{1});
+mu_up_b_k_deg       = str2num(x{2});
+
+mu_low_b_k_on      = str2num(x{3});
+mu_up_b_k_on       = str2num(x{4});
+
+mu_low_b_k_inh      = str2num(x{5});
+mu_up_b_k_inh       = str2num(x{6});
+
+mu_low_b_r_h      = str2num(x{7});
+mu_up_b_r_h       = str2num(x{8});
+
+mu_low_b_K_G      = str2num(x{9});
+mu_up_b_K_G       = str2num(x{10});
+
+mu_low_b_K_I      = str2num(x{11});
+mu_up_b_K_I       = str2num(x{12});
+
+mu_low_b_BK_end      = str2num(x{13});
+mu_up_b_BK_end       = str2num(x{14});
+
+mu_low_b_K_ex      = str2num(x{15});
+mu_up_b_K_ex       = str2num(x{16});
+
+
+prompt_3 = {'Enter lower boundary of randomisation of B_ex:'
             'Enter upper boundary of randomisation of B_ex:'
             
             'Enter lower boundary of randomisation of J_max:'
@@ -78,71 +135,89 @@ prompt = {  'Enter size of population (if divided by number of organism, result 
             
 
 };
-        
-dlg_title = 'Ca^{2+} optimization in the astrocyte';
 
-num_lines = 1;
+dlg_title_3 = 'Ca^{2+} optimization in the astrocyte';
 
-defaultanswer = {'32','16','0.8','0.005','20','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2',...
-                 '0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8',...
-                 '1.2','0.8','1.2'};
+num_lines_3 = 1;
+defaultanswer_3 = { '0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2',...
+                    '0.8','1.2','0.8','1.2','0.8','1.2'};
 
-x = inputdlg(prompt,dlg_title,num_lines,defaultanswer);
+x_3 = inputdlg(prompt_3,dlg_title_3,num_lines_3,defaultanswer_3,'on');
 
-num_pop           = str2num(x{1});
-nr_parents        = str2num(x{2});
-p_co              = str2num(x{3});
-p_el              = str2num(x{4}); 
-nr_generation     = str2num(x{5}); 
-p_mu_ini          = str2num(x{6}); 
+mu_low_b_B_ex      = str2num(x_3{1});
+mu_up_b_B_ex       = str2num(x_3{2});
 
-mu_low_b_k_deg      = str2num(x{7});
-mu_up_b_k_deg       = str2num(x{8});
+mu_low_b_J_max      = str2num(x_3{3});
+mu_up_b_J_max       = str2num(x_3{4});
 
-mu_low_b_k_on      = str2num(x{9});
-mu_up_b_k_on       = str2num(x{10});
+mu_low_b_K_act      = str2num(x_3{5});
+mu_up_b_K_act       = str2num(x_3{6});
 
-mu_low_b_k_inh      = str2num(x{11});
-mu_up_b_k_inh       = str2num(x{12});
+mu_low_b_P_L      = str2num(x_3{7});
+mu_up_b_P_L       = str2num(x_3{8});
 
-mu_low_b_r_h      = str2num(x{13});
-mu_up_b_r_h       = str2num(x{14});
+mu_low_b_V_max      = str2num(x_3{9});
+mu_up_b_V_max       = str2num(x_3{10});
 
-mu_low_b_K_G      = str2num(x{15});
-mu_up_b_K_G       = str2num(x{16});
+mu_low_b_k_pump      = str2num(x_3{11});
+mu_up_b_k_pump       = str2num(x_3{12});
 
-mu_low_b_K_I      = str2num(x{17});
-mu_up_b_K_I       = str2num(x{18});
+mu_low_b_delta      = str2num(x_3{13});
+mu_up_b_delta       = str2num(x_3{14});
 
-mu_low_b_BK_end      = str2num(x{19});
-mu_up_b_BK_end       = str2num(x{20});
+mu_low_b_VR_ER_cyt      = str2num(x_3{15});
+mu_up_b_VR_ER_cyt       = str2num(x_3{16});
 
-mu_low_b_K_ex      = str2num(x{21});
-mu_up_b_K_ex       = str2num(x{22});
+else
+  
+mu_low_b_k_deg      = 0.8;
+mu_up_b_k_deg       = 1.2;
 
-mu_low_b_B_ex      = str2num(x{23});
-mu_up_b_B_ex       = str2num(x{24});
+mu_low_b_k_on      = 0.8;
+mu_up_b_k_on       = 1.2;
 
-mu_low_b_J_max      = str2num(x{25});
-mu_up_b_J_max       = str2num(x{26});
+mu_low_b_k_inh      = 0.8;
+mu_up_b_k_inh       = 1.2;
 
-mu_low_b_K_act      = str2num(x{27});
-mu_up_b_K_act       = str2num(x{28});
+mu_low_b_r_h      = 0.8;
+mu_up_b_r_h       = 1.2;
 
-mu_low_b_P_L      = str2num(x{29});
-mu_up_b_P_L       = str2num(x{30});
+mu_low_b_K_G      = 0.8;
+mu_up_b_K_G       = 1.2;
 
-mu_low_b_V_max      = str2num(x{31});
-mu_up_b_V_max       = str2num(x{32});
+mu_low_b_K_I      = 0.8;
+mu_up_b_K_I       = 1.2;
 
-mu_low_b_k_pump      = str2num(x{33});
-mu_up_b_k_pump       = str2num(x{34});
+mu_low_b_BK_end      = 0.8;
+mu_up_b_BK_end       = 1.2;
 
-mu_low_b_delta      = str2num(x{35});
-mu_up_b_delta       = str2num(x{37});
+mu_low_b_K_ex      = 0.8;
+mu_up_b_K_ex       = 1.2;
 
-mu_low_b_VR_ER_cyt      = str2num(x{38});
-mu_up_b_VR_ER_cyt       = str2num(x{39});
+mu_low_b_B_ex      = 0.8;
+mu_up_b_B_ex       = 1.2;
+
+mu_low_b_J_max      = 0.8;
+mu_up_b_J_max       = 1.2;
+
+mu_low_b_K_act      = 0.8;
+mu_up_b_K_act       = 1.2;
+
+mu_low_b_P_L      = 0.8;
+mu_up_b_P_L       = 1.2;
+
+mu_low_b_V_max      = 0.8;
+mu_up_b_V_max       = 1.2;
+
+mu_low_b_k_pump      = 0.8;
+mu_up_b_k_pump       = 1.2;
+
+mu_low_b_delta      = 0.8;
+mu_up_b_delta       = 1.2;
+
+mu_low_b_VR_ER_cyt      = 0.8;
+mu_up_b_VR_ER_cyt       = 1.2;
+end
 
 %% initial values
 
@@ -333,7 +408,8 @@ for mu_1 = 1:size(parent_matrix(:,1))
        r_mu_1 = rand(1);
        
        if r_mu_1 <= p_mu_ini
-           if mu_2 == 1;
+
+           if mu_2 == 1;                                                                    %defines parameter specific boundaries
                 r_mu_2 = mu_low_b_k_deg + (mu_up_b_k_deg - mu_low_b_k_deg)*rand(1,1);      
                 parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
            elseif mu_2 == 2;
@@ -478,7 +554,8 @@ nv.simulate()
 
 results_c_k_gen(g,:)= nv.out('c_k');
 parent_matrix(g,4)  = results_c_k_gen(g,z);
-
+Results_end_max(ga+1)  = max  (parent_matrix(:,4));        %essential for plotting results
+Results_end_mean(ga+1) = mean (parent_matrix(:,4));        %essential for plotting results
 end
 
  
@@ -590,7 +667,56 @@ for mu_1 = 1:length(parent_matrix(:,1))
 %            if mu_up_b >= mu_up_b_ini 
 %                mu_up_b = 1.2;
 %            end
-           
+
+       if mu_2 == 1;                                                                        %defines parameter specific boundaries
+                r_mu_2 = mu_low_b_k_deg + (mu_up_b_k_deg - mu_low_b_k_deg)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 2;
+                r_mu_2 = mu_low_b_k_on + (mu_up_b_k_on - mu_low_b_k_on)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 3;
+                r_mu_2 = mu_low_b_k_inh + (mu_up_b_k_inh - mu_low_b_k_inh)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 4;
+                r_mu_2 = mu_low_b_r_h + (mu_up_b_r_h - mu_low_b_r_h)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 5
+                r_mu_2 = mu_low_b_K_G + (mu_up_b_K_G - mu_low_b_K_G)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 6;
+                r_mu_2 = mu_low_b_K_I + (mu_up_b_K_I - mu_low_b_K_I)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 7;
+                r_mu_2 = mu_low_b_BK_end + (mu_up_b_BK_end - mu_low_b_BK_end)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 8;
+                r_mu_2 = mu_low_b_K_ex + (mu_up_b_K_ex - mu_low_b_K_ex)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 9;
+                r_mu_2 = mu_low_b_B_ex + (mu_up_b_B_ex - mu_low_b_B_ex)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 10;
+               r_mu_2 = mu_low_b_J_max + (mu_up_b_J_max - mu_low_b_J_max)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 11;
+               r_mu_2 = mu_low_b_K_act + (mu_up_b_K_act - mu_low_b_K_act)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 12;
+               r_mu_2 = mu_low_b_P_L + (mu_up_b_P_L - mu_low_b_P_L)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 13;
+               r_mu_2 = mu_low_b_V_max + (mu_up_b_V_max - mu_low_b_V_max)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 14;
+               r_mu_2 = mu_low_b_k_pump + (mu_up_b_k_pump - mu_low_b_k_pump)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 15;
+               r_mu_2 = mu_low_b_delta + (mu_up_b_delta - mu_low_b_delta)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 16;
+               r_mu_2 = mu_low_b_VR_ER_cyt + (mu_up_b_VR_ER_cyt - mu_low_b_VR_ER_cyt)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                             
+           end    
 
        end
        
@@ -601,7 +727,8 @@ for mu_1 = 1:length(parent_matrix(:,1))
    mu_2 = 1;
    
 end
-p_mu_total(ga) = mean(p_mu);                                                %in order to plot change of mutation over all generations
+p_mu_total(1) = p_mu_ini;
+p_mu_total(ga+1) = mean(p_mu);                                                %in order to plot change of mutation over all generations
  
 %% Cross-over
 co_s = length(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
@@ -650,8 +777,7 @@ el_u=0;
      end
 end
 
-Results_end_max(ga+1)  = max  (parent_matrix(:,4));        %essential for plotting results
-Results_end_mean(ga+1) = mean (parent_matrix(:,4));        %essential for plotting results
+
 
 end
 
@@ -690,13 +816,13 @@ end
 
 %% Plotting results
 
-Results_end_max(ga+2)  = max(results_c_k_gen(:,z)');        %essential for plotting results
-Results_end_mean(ga+2) = mean(results_c_k_gen(:,z)');       %This is located afeter each generation to save the CA result
+Results_end_max(ga+1)  = max(results_c_k_gen(:,z)');        %essential for plotting results
+Results_end_mean(ga+1) = mean(results_c_k_gen(:,z)');       %This is located afeter each generation to save the CA result
 
 
 figure(1)
-v_initial_c_k = linspace(initial_c_k,initial_c_k,nr_generation+2);
-plot(linspace(1,nr_generation+2,nr_generation+2)', Results_end_max)
+v_initial_c_k = linspace(initial_c_k,initial_c_k,nr_generation+1);
+plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_max)
     legend('Best [Ca2+] of each Generation','Initial [Ca2+]')
     title('Best CA^2^+ concentration in AC of every generation'); 
     xlabel('# of generation'); 
@@ -704,7 +830,7 @@ plot(linspace(1,nr_generation+2,nr_generation+2)', Results_end_max)
     hold on; 
     grid on;
 
-    plot(linspace(1,nr_generation+2,nr_generation+2)',v_initial_c_k);
+    plot(linspace(1,nr_generation+1,nr_generation+1)',v_initial_c_k);
     legend('Best [Ca2+] of each Generation','Initial [Ca2+]');
     title('Best CA^2^+ concentration in AC of every generation');
     xlabel('# of generation'); 
@@ -713,7 +839,7 @@ plot(linspace(1,nr_generation+2,nr_generation+2)', Results_end_max)
     grid minor;
     
 figure(2)
-plot(linspace(1,nr_generation+2,nr_generation+2)', Results_end_mean)
+plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_mean)
     legend('Average [Ca2+] of each Generation','Initial [Ca2+]')
     title('Average CA^2^+ concentration in AC of every generation'); 
     xlabel('# of generation'); 
@@ -721,7 +847,7 @@ plot(linspace(1,nr_generation+2,nr_generation+2)', Results_end_mean)
     hold on; 
     grid on;
 
-    plot(linspace(1,nr_generation+2,nr_generation+2)',v_initial_c_k);
+    plot(linspace(1,nr_generation+1,nr_generation+1)',v_initial_c_k);
     legend('Average [Ca2+] of each Generation','Initial [Ca2+]');
     title('Average CA^2^+ concentration in AC of every generation');
     xlabel('# of generation'); 
@@ -730,7 +856,7 @@ plot(linspace(1,nr_generation+2,nr_generation+2)', Results_end_mean)
     grid minor;
 
 figure(3)
-plot(linspace(1,ga,ga)',p_mu_total');
+plot(linspace(1,ga+1,ga+1)',p_mu_total');
     legend('Change of average mutation rate');
     title('Change of average mutation rate');
     xlabel('# of generation'); 
