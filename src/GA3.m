@@ -2,7 +2,7 @@
 %Initiation of a random population
 
 clear; clc; close all
-%% Load NVU model
+%% Options 
 % First the options need to be set for the ODE solver (currently |ode15s|) 
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
@@ -23,16 +23,22 @@ T = linspace (0,500,1000);
 prompt_1 = {  'Enter size of population (if divided by number of organism, result must be out of Z:',
             'Enter number of organism which are allowed to reproduce:',
             'Enter the initial probability of cross-over:',
-            'Enter the threshold for elitism:',
-            'Enter the number of generations',
+            'Enter the threshold for elitism:'
             'Enter the initial probability of mutation:',
             'Do you want to specify the parameter boundaries: [y] [n]'
-};
+            'Enter the minimal generation number:'
+            'Enter the maximal generation number:'
+            'Enter the boundaries for convergenz'
+            'Enter the convergenz criteria number:'
+            'Enter the maximal CA^(2+) concentration number:'};
+
+ 
         
 dlg_title_1 = 'Ca^{2+} optimization in the astrocyte';
 
 num_lines_1 = 1;
-defaultanswer_1 = {'32','16','0.8','0.005','20','0.1','y'};
+
+defaultanswer_1 = {'32','16','0.8','0.005','0.1','y','5','15','0.02','3','0.55'};
 
 x_1 = inputdlg(prompt_1,dlg_title_1,num_lines_1,defaultanswer_1,'on');
 
@@ -40,11 +46,16 @@ num_pop           = str2double(x_1{1});
 nr_parents        = str2double(x_1{2});
 p_co              = str2double(x_1{3});
 p_el              = str2double(x_1{4}); 
-nr_generation     = str2double(x_1{5}); 
-p_mu_ini          = str2double(x_1{6}); 
-answer            = x_1{7};
+p_mu_ini          = str2double(x_1{5}); 
+answer            = x_1{6};
 yes               = 'y'
+min_nr_generation = str2double(x_1{7}); 
+max_nr_generation = str2double(x_1{8});
+eps               = str2double(x_1{9});
+nr_convergenz     = str2double(x_1{10});
+conc_nr           = str2double(x_1{11});
 
+ 
 check = strcmp(answer,yes);
 
 if check == 1
@@ -82,8 +93,8 @@ defaultanswer_2 = { '0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2',
 
 x = inputdlg(prompt_2,dlg_title_2,num_lines_2,defaultanswer_2,'on');
 
-
-
+ 
+ 
 mu_low_b_k_deg      = str2double(x{1});
 mu_up_b_k_deg       = str2double(x{2});
 
@@ -108,7 +119,7 @@ mu_up_b_BK_end       = str2double(x{14});
 mu_low_b_K_ex      = str2double(x{15});
 mu_up_b_K_ex       = str2double(x{16});
 
-
+ 
 prompt_3 = {'Enter lower boundary of randomisation of B_ex:'
             'Enter upper boundary of randomisation of B_ex:'
             
@@ -133,7 +144,7 @@ prompt_3 = {'Enter lower boundary of randomisation of B_ex:'
             'Enter lower boundary of randomisation of VR_ER_cyt:'
             'Enter upper boundary of randomisation of VR_ER_cyt:'
             
-
+ 
 };
 
 dlg_title_3 = 'Ca^{2+} optimization in the astrocyte';
@@ -219,6 +230,7 @@ mu_low_b_VR_ER_cyt      = 0.8;
 mu_up_b_VR_ER_cyt       = 1.2;
 end
 
+ 
 %% initial values
 
  
@@ -263,7 +275,20 @@ n_el        = 1;
 el_parII    = 1;
 nr_par      = 16; % # of different parameters
 mu_var      = 1;
+count_max   = 1;
+conv_crit   = 1;
+ga          = 1; % can count max be used???
+%p_co = 0; %Probability of cross over
+% co = size of parent-matrix
 
+%Mutation Initial values
+
+%p_mu        = 0.2;             %defines how often mutation occur
+%mu_low_b    = 0.8;         %defines the range of mutation
+%mu_up_b     = 1.2;
+%p_el        = 0.005; % Probability that one organism is allowed to skip mutation and live on
+
+ 
  
 %% First Generation -> Initiation of a random population
 
@@ -290,6 +315,7 @@ randVec14 = vertcat(1,mu_low_b_k_pump + (mu_up_b_k_pump - mu_low_b_k_pump).*rand
 randVec15 = vertcat(1,mu_low_b_delta + (mu_up_b_delta - mu_low_b_delta).*rand(j-1, 1));
 randVec16 = vertcat(1,mu_low_b_VR_ER_cyt + (mu_up_b_VR_ER_cyt - mu_low_b_VR_ER_cyt).*rand(j-1, 1));
 
+ 
  
 nv.astrocyte.params.k_deg = randVec1(j,1)*x1;
 nv.astrocyte.params.k_on = randVec2(j,1)*x2;
@@ -320,11 +346,11 @@ end
 
 Big_randMat = [randVec1, randVec2, randVec3, randVec4,...
 randVec5,randVec6, randVec7, randVec8, randVec9, randVec10,randVec11, randVec12, randVec13, randVec14, randVec15,randVec16];
- 
+
 Max_matrix = [time_results_c_k(z,2:j+1)', Big_randMat];   
  
-Results_end_max(1)  = max(time_results_c_k(z,2:j+1)');        %essential for plotting results
-Results_end_mean(1) = mean(time_results_c_k(z,2:j+1)');       %essential for plotting results 
+Results_end_max(ga)  = max(time_results_c_k(z,2:j+1)');        %essential for plotting results
+Results_end_mean(ga) = mean(time_results_c_k(z,2:j+1)');       %essential for plotting results 
  
 %% Selection (roulette wheel method)-> sel_...
 
@@ -339,7 +365,7 @@ sel_prob = Max_matrix(i,1)./sel_sum_c_k;
 sel_probvec(i,:)= sel_prob;
 end
 
-% cummultative probability
+% cummultative porbability
 sel_cum_probvec = cumsum(sel_probvec);
 
 sel_max_matrix = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, Max_matrix]; %numberd max_matrix with probabilities
@@ -398,9 +424,9 @@ for pp = 1:n/2    %divided by 2, because there are 2 parents
     end 
    var_p = var_p + 2;
 end 
-
-
-%% Mutation of Parent Matrix
+ 
+ 
+%%Mutation of Parent Matrix
 
 for mu_1 = 1:size(parent_matrix(:,1))
     
@@ -467,6 +493,7 @@ for mu_1 = 1:size(parent_matrix(:,1))
    
 end
 
+p_mu_total(ga) = mean(p_mu_ini);
 %% Cross-over
 
 co_s = size(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
@@ -487,7 +514,7 @@ end
 co_var = co_var + 2;
 end                                                              %output is a matrix which is 2*r_co bigger than matrix_input 
  
-
+ 
 %% Elitism 
 el_max_c_k(1)  = max(parent_matrix(:,4)) * (1-p_el); %Who is elite? ------- position after Parent choosing
 for var_el = 1:size(sel_output(:,1))
@@ -503,36 +530,8 @@ el_u=0;
      end
 end                                                      %output is a matrix which is 2*r_co bigger than matrix_input 
  
- 
- %% Third and following generations                                                     
-    
-%% Selection (roulette wheel method)-> sel_...
+for g=1:length(parent_matrix(:,1)) % simulate for the second generation
 
-%probability of each parameterset to be choosen for the offspring
-%population -> probability for parametersets with a high
-%calciumconcentration is higher
-for ga = 1 : nr_generation
-    pp_1        = 1;           %Reset all running variables
-    pp          = 1;
-    rc          = 1;           % Running variable in the parenting choosing
-    mu_1        = 1;
-    mu_2        = 1;
-    n_el        = 1;
-    el_parII    = 1;
-    i           = 1;
-    var_p       = 1;
-    n           = 1;
-    co_var      = 1;
-    g           = 1;
-    p           = 1;
-    var_el      = 1;
-    sp          = 1;
-    el_i        = 1;
-    
-for g=1:length(parent_matrix(:,1))
-
-% nv.simulate()
-    
 nv.astrocyte.params.k_deg       = x1*parent_matrix(g,5);
 nv.astrocyte.params.k_on        = x2*parent_matrix(g,6);
 nv.astrocyte.params.K_inh       = x3*parent_matrix(g,7);
@@ -552,13 +551,47 @@ nv.astrocyte.params.VR_ER_cyt   = x16*parent_matrix(g,20);
 
 nv.simulate()
 
-results_c_k_gen(g,:)= nv.out('c_k');
-parent_matrix(g,4)  = results_c_k_gen(g,z);
-Results_end_max(ga+1)  = max  (parent_matrix(:,4));        %essential for plotting results
-Results_end_mean(ga+1) = mean (parent_matrix(:,4));        %essential for plotting results
+results_c_k_gen(g,:)        =  nv.out('c_k');
+results_R_gen(g,:)          =  nv.out('R');
+parent_matrix(g,4)          =  results_c_k_gen(g,z);
 end
 
+Results_end_max(ga+1)  = max(results_c_k_gen(:,z)');        %essential for plotting results
+Results_end_mean(ga+1) = mean(results_c_k_gen(:,z)');       %This is located afeter each generation to save the CA result
+
  
+if count_max >= min_nr_generation && Results_end_mean(ga+1)<= Results_end_mean(ga)*(1+eps) && Results_end_mean(ga+1) >= Results_end_mean(ga)*(1-eps)
+       conv_crit = conv_crit+1
+   else 
+       conv_crit = 0
+end
+
+ %% Third and following generations                                                     
+    
+%% Selection (roulette wheel method)-> sel_...
+
+%probability of each parameterset to be choosen for the offspring
+%population -> probability for parametersets with a high
+%calciumconcentration is higher
+while count_max <= max_nr_generation-2 && Results_end_mean(ga+1)< conc_nr && conv_crit < nr_convergenz
+    
+    pp_1        = 1;           %Reset all running variables
+    pp          = 1;
+    rc          = 1;           % Running variable in the parenting choosing
+    mu_1        = 1;
+    mu_2        = 1;
+    n_el        = 1;
+    el_parII    = 1;
+    i           = 1;
+    var_p       = 1;
+    n           = 1;
+    co_var      = 1;
+    g           = 1;
+    p           = 1;
+    var_el      = 1;
+    sp          = 1;
+    el_i        = 1;
+    
  
 %% Selection (roulette wheel method)-> sel_...
 
@@ -717,7 +750,7 @@ for mu_1 = 1:length(parent_matrix(:,1))
                r_mu_2 = mu_low_b_VR_ER_cyt + (mu_up_b_VR_ER_cyt - mu_low_b_VR_ER_cyt)*rand(1,1);      
                 parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                             
            end    
-
+ 
        end
        
        mu_2 = mu_2 + 1;
@@ -727,9 +760,9 @@ for mu_1 = 1:length(parent_matrix(:,1))
    mu_2 = 1;
    
 end
-p_mu_total(1) = p_mu_ini;
+
 p_mu_total(ga+1) = mean(p_mu);                                                %in order to plot change of mutation over all generations
- 
+
 %% Cross-over
 co_s = length(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
 
@@ -760,13 +793,13 @@ parent_matrix(co_var+1,cr_var1:cr_var2) = CO_1;
 end 
 co_var = co_var + 2;
 end                                                              %output is a matrix which is 2*r_co bigger than matrix_input 
-
+ 
 %% Elitism 
 clear el_p;
 el_max_c_k(ga+1)  = max(parent_matrix(:,4)) * (1-p_el); 
 for var_el = 1:size(sel_output(:,1))
 el_u=0;
-     if sel_output(var_el,4) >= el_max_c_k(ga+1)
+     if sel_output(var_el,4) >= el_max_c_k(1,ga+1)
          el_p(var_el,:) = sel_output(var_el,:);
          for el_i = 1:size(parent_matrix(:,1));
              if el_p(var_el,1) == parent_matrix(el_i,1) && el_u== 0
@@ -777,17 +810,9 @@ el_u=0;
      end
 end
 
-
-
-end
-
-%% Getting Ca2+ 
-
-g = 1;
-
 for g=1:length(parent_matrix(:,1))
 
- 
+% nv.simulate()
     
 nv.astrocyte.params.k_deg       = x1*parent_matrix(g,5);
 nv.astrocyte.params.k_on        = x2*parent_matrix(g,6);
@@ -808,21 +833,32 @@ nv.astrocyte.params.VR_ER_cyt   = x16*parent_matrix(g,20);
 
 nv.simulate()
 
-results_c_k_gen(g,:)        =  nv.out('c_k');
-results_R_gen(g,:)          =  nv.out('R');
-parent_matrix(g,4)          =  results_c_k_gen(g,z);
-parent_matrix(g,nr_par+5)   =  results_R_gen(g,z);
+results_c_k_gen(g,:)= nv.out('c_k');
+parent_matrix(g,4)  = results_c_k_gen(g,z);
+
+Results_end_max(ga+2)  = max  (parent_matrix(:,4));        %essential for plotting results
+Results_end_mean(ga+2) = mean (parent_matrix(:,4));        %essential for plotting results
+
 end
 
-%% Plotting results
+ 
+   if count_max >= min_nr_generation && Results_end_mean(ga+2)<= Results_end_mean(ga+1)*(1+eps) && Results_end_mean(ga+2) >= Results_end_mean(ga+1)*(1-eps)
+       conv_crit = conv_crit+1
+   else 
+       conv_crit = 0
+   end
 
-Results_end_max(ga+1)  = max(results_c_k_gen(:,z)');        %essential for plotting results
-Results_end_mean(ga+1) = mean(results_c_k_gen(:,z)');       %This is located afeter each generation to save the CA result
+ 
+ga = ga + 1;
+count_max = count_max+1;
 
+end
 
+ 
+ 
 figure(1)
-v_initial_c_k = linspace(initial_c_k,initial_c_k,nr_generation+1);
-plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_max)
+v_initial_c_k = linspace(initial_c_k,initial_c_k,count_max+1);
+plot(linspace(1,count_max+1,count_max+1)', Results_end_max)
     legend('Best [Ca2+] of each Generation','Initial [Ca2+]')
     title('Best CA^2^+ concentration in AC of every generation'); 
     xlabel('# of generation'); 
@@ -830,7 +866,7 @@ plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_max)
     hold on; 
     grid on;
 
-    plot(linspace(1,nr_generation+1,nr_generation+1)',v_initial_c_k);
+    plot(linspace(1,count_max+1,count_max+1)',v_initial_c_k);
     legend('Best [Ca2+] of each Generation','Initial [Ca2+]');
     title('Best CA^2^+ concentration in AC of every generation');
     xlabel('# of generation'); 
@@ -839,7 +875,7 @@ plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_max)
     grid minor;
     
 figure(2)
-plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_mean)
+plot(linspace(1,count_max+1,count_max+1)', Results_end_mean)
     legend('Average [Ca2+] of each Generation','Initial [Ca2+]')
     title('Average CA^2^+ concentration in AC of every generation'); 
     xlabel('# of generation'); 
@@ -847,7 +883,7 @@ plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_mean)
     hold on; 
     grid on;
 
-    plot(linspace(1,nr_generation+1,nr_generation+1)',v_initial_c_k);
+    plot(linspace(1,count_max+1,count_max+1)',v_initial_c_k);
     legend('Average [Ca2+] of each Generation','Initial [Ca2+]');
     title('Average CA^2^+ concentration in AC of every generation');
     xlabel('# of generation'); 
@@ -856,10 +892,11 @@ plot(linspace(1,nr_generation+1,nr_generation+1)', Results_end_mean)
     grid minor;
 
 figure(3)
-plot(linspace(1,ga+1,ga+1)',p_mu_total');
+plot(linspace(1,ga,ga)',p_mu_total');
     legend('Change of average mutation rate');
     title('Change of average mutation rate');
     xlabel('# of generation'); 
     ylabel('probability of mutation'); 
     grid on;
     grid minor;
+
