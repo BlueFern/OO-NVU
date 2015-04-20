@@ -20,36 +20,130 @@ T = linspace (0,500,1000);
  
 %Position in the beginning
 
-prompt = {  'Enter size of population (if divided by number of organism, result must be out of Z:',
-            'Enter number of organism which are allowed to reproduce:',
-            'Enter lower boundary of randomisation of the initial population:',
-            'Enter upper boundary of randomisation of the initial population:',
-            'Enter the initial probability of mutation:',
-            'Enter lower boundary of mutation:',
-            'Enter upper boundary of mutation:',
-            'Enter the initial probability of cross-over:',
+prompt = {  'Enter size of population (if divided by number of organism, result must be out of Z:'
+            'Enter number of organism which are allowed to reproduce:'
+            'Enter the initial probability of cross-over:'
             'Enter the threshold for elitism:'
-            'Enter the number of generations'};
+            'Enter the number of generations'
+            'Enter the initial probability of mutation:'
+            'Enter the threshold for elitism:'
+            'Enter the number of generations'
+            'Enter lower boundary of randomisation of k_deg:'
+            'Enter upper boundary of randomisation of k_deg:'
+           
+            'Enter lower boundary of randomisation of k_on:'
+            'Enter upper boundary of randomisation of k_on:'
+            
+            'Enter lower boundary of randomisation of k_inh:'
+            'Enter upper boundary of randomisation of k_inh:'
+            
+            'Enter lower boundary of randomisation of r_h:'
+            'Enter upper boundary of randomisation of r_h:'
+            
+            'Enter lower boundary of randomisation of the K_G:'
+            'Enter upper boundary of randomisation of the K_G:'
+            
+            'Enter lower boundary of randomisation of the K_I:'
+            'Enter upper boundary of randomisation of the K_I:'
+           
+            'Enter lower boundary of randomisation of BK_end:'
+            'Enter upper boundary of randomisation of BK_end:'
+            
+            'Enter lower boundary of randomisation of K_ex:'
+            'Enter upper boundary of randomisation of K_ex:'
+            
+            'Enter lower boundary of randomisation of B_ex:'
+            'Enter upper boundary of randomisation of B_ex:'
+            
+            'Enter lower boundary of randomisation of J_max:'
+            'Enter upper boundary of randomisation of J_max:'
+            
+            'Enter lower boundary of randomisation of K_act:'
+            'Enter upper boundary of randomisation of K_act:'
+            
+            'Enter lower boundary of randomisation of P_L:'
+            'Enter upper boundary of randomisation of P_L:'
+            
+            'Enter lower boundary of randomisation of V_max:'
+            'Enter upper boundary of randomisation of V_max:'
+            
+            'Enter lower boundary of randomisation of k_pump:'
+            'Enter upper boundary of randomisation of k_pump:'
+            
+            'Enter lower boundary of randomisation of delta:'
+            'Enter upper boundary of randomisation of delta:'
+            
+            'Enter lower boundary of randomisation of VR_ER_cyt:'
+            'Enter upper boundary of randomisation of VR_ER_cyt:'
+            
+
+};
         
 dlg_title = 'Ca^{2+} optimization in the astrocyte';
 
 num_lines = 1;
 
-defaultanswer = {'20','10','0.8','1.2','0.1','0.8','1.2','0.8','0.005','5'};
+defaultanswer = {'32','16','0.8','0.005','20','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2',...
+                 '0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8',...
+                 '1.2','0.8','1.2'};
 
 x = inputdlg(prompt,dlg_title,num_lines,defaultanswer);
 
 num_pop           = str2num(x{1});
 nr_parents        = str2num(x{2});
-low_bound         = str2num(x{3});
-up_bound          = str2num(x{4});
-p_mu_ini          = str2num(x{5});
-mu_low_b_ini      = str2num(x{6});
-mu_up_b_ini       = str2num(x{7});
-p_co              = str2num(x{8});
-p_el              = str2num(x{9}); 
-nr_generation     = str2num(x{10}); 
- 
+p_co              = str2num(x{3});
+p_el              = str2num(x{4}); 
+nr_generation     = str2num(x{5}); 
+p_mu_ini          = str2num(x{6}); 
+
+mu_low_b_k_deg      = str2num(x{7});
+mu_up_b_k_deg       = str2num(x{8});
+
+mu_low_b_k_on      = str2num(x{9});
+mu_up_b_k_on       = str2num(x{10});
+
+mu_low_b_k_inh      = str2num(x{11});
+mu_up_b_k_inh       = str2num(x{12});
+
+mu_low_b_r_h      = str2num(x{13});
+mu_up_b_r_h       = str2num(x{14});
+
+mu_low_b_K_G      = str2num(x{15});
+mu_up_b_K_G       = str2num(x{16});
+
+mu_low_b_K_I      = str2num(x{17});
+mu_up_b_K_I       = str2num(x{18});
+
+mu_low_b_BK_end      = str2num(x{19});
+mu_up_b_BK_end       = str2num(x{20});
+
+mu_low_b_K_ex      = str2num(x{21});
+mu_up_b_K_ex       = str2num(x{22});
+
+mu_low_b_B_ex      = str2num(x{23});
+mu_up_b_B_ex       = str2num(x{24});
+
+mu_low_b_J_max      = str2num(x{25});
+mu_up_b_J_max       = str2num(x{26});
+
+mu_low_b_K_act      = str2num(x{27});
+mu_up_b_K_act       = str2num(x{28});
+
+mu_low_b_P_L      = str2num(x{29});
+mu_up_b_P_L       = str2num(x{30});
+
+mu_low_b_V_max      = str2num(x{31});
+mu_up_b_V_max       = str2num(x{32});
+
+mu_low_b_k_pump      = str2num(x{33});
+mu_up_b_k_pump       = str2num(x{34});
+
+mu_low_b_delta      = str2num(x{35});
+mu_up_b_delta       = str2num(x{37});
+
+mu_low_b_VR_ER_cyt      = str2num(x{38});
+mu_up_b_VR_ER_cyt       = str2num(x{39});
+
 %% initial values
 
  
@@ -104,22 +198,22 @@ mu_var      = 1;
 
 for j = 1:num_pop  %size of the first generation 
  
-randVec1  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1)); 
-randVec2  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec3  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec4  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec5  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec6  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1)); 
-randVec7  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec8  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec9  = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec10 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec11 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1)); 
-randVec12 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec13 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec14 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec15 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
-randVec16 = vertcat(1,low_bound + (up_bound-low_bound).*rand(j-1, 1));
+randVec1  = vertcat(1,mu_low_b_k_deg + (mu_up_b_k_deg - mu_low_b_k_deg).*rand(j-1, 1)); 
+randVec2  = vertcat(1,mu_low_b_k_on + (mu_up_b_k_on - mu_low_b_k_on).*rand(j-1, 1));
+randVec3  = vertcat(1,mu_low_b_k_inh + (mu_up_b_k_inh - mu_low_b_k_inh).*rand(j-1, 1));
+randVec4  = vertcat(1,mu_low_b_r_h + (mu_up_b_r_h - mu_low_b_r_h).*rand(j-1, 1));
+randVec5  = vertcat(1,mu_low_b_K_G + (mu_up_b_K_G - mu_low_b_K_G).*rand(j-1, 1));
+randVec6  = vertcat(1,mu_low_b_K_I + (mu_up_b_K_I - mu_low_b_K_I).*rand(j-1, 1)); 
+randVec7  = vertcat(1,mu_low_b_BK_end + (mu_up_b_BK_end - mu_low_b_BK_end).*rand(j-1, 1));
+randVec8  = vertcat(1,mu_low_b_K_ex + (mu_up_b_K_ex - mu_low_b_K_ex).*rand(j-1, 1));
+randVec9  = vertcat(1,mu_low_b_B_ex + (mu_up_b_B_ex - mu_low_b_B_ex).*rand(j-1, 1));
+randVec10 = vertcat(1,mu_low_b_J_max + (mu_up_b_J_max - mu_low_b_J_max).*rand(j-1, 1));
+randVec11 = vertcat(1,mu_low_b_K_act + (mu_up_b_K_act - mu_low_b_K_act).*rand(j-1, 1)); 
+randVec12 = vertcat(1,mu_low_b_P_L + (mu_up_b_P_L - mu_low_b_P_L).*rand(j-1, 1));
+randVec13 = vertcat(1,mu_low_b_V_max + (mu_up_b_V_max - mu_low_b_V_max).*rand(j-1, 1));
+randVec14 = vertcat(1,mu_low_b_k_pump + (mu_up_b_k_pump - mu_low_b_k_pump).*rand(j-1, 1));
+randVec15 = vertcat(1,mu_low_b_delta + (mu_up_b_delta - mu_low_b_delta).*rand(j-1, 1));
+randVec16 = vertcat(1,mu_low_b_VR_ER_cyt + (mu_up_b_VR_ER_cyt - mu_low_b_VR_ER_cyt).*rand(j-1, 1));
 
  
 nv.astrocyte.params.k_deg = randVec1(j,1)*x1;
@@ -239,9 +333,56 @@ for mu_1 = 1:size(parent_matrix(:,1))
        r_mu_1 = rand(1);
        
        if r_mu_1 <= p_mu_ini
-                r_mu_2 = mu_low_b_ini + (mu_up_b_ini - mu_low_b_ini)*rand(1,1);                       %randomised mutation factor with boundaries
-                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                  %Mutation changes parameter at current position
-       end
+           if mu_2 == 1;
+                r_mu_2 = mu_low_b_k_deg + (mu_up_b_k_deg - mu_low_b_k_deg)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 2;
+                r_mu_2 = mu_low_b_k_on + (mu_up_b_k_on - mu_low_b_k_on)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 3;
+                r_mu_2 = mu_low_b_k_inh + (mu_up_b_k_inh - mu_low_b_k_inh)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 4;
+                r_mu_2 = mu_low_b_r_h + (mu_up_b_r_h - mu_low_b_r_h)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 5
+                r_mu_2 = mu_low_b_K_G + (mu_up_b_K_G - mu_low_b_K_G)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 6;
+                r_mu_2 = mu_low_b_K_I + (mu_up_b_K_I - mu_low_b_K_I)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 7;
+                r_mu_2 = mu_low_b_BK_end + (mu_up_b_BK_end - mu_low_b_BK_end)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 8;
+                r_mu_2 = mu_low_b_K_ex + (mu_up_b_K_ex - mu_low_b_K_ex)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 9;
+                r_mu_2 = mu_low_b_B_ex + (mu_up_b_B_ex - mu_low_b_B_ex)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 10;
+               r_mu_2 = mu_low_b_J_max + (mu_up_b_J_max - mu_low_b_J_max)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 11;
+               r_mu_2 = mu_low_b_K_act + (mu_up_b_K_act - mu_low_b_K_act)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 12;
+               r_mu_2 = mu_low_b_P_L + (mu_up_b_P_L - mu_low_b_P_L)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 13;
+               r_mu_2 = mu_low_b_V_max + (mu_up_b_V_max - mu_low_b_V_max)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 14;
+               r_mu_2 = mu_low_b_k_pump + (mu_up_b_k_pump - mu_low_b_k_pump)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 15;
+               r_mu_2 = mu_low_b_delta + (mu_up_b_delta - mu_low_b_delta)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
+           elseif mu_2 == 16;
+               r_mu_2 = mu_low_b_VR_ER_cyt + (mu_up_b_VR_ER_cyt - mu_low_b_VR_ER_cyt)*rand(1,1);      
+                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                             
+           end
+           end
        
        mu_2 = mu_2 + 1;
    end

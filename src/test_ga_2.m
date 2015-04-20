@@ -43,7 +43,7 @@ num_pop           = str2num(x{1});
 nr_parents        = str2num(x{2});
 low_bound         = str2num(x{3});
 up_bound          = str2num(x{4});
-p_mu_ini              = str2num(x{5});
+p_mu_ini          = str2num(x{5});
 mu_low_b_ini      = str2num(x{6});
 mu_up_b_ini       = str2num(x{7});
 p_co              = str2num(x{8});
@@ -425,9 +425,9 @@ for mu_1 = 1:length(parent_matrix(:,1))
         mu_current  = parent_matrix(mu_1,4);
        
        if mu_current >= mu_mean                                                     %makes mutation rate adaptive to quality of organism's fitness
-            p_mu(mu_var) = 0.15 * ((mu_max - mu_current) / (mu_max - mu_mean));      %If organism is fitter than average -> mutation should decrease
+            p_mu(mu_var) = 0.10 * ((mu_max - mu_current) / (mu_max - mu_mean));      %If organism is fitter than average -> mutation should decrease
        else 
-            p_mu(mu_var) = 0.15;                                                     %if not mutation rate stays the same
+            p_mu(mu_var) = 0.10;                                                     %if not mutation rate stays the same
        end
        
 %        if mu_current == mu_max                                                      %Otherwise the best organism would not be mutated
