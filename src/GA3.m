@@ -354,9 +354,9 @@ Results_end_mean(ga) = mean(time_results_c_k(z,2:j+1)');                    %ess
  
 %% Selection (roulette wheel method)-> sel_...
 
-%probability of each parameterset to be choosen for the offspring
-%population -> probability for parametersets with a high
-%calciumconcentration is higher
+                                                                            %probability of each parameterset to be choosen for the offspring
+                                                                            %population -> probability for parametersets with a high
+                                                                            %calciumconcentration is higher
 
 sel_sum_c_k = sum(Max_matrix(1:j,1));
 
@@ -371,7 +371,7 @@ sel_cum_probvec = cumsum(sel_probvec);
 sel_max_matrix  = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, Max_matrix]; %numberd max_matrix with probabilities
 
 % decision
-sel_output      = zeros(nr_parents,4+nr_par); %4 because of probabilities, numberation
+sel_output      = zeros(nr_parents,4+nr_par);                               %4 because of probabilities, numberation
 sel_rand_value  = rand(length(sel_output(:,1)),1);
 
  
@@ -391,7 +391,7 @@ for n=1:length(sel_output(:,1))
         end
         
         
-        if n>1                                                          %prevent, that one parameterset is taken twice
+        if n>1                                                              %prevent, that one parameterset is taken twice
             sel_duplex = ismember(sel_output(n,1),sel_output(1:(n-1),1));
             if sel_duplex == 1
             sel_output(n,1)     = 0;
@@ -407,14 +407,14 @@ end
 
 % # of calculations
 
-% r = randperm(n);%creates a shuffled linspace vector from 1 to n, but without duplicates -> so a parent can just be parent once
+
 var_p = 1;
-for pp = 1:n/2    %divided by 2, because there are 2 parents   
+for pp = 1:n/2                                                              %divided by 2, because there are 2 parents   
         
-    P1 = sel_output(var_p,:);  %choosing parents out of input matrix
+    P1 = sel_output(var_p,:);                                               %choosing parents out of input matrix
     P2 = sel_output(var_p+1,:);
     
-    for sp = 1:r_co 
+    for sp = 1:r_co                                                         % Repeat until initial population size is reached
         
         parent_matrix(rc,:)   = P1;
         parent_matrix(rc+1,:) = P2;
@@ -428,14 +428,14 @@ end
  
 %%Mutation of Parent Matrix
 
-for mu_1 = 1:size(parent_matrix(:,1))
+for mu_1 = 1:size(parent_matrix(:,1))                                       % Running variable for lines
     
-   for mu_2 = 1 : nr_par
-       r_mu_1 = rand(1);
+   for mu_2 = 1 : nr_par                                                    % Running variable for number of parameters / columns
+       r_mu_1 = rand(1);                                                    % Random number between 0 and 1
        
-       if r_mu_1 <= p_mu_ini
+       if r_mu_1 <= p_mu_ini                                                % decision of mutation occurs or not 
 
-           if mu_2 == 1;                                                                    %defines parameter specific boundaries
+           if mu_2 == 1;                                                    %defines parameter specific boundaries
                 r_mu_2 = mu_low_b_k_deg + (mu_up_b_k_deg - mu_low_b_k_deg)*rand(1,1);      
                 parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
            elseif mu_2 == 2;
@@ -493,30 +493,30 @@ for mu_1 = 1:size(parent_matrix(:,1))
    
 end
 
-p_mu_total(ga) = mean(p_mu_ini);
+p_mu_total(ga) = mean(p_mu_ini);                                            
 %% Cross-over
 
-co_s        = size(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
+co_s        = size(parent_matrix(:,1));                                     %size of the column of the parents_matrix (should be initial population)
 for co_var  = 1:(co_s-1)
 cr_rand = rand(1);
 
-if cr_rand <= p_co                                               %probability of cross-over
-cr_var1 = randi(nr_par)+4;                                         %defines the lower boundary of the crossover section
-cr_var2 = randi([cr_var1,nr_par+4]);                               %defines the upper boundary of the crossover section
+if cr_rand <= p_co                                                          %probability of cross-over
+cr_var1 = randi(nr_par)+4;                                                  %defines the lower boundary of the crossover section
+cr_var2 = randi([cr_var1,nr_par+4]);                                        %defines the upper boundary of the crossover section
 
-CO_1 = parent_matrix(co_var,cr_var1:cr_var2);                    %cutting out the cross-over section
+CO_1 = parent_matrix(co_var,cr_var1:cr_var2);                               %cutting out the cross-over section
 CO_2 = parent_matrix(co_var+1,cr_var1:cr_var2); 
  
-parent_matrix(co_var,cr_var1:cr_var2)  = CO_2;                   %change of the cross-over section between the 2 childrens
+parent_matrix(co_var,cr_var1:cr_var2)  = CO_2;                              %change of the cross-over section between the 2 childrens
 parent_matrix(co_var+1,cr_var1:cr_var2) = CO_1;
 
 end 
 co_var = co_var + 2;
-end                                                              %output is a matrix which is 2*r_co bigger than matrix_input 
+end                                                                         %output is a matrix which is 2*r_co bigger than matrix_input 
  
  
 %% Elitism 
-el_max_c_k(1)  = max(parent_matrix(:,4)) * (1-p_el); %Who is elite? ------- position after Parent choosing
+el_max_c_k(1)  = max(parent_matrix(:,4)) * (1-p_el);                        %Who is elite? 
 for var_el = 1:size(sel_output(:,1))
 el_u=0;
      if sel_output(var_el,4) >= el_max_c_k(1)
@@ -528,9 +528,9 @@ el_u=0;
              end
          end
      end
-end                                                      %output is a matrix which is 2*r_co bigger than matrix_input 
+end                                                                         %output is a matrix which is 2*r_co bigger than matrix_input 
  
-for g=1:length(parent_matrix(:,1)) % simulate for the second generation
+for g=1:length(parent_matrix(:,1))                                          % simulate for the second generation
 
 nv.astrocyte.params.k_deg       = x1*parent_matrix(g,5);
 nv.astrocyte.params.k_on        = x2*parent_matrix(g,6);
@@ -556,8 +556,8 @@ results_R_gen(g,:)          =  nv.out('R');
 parent_matrix(g,4)          =  results_c_k_gen(g,z);
 end
 
-Results_end_max(ga+1)  = max(results_c_k_gen(:,z)');        %essential for plotting results
-Results_end_mean(ga+1) = mean(results_c_k_gen(:,z)');       %This is located afeter each generation to save the CA result
+Results_end_max(ga+1)  = max(results_c_k_gen(:,z)');                        %essential for plotting results
+Results_end_mean(ga+1) = mean(results_c_k_gen(:,z)');                       %This is located afeter each generation to save the CA result
 
  
 if count_max >= min_nr_generation && Results_end_mean(ga+1)<= Results_end_mean(ga)*(1+eps) && Results_end_mean(ga+1) >= Results_end_mean(ga)*(1-eps)
@@ -575,9 +575,9 @@ end
 %calciumconcentration is higher
 while count_max <= max_nr_generation-2 && Results_end_mean(ga+1)< conc_nr && conv_crit < nr_convergenz
     
-    pp_1        = 1;           %Reset all running variables
+    pp_1        = 1;                                                        %Reset all running variables so the whole process can run again
     pp          = 1;
-    rc          = 1;           % Running variable in the parenting choosing
+    rc          = 1;                                                        % Running variable in the parenting choosing
     mu_1        = 1;
     mu_2        = 1;
     n_el        = 1;
@@ -612,7 +612,7 @@ sel_cum_probvec = cumsum(sel_probvec);
 sel_max_matrix  = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, parent_matrix(:,4:nr_par+4)]; %numbered parent_matrix with probabilities
 
 % decision
-sel_output      = zeros(nr_parents,4+nr_par); %4 because of probabilities, numberation
+sel_output      = zeros(nr_parents,4+nr_par);                               %4 because of probabilities, numberation
 sel_rand_value  = rand(length(sel_output(:,1)),1);
 
  
@@ -631,7 +631,7 @@ for n=1:length(sel_output(:,1))
             end
         end
         
-        if n>1                                                          %prevent, that one parameterset is taken twice
+        if n>1                                                              %prevent, that one parameterset is taken twice
             sel_duplex = ismember(sel_output(n,1),sel_output(1:(n-1),1));
             if sel_duplex == 1
             sel_output(n,1)=0;
@@ -648,11 +648,11 @@ end
 
 % # of calculations
 
-% r = randperm(n);%creates a shuffled linspace vector from 1 to n, but without duplicates -> so a parent can just be parent once
+
 var_p = 1;
-for pp = 1:n/2    %divided by 2, because there are 2 parents   
+for pp = 1:n/2                                                              %divided by 2, because there are 2 parents   
         
-    P1 = sel_output(var_p,:);  %choosing parents out of input matrix
+    P1 = sel_output(var_p,:);                                               %choosing parents out of input matrix
     P2 = sel_output(var_p+1,:);
     
     for sp = 1:r_co 
@@ -676,24 +676,24 @@ for mu_1 = 1:length(parent_matrix(:,1))
         mu_current  = parent_matrix(mu_1,4);
        
        if mu_current >= mu_mean                                                     %makes mutation rate adaptive to quality of organism's fitness
-            p_mu(mu_var) = 0.10 * ((mu_max - mu_current) / (mu_max - mu_mean));      %If organism is fitter than average -> mutation should decrease
+            p_mu(mu_var) = 0.10 * ((mu_max - mu_current) / (mu_max - mu_mean));     %If organism is fitter than average -> mutation should decrease
        else 
-            p_mu(mu_var) = 0.10;                                                     %if not mutation rate stays the same
+            p_mu(mu_var) = 0.10;                                            %if not mutation rate stays the same
        end
        
-%        if mu_current == mu_max                                                      %Otherwise the best organism would not mutate
+%        if mu_current == mu_max                                            %Otherwise the best organism would not mutate
 %            p_mu(mu_var) = 0.02;
 %        end
         
        r_mu_1 = rand(1);
        
-       if r_mu_1 <= p_mu(mu_var)                                      %Decision if Mutation occurs or not
+       if r_mu_1 <= p_mu(mu_var)                                            %Decision if Mutation occurs or not
            
-%            mu_factor_current    = parent_matrix(mu_1,mu_2 + 4);                %factor which is currently observed
-%            mu_low_b             = mu_factor_current - p_mu(mu_var);            %new boundaries around factor
+%            mu_factor_current    = parent_matrix(mu_1,mu_2 + 4);           %factor which is currently observed
+%            mu_low_b             = mu_factor_current - p_mu(mu_var);       %new boundaries around factor
 %            mu_up_b              = mu_factor_current + p_mu(mu_var); 
 %            
-%            if mu_low_b <= mu_low_b_ini                                      %initial boundaries are still important
+%            if mu_low_b <= mu_low_b_ini                                    %initial boundaries are still important
 %                mu_low_b = 0.8;
 %            end
 %            
@@ -701,7 +701,7 @@ for mu_1 = 1:length(parent_matrix(:,1))
 %                mu_up_b = 1.2;
 %            end
 
-       if mu_2 == 1;                                                                        %defines parameter specific boundaries
+       if mu_2 == 1;                                                        %defines parameter specific boundaries
                 r_mu_2 = mu_low_b_k_deg + (mu_up_b_k_deg - mu_low_b_k_deg)*rand(1,1);      
                 parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                 
            elseif mu_2 == 2;
@@ -761,10 +761,10 @@ for mu_1 = 1:length(parent_matrix(:,1))
    
 end
 
-p_mu_total(ga+1) = mean(p_mu);                                                %in order to plot change of mutation over all generations
+p_mu_total(ga+1) = mean(p_mu);                                              %in order to plot change of mutation over all generations
 
 %% Cross-over
-co_s = length(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
+co_s = length(parent_matrix(:,1));                                          %size of the column of the parents_matrix (should be initial population)
 
 while co_var      <= (co_s-1)
     
@@ -779,20 +779,20 @@ while co_var      <= (co_s-1)
         p_co = 1;
     end
 
-if cr_rand <= p_co                                         %probability of cross-over
+if cr_rand <= p_co                                                          %probability of cross-over
     
-cr_var1 = randi(nr_par)+4;                                         %defines the lower boundary of the crossover section
-cr_var2 = randi([cr_var1,nr_par+4]);                               %defines the upper boundary of the crossover section
+cr_var1 = randi(nr_par)+4;                                                  %defines the lower boundary of the crossover section
+cr_var2 = randi([cr_var1,nr_par+4]);                                        %defines the upper boundary of the crossover section
 
-CO_1 = parent_matrix(co_var,cr_var1:cr_var2);                    %cutting out the cross-over section
+CO_1 = parent_matrix(co_var,cr_var1:cr_var2);                               %cutting out the cross-over section
 CO_2 = parent_matrix(co_var+1,cr_var1:cr_var2); 
  
-parent_matrix(co_var,cr_var1:cr_var2)   = CO_2;                   %change of the cross-over section between the 2 childrens
+parent_matrix(co_var,cr_var1:cr_var2)   = CO_2;                             %change of the cross-over section between the 2 childrens
 parent_matrix(co_var+1,cr_var1:cr_var2) = CO_1;
 
 end 
 co_var = co_var + 2;
-end                                                              %output is a matrix which is 2*r_co bigger than matrix_input 
+end                                                                         %output is a matrix which is 2*r_co bigger than matrix_input 
  
 %% Elitism 
 clear el_p;
@@ -836,8 +836,8 @@ nv.simulate()
 results_c_k_gen(g,:)= nv.out('c_k');
 parent_matrix(g,4)  = results_c_k_gen(g,z);
 
-Results_end_max(ga+2)  = max  (parent_matrix(:,4));        %essential for plotting results
-Results_end_mean(ga+2) = mean (parent_matrix(:,4));        %essential for plotting results
+Results_end_max(ga+2)  = max  (parent_matrix(:,4));                         %essential for plotting results
+Results_end_mean(ga+2) = mean (parent_matrix(:,4));                         %essential for plotting results
 
 end
 
