@@ -591,8 +591,7 @@ for mu_1 = 1:length(parent_matrix(:,1))
 %                mu_up_b = 1.2;
 %            end
            
-                r_mu_2 = mu_low_b_ini + (mu_up_b_ini - mu_low_b_ini)*rand(1,1);                       %randomised mutation factor with boundaries
-                parent_matrix(mu_1,mu_2 + 4) = r_mu_2;                                  %Mutation changes parameter at current position
+
        end
        
        mu_2 = mu_2 + 1;

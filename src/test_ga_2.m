@@ -294,7 +294,7 @@ end                                                      %output is a matrix whi
 %probability of each parameterset to be choosen for the offspring
 %population -> probability for parametersets with a high
 %calciumconcentration is higher
-for ga = 1 : nr_generation
+for ga = 1 : nr_generation - 1
     pp_1        = 1;           %Reset all running variables
     pp          = 1;
     rc          = 1;           % Running variable in the parenting choosing
@@ -337,6 +337,8 @@ nv.simulate()
 
 results_c_k_gen(g,:)= nv.out('c_k');
 parent_matrix(g,4)  = results_c_k_gen(g,z);
+Results_end_max(ga+1)  = max  (parent_matrix(:,4));        %essential for plotting results
+Results_end_mean(ga+1) = mean (parent_matrix(:,4));        %essential for plotting results
 
 end
 
@@ -510,8 +512,7 @@ el_u=0;
      end
 end
 
-Results_end_max(ga+1)  = max  (parent_matrix(:,4));        %essential for plotting results
-Results_end_mean(ga+1) = mean (parent_matrix(:,4));        %essential for plotting results
+
 
 end
 
