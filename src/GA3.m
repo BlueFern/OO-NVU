@@ -20,17 +20,17 @@ T = linspace (0,500,1000);
  
 %% Determine the initial condition - User Input
 
-prompt_1 = {  'Enter size of population (if divided by number of organism, result must be out of Z:',
-            'Enter number of organism which are allowed to reproduce:',
-            'Enter the initial probability of cross-over:',
-            'Enter the threshold for elitism:'
-            'Enter the initial probability of mutation:',
-            'Do you want to specify the parameter boundaries: [y] [n]'
-            'Enter the minimal generation number:'
-            'Enter the maximal generation number:'
-            'Enter the boundaries for convergenz'
-            'Enter the convergenz criteria number:'
-            'Enter the maximal CA^(2+) concentration number:'};
+prompt_1 = {'Enter size of population (if divided by number of organism, result must be out of Z:'      % This population size is constant      
+            'Enter number of organism which are allowed to reproduce:'                                  % pop.:24 this can just be: 2,4,6,12      
+            'Enter the initial probability of cross-over:'                                              % This value determines the frequency of co
+            'Enter the threshold for elitism:'                                                          % 0.005 means that a organism must have a bigger c_k than 99.5% of population to be an elite
+            'Enter the initial probability of mutation:'                                                % Mutation probability
+            'Do you want to change the parameter boundaries(+/-20%): [y] [n]'                                  % If User wants to adjust parameter boundaries
+            'Enter the minimal generation number:'                                                      % Number of calculation which the code runs at least
+            'Enter the maximal generation number:'                                                      % Max. number of runs / generations
+            'Enter the boundaries for convergenz'                                                       % Decision criteria if 2 values are close together or not
+            'Enter the convergenz criteria number:'                                                     % How many "close" values have to be in row, that he code stops                        
+            'Enter the maximal CA^(2+) concentration number:'};                                         % At which max. c_k should the code stop
 
  
         
@@ -38,7 +38,7 @@ dlg_title_1 = 'Ca^{2+} optimization in the astrocyte';
 
 num_lines_1 = 1;
 
-defaultanswer_1 = {'32','16','0.8','0.005','0.1','y','5','15','0.02','3','0.55'};
+defaultanswer_1 = {'32','16','0.8','0.005','0.1','y','5','15','0.02','3','0.55'};                       % Just a default answer
 
 x_1 = inputdlg(prompt_1,dlg_title_1,num_lines_1,defaultanswer_1,'on');
 
@@ -56,7 +56,7 @@ nr_convergenz     = str2double(x_1{10});
 conc_nr           = str2double(x_1{11});
 
  
-check = strcmp(answer,yes);
+check = strcmp(answer,yes);                                                                             % Returns answer of user about changing parameter boundaries
 
 if check == 1
 prompt_2 = {'Enter lower boundary of randomisation of k_deg:'
@@ -155,70 +155,70 @@ defaultanswer_3 = { '0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2','0.8','1.2',
 
 x_3 = inputdlg(prompt_3,dlg_title_3,num_lines_3,defaultanswer_3,'on');
 
-mu_low_b_B_ex      = str2double(x_3{1});
-mu_up_b_B_ex       = str2double(x_3{2});
+mu_low_b_B_ex           = str2double(x_3{1});
+mu_up_b_B_ex            = str2double(x_3{2});
 
-mu_low_b_J_max      = str2double(x_3{3});
-mu_up_b_J_max       = str2double(x_3{4});
+mu_low_b_J_max          = str2double(x_3{3});
+mu_up_b_J_max           = str2double(x_3{4});
 
-mu_low_b_K_act      = str2double(x_3{5});
-mu_up_b_K_act       = str2double(x_3{6});
+mu_low_b_K_act          = str2double(x_3{5});
+mu_up_b_K_act           = str2double(x_3{6});
 
-mu_low_b_P_L      = str2double(x_3{7});
-mu_up_b_P_L       = str2double(x_3{8});
+mu_low_b_P_L            = str2double(x_3{7});
+mu_up_b_P_L             = str2double(x_3{8});
 
-mu_low_b_V_max      = str2double(x_3{9});
-mu_up_b_V_max       = str2double(x_3{10});
+mu_low_b_V_max          = str2double(x_3{9});
+mu_up_b_V_max           = str2double(x_3{10});
 
-mu_low_b_k_pump      = str2double(x_3{11});
-mu_up_b_k_pump       = str2double(x_3{12});
+mu_low_b_k_pump         = str2double(x_3{11});
+mu_up_b_k_pump          = str2double(x_3{12});
 
-mu_low_b_delta      = str2double(x_3{13});
-mu_up_b_delta       = str2double(x_3{14});
+mu_low_b_delta          = str2double(x_3{13});
+mu_up_b_delta           = str2double(x_3{14});
 
 mu_low_b_VR_ER_cyt      = str2double(x_3{15});
 mu_up_b_VR_ER_cyt       = str2double(x_3{16});
 
-else
+else                                                                                        % IF user doesn't want to change default boundaries
   
-mu_low_b_k_deg      = 0.8;
-mu_up_b_k_deg       = 1.2;
+mu_low_b_k_deg          = 0.8;
+mu_up_b_k_deg           = 1.2;
 
-mu_low_b_k_on      = 0.8;
-mu_up_b_k_on       = 1.2;
+mu_low_b_k_on           = 0.8;
+mu_up_b_k_on            = 1.2;
 
-mu_low_b_k_inh      = 0.8;
-mu_up_b_k_inh       = 1.2;
+mu_low_b_k_inh          = 0.8;
+mu_up_b_k_inh           = 1.2;
 
-mu_low_b_r_h      = 0.8;
-mu_up_b_r_h       = 1.2;
+mu_low_b_r_h            = 0.8;
+mu_up_b_r_h             = 1.2;
 
-mu_low_b_K_G      = 0.8;
-mu_up_b_K_G       = 1.2;
+mu_low_b_K_G            = 0.8;
+mu_up_b_K_G             = 1.2;
 
-mu_low_b_K_I      = 0.8;
-mu_up_b_K_I       = 1.2;
+mu_low_b_K_I            = 0.8;
+mu_up_b_K_I             = 1.2;
 
-mu_low_b_BK_end      = 0.8;
-mu_up_b_BK_end       = 1.2;
+mu_low_b_BK_end     	= 0.8;
+mu_up_b_BK_end          = 1.2;
 
-mu_low_b_K_ex      = 0.8;
-mu_up_b_K_ex       = 1.2;
+mu_low_b_K_ex           = 0.8;
+mu_up_b_K_ex            = 1.2;
 
-mu_low_b_B_ex      = 0.8;
-mu_up_b_B_ex       = 1.2;
+mu_low_b_B_ex           = 0.8;
+mu_up_b_B_ex            = 1.2;
 
-mu_low_b_J_max      = 0.8;
-mu_up_b_J_max       = 1.2;
+mu_low_b_J_max          = 0.8;
+mu_up_b_J_max           = 1.2;
 
-mu_low_b_K_act      = 0.8;
-mu_up_b_K_act       = 1.2;
+mu_low_b_K_act          = 0.8;
+mu_up_b_K_act           = 1.2;
 
 mu_low_b_P_L            = 0.8;
 mu_up_b_P_L             = 1.2;
 
-mu_low_b_V_max           = 0.8;
-mu_up_b_V_max            = 1.2;
+mu_low_b_V_max          = 0.8;
+mu_up_b_V_max           = 1.2;
 
 mu_low_b_k_pump         = 0.8;
 mu_up_b_k_pump          = 1.2;
@@ -238,7 +238,7 @@ end
 %num_pop = 30; %number of individuals in the first generation
 z = 740; %timestep for the first population 
  
-x1  = nv.astrocyte.params.k_deg; %orginal values for the parameters used in the AC
+x1  = nv.astrocyte.params.k_deg;                                            %orginal values for the parameters used in the AC
 x2  = nv.astrocyte.params.k_on;
 x3  = nv.astrocyte.params.K_inh;
 x4  = nv.astrocyte.params.r_h;
@@ -265,19 +265,19 @@ x16 = nv.astrocyte.params.VR_ER_cyt;
 
 %% Parentchoosing,Crossover
 
-r_co        = num_pop/nr_parents; %Ratio between inital population and selected population
+r_co        = num_pop/nr_parents;                                           % Ratio between inital population and selected population
 pp_1        = 1;
 pp          = 1;
-rc          = 1; % Running variable in the parenting choosing
+rc          = 1;                                                            % Running variable in the parenting choosing
 mu_1        = 1;
 mu_2        = 1;
 n_el        = 1;
 el_parII    = 1;
-nr_par      = 16; % # of different parameters
+nr_par      = 16;                                                           % # of different parameters
 mu_var      = 1;
 count_max   = 1;
 conv_crit   = 1;
-ga          = 1; % can count max be used???
+ga          = 1;                                                           
 %p_co = 0; %Probability of cross over
 % co = size of parent-matrix
 
@@ -317,40 +317,40 @@ randVec16 = vertcat(1,mu_low_b_VR_ER_cyt + (mu_up_b_VR_ER_cyt - mu_low_b_VR_ER_c
 
  
  
-nv.astrocyte.params.k_deg = randVec1(j,1)*x1;
-nv.astrocyte.params.k_on = randVec2(j,1)*x2;
-nv.astrocyte.params.K_inh = randVec3(j,1)*x3;
-nv.astrocyte.params.r_h = randVec4(j,1)*x4;
-nv.astrocyte.params.K_G = randVec5(j,1)*x5;
-nv.astrocyte.params.K_I = randVec6(j,1)*x6;
-nv.astrocyte.params.BK_end = randVec7(j,1)*x7;
-nv.astrocyte.params.K_ex = randVec8(j,1)*x8;
-nv.astrocyte.params.B_ex = randVec9(j,1)*x9;
-nv.astrocyte.params.J_max = randVec10(j,1)*x10;
-nv.astrocyte.params.K_act = randVec11(j,1)*x11;
-nv.astrocyte.params.P_L = randVec12(j,1)*x12;
-nv.astrocyte.params.V_max = randVec13(j,1)*x13;
-nv.astrocyte.params.k_pump = randVec14(j,1)*x14;
-nv.astrocyte.params.delta = randVec15(j,1)*x15;
-nv.astrocyte.params.VR_ER_cyt = randVec16(j,1)*x16;
+nv.astrocyte.params.k_deg       = randVec1(j,1)*x1;
+nv.astrocyte.params.k_on        = randVec2(j,1)*x2;
+nv.astrocyte.params.K_inh       = randVec3(j,1)*x3;
+nv.astrocyte.params.r_h         = randVec4(j,1)*x4;
+nv.astrocyte.params.K_G         = randVec5(j,1)*x5;
+nv.astrocyte.params.K_I         = randVec6(j,1)*x6;
+nv.astrocyte.params.BK_end      = randVec7(j,1)*x7;
+nv.astrocyte.params.K_ex        = randVec8(j,1)*x8;
+nv.astrocyte.params.B_ex        = randVec9(j,1)*x9;
+nv.astrocyte.params.J_max       = randVec10(j,1)*x10;
+nv.astrocyte.params.K_act       = randVec11(j,1)*x11;
+nv.astrocyte.params.P_L         = randVec12(j,1)*x12;
+nv.astrocyte.params.V_max       = randVec13(j,1)*x13;
+nv.astrocyte.params.k_pump      = randVec14(j,1)*x14;
+nv.astrocyte.params.delta       = randVec15(j,1)*x15;
+nv.astrocyte.params.VR_ER_cyt   = randVec16(j,1)*x16;
 
 nv.simulate()  
  
-results_c_k (j,:) = nv.out('c_k');
-time_results_c_k = [T;results_c_k]';
+results_c_k (j,:)   = nv.out('c_k');
+time_results_c_k    = [T;results_c_k]';
 
-results_R (j,:) = nv.out('R');
-time_results_R = [T;results_R]';
+results_R (j,:)     = nv.out('R');
+time_results_R      = [T;results_R]';
 
 end
 
-Big_randMat = [randVec1, randVec2, randVec3, randVec4,...
-randVec5,randVec6, randVec7, randVec8, randVec9, randVec10,randVec11, randVec12, randVec13, randVec14, randVec15,randVec16];
+Big_randMat = [randVec1, randVec2, randVec3, randVec4, randVec5,randVec6, randVec7, randVec8, ...
+               randVec9, randVec10,randVec11, randVec12, randVec13, randVec14, randVec15,randVec16];
 
-Max_matrix = [time_results_c_k(z,2:j+1)', Big_randMat];   
+Max_matrix = [time_results_c_k(z,2:j+1)', Big_randMat];                     %takes c_k value at time 740ms because this is the area of interest and combines it with the responsible param. factors       
  
-Results_end_max(ga)  = max(time_results_c_k(z,2:j+1)');        %essential for plotting results
-Results_end_mean(ga) = mean(time_results_c_k(z,2:j+1)');       %essential for plotting results 
+Results_end_max(ga)  = max(time_results_c_k(z,2:j+1)');                     %essential for plotting results
+Results_end_mean(ga) = mean(time_results_c_k(z,2:j+1)');                    %essential for plotting results 
  
 %% Selection (roulette wheel method)-> sel_...
 
@@ -361,18 +361,18 @@ Results_end_mean(ga) = mean(time_results_c_k(z,2:j+1)');       %essential for pl
 sel_sum_c_k = sum(Max_matrix(1:j,1));
 
 for i= 1:j
-sel_prob = Max_matrix(i,1)./sel_sum_c_k;
+sel_prob        = Max_matrix(i,1)./sel_sum_c_k;
 sel_probvec(i,:)= sel_prob;
 end
 
 % cummultative porbability
 sel_cum_probvec = cumsum(sel_probvec);
 
-sel_max_matrix = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, Max_matrix]; %numberd max_matrix with probabilities
+sel_max_matrix  = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, Max_matrix]; %numberd max_matrix with probabilities
 
 % decision
-sel_output = zeros(nr_parents,4+nr_par); %4 because of probabilities, numberation
-sel_rand_value = rand(length(sel_output(:,1)),1);
+sel_output      = zeros(nr_parents,4+nr_par); %4 because of probabilities, numberation
+sel_rand_value  = rand(length(sel_output(:,1)),1);
 
  
 for n=1:length(sel_output(:,1))
@@ -394,8 +394,8 @@ for n=1:length(sel_output(:,1))
         if n>1                                                          %prevent, that one parameterset is taken twice
             sel_duplex = ismember(sel_output(n,1),sel_output(1:(n-1),1));
             if sel_duplex == 1
-            sel_output(n,1)=0;
-            sel_rand_value(n,1)=rand(1);
+            sel_output(n,1)     = 0;
+            sel_rand_value(n,1) = rand(1);
             end
         end
       
@@ -496,8 +496,8 @@ end
 p_mu_total(ga) = mean(p_mu_ini);
 %% Cross-over
 
-co_s = size(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
-for co_var = 1:(co_s-1)
+co_s        = size(parent_matrix(:,1));                                %size of the column of the parents_matrix (should be initial population)
+for co_var  = 1:(co_s-1)
 cr_rand = rand(1);
 
 if cr_rand <= p_co                                               %probability of cross-over
@@ -561,9 +561,9 @@ Results_end_mean(ga+1) = mean(results_c_k_gen(:,z)');       %This is located afe
 
  
 if count_max >= min_nr_generation && Results_end_mean(ga+1)<= Results_end_mean(ga)*(1+eps) && Results_end_mean(ga+1) >= Results_end_mean(ga)*(1-eps)
-       conv_crit = conv_crit+1
+       conv_crit = conv_crit+1;
    else 
-       conv_crit = 0
+       conv_crit = 0;
 end
 
  %% Third and following generations                                                     
@@ -601,7 +601,7 @@ while count_max <= max_nr_generation-2 && Results_end_mean(ga+1)< conc_nr && con
 sel_sum_c_k = sum(parent_matrix(1:j,4));
 
 for i= 1:j
-sel_prob = parent_matrix(i,4)./sel_sum_c_k;
+sel_prob        = parent_matrix(i,4)./sel_sum_c_k;
 sel_probvec(i,:)= sel_prob;
 end
 
@@ -609,11 +609,11 @@ end
 % cummultative probability
 sel_cum_probvec = cumsum(sel_probvec);
 
-sel_max_matrix = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, parent_matrix(:,4:nr_par+4)]; %numbered parent_matrix with probabilities
+sel_max_matrix  = [linspace(1,j,j)',sel_cum_probvec,sel_probvec, parent_matrix(:,4:nr_par+4)]; %numbered parent_matrix with probabilities
 
 % decision
-sel_output = zeros(nr_parents,4+nr_par); %4 because of probabilities, numberation
-sel_rand_value = rand(length(sel_output(:,1)),1);
+sel_output      = zeros(nr_parents,4+nr_par); %4 because of probabilities, numberation
+sel_rand_value  = rand(length(sel_output(:,1)),1);
 
  
 for n=1:length(sel_output(:,1))
@@ -753,8 +753,8 @@ for mu_1 = 1:length(parent_matrix(:,1))
  
        end
        
-       mu_2 = mu_2 + 1;
-       mu_var = mu_var + 1;
+       mu_2     = mu_2 + 1;
+       mu_var   = mu_var + 1;
    end
    mu_1 = mu_1 + 1;
    mu_2 = 1;
@@ -843,9 +843,9 @@ end
 
  
    if count_max >= min_nr_generation && Results_end_mean(ga+2)<= Results_end_mean(ga+1)*(1+eps) && Results_end_mean(ga+2) >= Results_end_mean(ga+1)*(1-eps)
-       conv_crit = conv_crit+1
+       conv_crit = conv_crit+1;
    else 
-       conv_crit = 0
+       conv_crit = 0;
    end
 
  
