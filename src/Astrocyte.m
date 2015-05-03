@@ -182,7 +182,7 @@ classdef Astrocyte < handle
             du(idx.N_Cl_k, :) = du(idx.N_Na_k, :) + du(idx.N_K_k, :) - ...
                 du(idx.N_HCO3_k, :);
             % Differential Calcium Equations in Astrocyte
-            du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak)+J_TRPV_k;%./((R_k)*1e3); %TRPV added
+            du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak+J_TRPV_k);%./((R_k)*1e3); %TRPV added
             du(idx.s_k, :) = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak))./(p.VR_ER_cyt);%+(J_TRPV_k./(1e3*R_k.*p.VR_ER_cyt));
             du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
             du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
@@ -196,7 +196,7 @@ classdef Astrocyte < handle
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_BK_k ./ (R_k*p.VR_pa) + J_KIR_i ./ ...
                 p.VR_ps - p.R_decay*(K_p - p.K_p_min);
-            du(idx.Ca_p, :) =( - J_TRPV_k+J_VOCC_k - p.Ca_decay_k.*(Ca_p - p.Capmin_k));%
+            du(idx.Ca_p, :) =( - J_TRPV_k./0.001)+(J_VOCC_k./0.001) - p.Ca_decay_k.*(Ca_p - p.Capmin_k);%
             % Differential Equations in the Synaptic Cleft
             du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
                 du(idx.N_K_k, :) - J_BK_k;
@@ -259,7 +259,7 @@ classdef Astrocyte < handle
         function rho = input_rho(self, t)
             % Input signal; the smooth pulse function rho
             p = self.params;
-            rho = p.vk_switch.*(((p.Amp - p.base) * ( ...
+            rho = (((p.Amp - p.base) * ( ...
                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
                0.5 * tanh((t - p.t_2) / p.theta_R)))) + p.base;
         end
@@ -295,7 +295,7 @@ parser.addParameter('R_tot', 8.79e-8); % m
 parser.addParameter('startpulse', 200); % s
 parser.addParameter('lengthpulse',250); % s
 parser.addParameter('lengtht1', 10); % s
-parser.addParameter('F_input', 4); % s
+parser.addParameter('F_input', 2.5); % s
 parser.addParameter('alpha', 2);% [-]
 parser.addParameter('beta', 5);% [-]
 parser.addParameter('delta_t', 10); % s
@@ -328,7 +328,7 @@ parser.addParameter('K_I', 0.03); % uM
 parser.addParameter('v_BK_k', -0.080);
 
 %TRPV4
-parser.addParameter('Capmin_k', 5); %uM
+parser.addParameter('Capmin_k', 2000); %uM
 
 parser.addParameter('C_astr_k', 37);%pF
 parser.addParameter('gamma_k',834.3);%mV/uM
@@ -483,7 +483,7 @@ u0(idx.h_k) = 0.1e-3;
 u0(idx.i_k) = 0.01e-3;
 u0(idx.eet_k) = 0.1e-3;
 u0(idx.z_k) = 0;
-u0(idx.Ca_p) = 5; %5.1
+u0(idx.Ca_p) = 2000; %5.1
 
 %u0(idx.v_k) = -0.090;
 end

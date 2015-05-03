@@ -27,15 +27,28 @@ nv = NVU(Astrocyte(), ...
  
 %%
  for clu =[2880]
-        nv.astrocyte.params.vk_switch =1;
+        
+        
         nv.astrocyte.params.J_max = clu;
         
-        for foo =[8e-3] % [0.152,0.3,0.5,0.7,1,1.5]
-            nv.astrocyte.params.CAP_switch = 1;
-            nv.astrocyte.params.v_5 = foo;
-            for pie = [0,1]
-                nv.astrocyte.params.trpv_switch = pie;
+        for foo =[1,0,2,5] % [0.152,0.3,0.5,0.7,1,1.5]
+            nv.astrocyte.params.F_input = 2.5*foo;
+            nv.astrocyte.params.Amp =0.7*foo;
+            nv.astrocyte.params.trpv_switch = 0;
+            nv.astrocyte.params.vk_switch =1;
+            if foo == 0;
                 
+                nv.astrocyte.params.vk_switch = 0;
+                nv.astrocyte.params.Amp =0.7;
+                nv.astrocyte.params.J_max=1.90*2880;
+            end
+            if foo == 5;
+                
+                nv.astrocyte.params.vk_switch = 0;
+                nv.astrocyte.params.Amp =0.7;
+                nv.astrocyte.params.J_max=11*2880;
+                
+            end
                 %% Run a basic simulation
                 %nv.astrocyte.u0(nv.astrocyte.index.w_k) = clu;
                 nv.simulate()
@@ -147,21 +160,21 @@ nv = NVU(Astrocyte(), ...
                 %suptitle('Smooth Muscle Cell')
                 subplot(2,2,1)
                 hold all;
-                plot(nv.T, nv.out('Ca_i'))
-                title('[Ca^{2+}] in smooth muscle cell: Ca_i'); xlabel('Time [s]'); ylabel('[Ca^{2+}]_i [\muM]'); grid on
+                plot(nv.T, nv.out('Ca_p'))
+                title('[Ca^{2+}] PVS: Ca_p'); xlabel('Time [s]'); ylabel('[Ca^{2+}]_p [\muM]'); grid on
                 subplot(2,2,2)
                 hold all;
                 plot(nv.T, nv.out('v_i'))
                 xlabel('Time [s]'); ylabel('v_i [mV]'); title('Membrane voltage smooth muscle cell: v_i'); grid on
                 subplot(2,2,3)
                 hold all;
-                plot(nv.T, nv.out('J_VOCC_i'))
+                plot(nv.T, nv.out('J_VOCC_k'))
                 title('Ca^{2+} flux through the VOCC channel: J\_VOCC\_i'); xlabel('Time [s]'); ylabel('Ca^{2+} flux [\muM/s]'); grid on
                 subplot(2,2,4)
                 hold all;
-                plot(nv.T,  nv.out('J_KIR_i'))
-                title('K^+ flux through the KIR channel: J\_KIR\_i'); xlabel('Time [s]'); ylabel('K^+ flux [\muM m/s]'); grid on
-                legend('constant Ca_p TRPV4 deactivated','constant Ca_p TRPV4 activated','TRPV4 deactivated','TRPV4 activated')
+                plot(nv.T,  nv.out('J_TRPV_k'))
+                title('TRPV4'); xlabel('Time [s]'); ylabel('Ca^2+ flux [\muM m/s]'); grid on
+                legend('TRPV4 deactivated','TRPV4 activated')
                 
                 figure(6)
                 %suptitle('Endothlial Cell')
@@ -248,7 +261,7 @@ nv = NVU(Astrocyte(), ...
                 hold all;
                 title('Radius (R)');
                 xlabel('time (s)'); ylabel('(\mum) Radius'); grid on
-                legend('deactivated TRPV4','activated TRPV4')
+                legend('low EFS', 'low uncaged', 'high EFS', 'high uncaged')
                 
                 figure(11)
                 
@@ -348,4 +361,4 @@ nv = NVU(Astrocyte(), ...
         
     end
     
-end
+
