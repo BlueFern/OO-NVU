@@ -1,0 +1,16 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: report.aux
+A level-1 auxiliary file: Introduction.aux
+A level-1 auxiliary file: Code_GA.aux
+A level-1 auxiliary file: UsersManual.aux
+A level-1 auxiliary file: Results.aux
+A level-1 auxiliary file: Discussion.aux
+A level-1 auxiliary file: ToDo2.aux
+A level-1 auxiliary file: version1pt0.aux
+I couldn't open style file KathisBibstyle.bst
+---line 34 of file report.aux
+ : \bibstyle{KathisBibstyle
+ :                         }
+I'm skipping whatever remains of this command
+I found no \citation commands---while reading file report.aux
+I found no style file---while reading file report.aux
+(There were 3 error messages)

@@ -1,0 +1,42 @@
+\BOOKMARK [1][-]{section.1}{Release notes}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Adaptations to the astrocyte model}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{New/changed equations \046 parameters for the astrocyte model}{section.1}% 3
+\BOOKMARK [3][-]{subsubsection.1.2.1}{Conservation Equations}{subsection.1.2}% 4
+\BOOKMARK [3][-]{subsubsection.1.2.2}{Fluxes}{subsection.1.2}% 5
+\BOOKMARK [3][-]{subsubsection.1.2.3}{Additional equations}{subsection.1.2}% 6
+\BOOKMARK [2][-]{subsection.1.3}{Corrections}{section.1}% 7
+\BOOKMARK [1][-]{section.2}{Introduction}{}% 8
+\BOOKMARK [2][-]{subsection.2.1}{Neurovascular Unit}{section.2}% 9
+\BOOKMARK [2][-]{subsection.2.2}{Neurovascular Coupling}{section.2}% 10
+\BOOKMARK [2][-]{subsection.2.3}{Mathematical Approach}{section.2}% 11
+\BOOKMARK [1][-]{section.3}{Existing Models}{}% 12
+\BOOKMARK [2][-]{subsection.3.1}{The Astrocyte Model}{section.3}% 13
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Input Signal}{subsection.3.1}% 14
+\BOOKMARK [3][-]{subsubsection.3.1.2}{Scaling}{subsection.3.1}% 15
+\BOOKMARK [2][-]{subsection.3.2}{SMC and EC Model}{section.3}% 16
+\BOOKMARK [2][-]{subsection.3.3}{Contraction and Mechanical Model}{section.3}% 17
+\BOOKMARK [3][-]{subsubsection.3.3.1}{Contraction Model}{subsection.3.3}% 18
+\BOOKMARK [3][-]{subsubsection.3.3.2}{Mechanical Model}{subsection.3.3}% 19
+\BOOKMARK [2][-]{subsection.3.4}{Merging of All Models}{section.3}% 20
+\BOOKMARK [1][-]{section.4}{Equations}{}% 21
+\BOOKMARK [2][-]{subsection.4.1}{Astrocyte Model}{section.4}% 22
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Scaling}{subsection.4.1}% 23
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Input Signal}{subsection.4.1}% 24
+\BOOKMARK [3][-]{subsubsection.4.1.3}{Conservation Equations}{subsection.4.1}% 25
+\BOOKMARK [3][-]{subsubsection.4.1.4}{Fluxes}{subsection.4.1}% 26
+\BOOKMARK [3][-]{subsubsection.4.1.5}{Additional Equations}{subsection.4.1}% 27
+\BOOKMARK [2][-]{subsection.4.2}{SMC and EC Model}{section.4}% 28
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Conservation Equations}{subsection.4.2}% 29
+\BOOKMARK [3][-]{subsubsection.4.2.2}{Fluxes}{subsection.4.2}% 30
+\BOOKMARK [3][-]{subsubsection.4.2.3}{Coupling}{subsection.4.2}% 31
+\BOOKMARK [3][-]{subsubsection.4.2.4}{Additional Equations}{subsection.4.2}% 32
+\BOOKMARK [2][-]{subsection.4.3}{Contraction and Mechanical Model}{section.4}% 33
+\BOOKMARK [3][-]{subsubsection.4.3.1}{Contraction Equations}{subsection.4.3}% 34
+\BOOKMARK [3][-]{subsubsection.4.3.2}{Mechanical Equations}{subsection.4.3}% 35
+\BOOKMARK [1][-]{section.5}{Code Structure}{}% 36
+\BOOKMARK [1][-]{section.6}{Results}{}% 37
+\BOOKMARK [2][-]{subsection.6.1}{NVU1.1}{section.6}% 38
+\BOOKMARK [2][-]{subsection.6.2}{NVU1.1 compared to NVU1.0}{section.6}% 39
+\BOOKMARK [1][-]{section.7}{Summary}{}% 40
+\BOOKMARK [2][-]{subsection.7.1}{Conclusions Current Model}{section.7}% 41
+\BOOKMARK [2][-]{subsection.7.2}{Further Work}{section.7}% 42

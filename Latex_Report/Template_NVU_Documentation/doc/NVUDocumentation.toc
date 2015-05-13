@@ -1,0 +1,53 @@
+\contentsline {section}{\numberline {1}Release notes}{4}{section.1}
+\contentsline {subsection}{\numberline {1.1}Adaptations to the astrocyte model}{4}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}New/changed equations \& parameters for the astrocyte model}{4}{subsection.1.2}
+\contentsline {paragraph}{$\rho $ input signal}{4}{section*.2}
+\contentsline {subsubsection}{\numberline {1.2.1}Conservation Equations}{4}{subsubsection.1.2.1}
+\contentsline {subsubsection}{\numberline {1.2.2}Fluxes}{5}{subsubsection.1.2.2}
+\contentsline {subsubsection}{\numberline {1.2.3}Additional equations}{6}{subsubsection.1.2.3}
+\contentsline {subsection}{\numberline {1.3}Corrections}{6}{subsection.1.3}
+\contentsline {section}{\numberline {2}Introduction}{8}{section.2}
+\contentsline {subsection}{\numberline {2.1}Neurovascular Unit}{8}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Neurovascular Coupling}{9}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.3}Mathematical Approach}{9}{subsection.2.3}
+\contentsline {section}{\numberline {3}Existing Models}{10}{section.3}
+\contentsline {subsection}{\numberline {3.1}The Astrocyte Model}{10}{subsection.3.1}
+\contentsline {subsubsection}{\numberline {3.1.1}Input Signal}{11}{subsubsection.3.1.1}
+\contentsline {subsubsection}{\numberline {3.1.2}Scaling}{13}{subsubsection.3.1.2}
+\contentsline {subsection}{\numberline {3.2}SMC and EC Model}{13}{subsection.3.2}
+\contentsline {subsection}{\numberline {3.3}Contraction and Mechanical Model}{14}{subsection.3.3}
+\contentsline {subsubsection}{\numberline {3.3.1}Contraction Model}{14}{subsubsection.3.3.1}
+\contentsline {subsubsection}{\numberline {3.3.2}Mechanical Model}{15}{subsubsection.3.3.2}
+\contentsline {subsection}{\numberline {3.4}Merging of All Models}{17}{subsection.3.4}
+\contentsline {section}{\numberline {4}Equations}{19}{section.4}
+\contentsline {subsection}{\numberline {4.1}Astrocyte Model}{19}{subsection.4.1}
+\contentsline {subsubsection}{\numberline {4.1.1}Scaling}{19}{subsubsection.4.1.1}
+\contentsline {subsubsection}{\numberline {4.1.2}Input Signal}{20}{subsubsection.4.1.2}
+\contentsline {paragraph}{$\rho $ input signal}{20}{section*.3}
+\contentsline {subsubsection}{\numberline {4.1.3}Conservation Equations}{20}{subsubsection.4.1.3}
+\contentsline {paragraph}{Synaptic Cleft}{20}{section*.4}
+\contentsline {paragraph}{Astrocyte}{21}{section*.5}
+\contentsline {paragraph}{Perivascular Space}{22}{section*.6}
+\contentsline {subsubsection}{\numberline {4.1.4}Fluxes}{22}{subsubsection.4.1.4}
+\contentsline {subsubsection}{\numberline {4.1.5}Additional Equations}{24}{subsubsection.4.1.5}
+\contentsline {paragraph}{Synaptic Cleft}{24}{section*.7}
+\contentsline {paragraph}{Astrocyte}{24}{section*.8}
+\contentsline {subsection}{\numberline {4.2}SMC and EC Model}{26}{subsection.4.2}
+\contentsline {subsubsection}{\numberline {4.2.1}Conservation Equations}{26}{subsubsection.4.2.1}
+\contentsline {paragraph}{Smooth Muscle Cell}{26}{section*.9}
+\contentsline {paragraph}{Endothelial Cell}{27}{section*.10}
+\contentsline {subsubsection}{\numberline {4.2.2}Fluxes}{27}{subsubsection.4.2.2}
+\contentsline {paragraph}{Smooth Muscle Cell}{27}{section*.11}
+\contentsline {paragraph}{Endothelial Cell}{31}{section*.12}
+\contentsline {subsubsection}{\numberline {4.2.3}Coupling}{33}{subsubsection.4.2.3}
+\contentsline {subsubsection}{\numberline {4.2.4}Additional Equations}{34}{subsubsection.4.2.4}
+\contentsline {subsection}{\numberline {4.3}Contraction and Mechanical Model}{35}{subsection.4.3}
+\contentsline {subsubsection}{\numberline {4.3.1}Contraction Equations}{35}{subsubsection.4.3.1}
+\contentsline {subsubsection}{\numberline {4.3.2}Mechanical Equations}{36}{subsubsection.4.3.2}
+\contentsline {section}{\numberline {5}Code Structure}{37}{section.5}
+\contentsline {section}{\numberline {6}Results}{39}{section.6}
+\contentsline {subsection}{\numberline {6.1}NVU1.1}{39}{subsection.6.1}
+\contentsline {subsection}{\numberline {6.2}NVU1.1 compared to NVU1.0}{48}{subsection.6.2}
+\contentsline {section}{\numberline {7}Summary}{53}{section.7}
+\contentsline {subsection}{\numberline {7.1}Conclusions Current Model}{53}{subsection.7.1}
+\contentsline {subsection}{\numberline {7.2}Further Work}{53}{subsection.7.2}

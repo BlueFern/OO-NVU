@@ -1,0 +1,68 @@
+\begin{thebibliography}{12}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[{Chen et~al.(2011)Chen, Bouchard, McCaslin, Burgess and
+  Hillman}]{Hillman2011}
+\textbf{Chen, B.~R.; Bouchard, M.~B.; McCaslin, A.~F.; Burgess, S.~A. and
+  Hillman, E.} (\textbf{2011}): High-speed vascular dynamics of the hemodynamic
+  response, Neuroimage, Vol.~54, No.~2 pp. 1021--1030.
+
+\bibitem[{Donk and Kock(2013)}]{LoesEvert}
+\textbf{Donk, L. V.~D. and Kock, E. G. J.~D.} (\textbf{2013}): {Bluefern
+  Supercomputing Unit University of Canterbury Eindhoven University of
+  Technology}.
+
+\bibitem[{Farr and David(2011)}]{Farr2011}
+\textbf{Farr, H. and David, T.} (\textbf{2011}): {Models of neurovascular
+  coupling via potassium and EET signalling.}, Journal of theoretical biology,
+  Vol. 286, No.~1 pp. 13--23.
+
+\bibitem[{Filosa et~al.(2004)Filosa, Bonev and Nelson}]{Filosa2004}
+\textbf{Filosa, J.~a.; Bonev, A.~D. and Nelson, M.~T.} (\textbf{2004}):
+  {Calcium dynamics in cortical astrocytes and arterioles during neurovascular
+  coupling.}, Circulation research, Vol.~95, No.~10 pp. e73--81.
+
+\bibitem[{Franklin et~al.(2006)Franklin, Tech, Norris and Forrest}]{Franklin}
+\textbf{Franklin, T.; Tech, V.; Norris, J. and Forrest, W.} (\textbf{2006}): {A
+  MATLAB ODE progress display function with interrupt control}.
+
+\bibitem[{Gonzalez-Fernandez and Ermentrout(1994)}]{Gonzalez1994}
+\textbf{Gonzalez-Fernandez, J.~M. and Ermentrout, B.} (\textbf{1994}): {On the
+  origin and dynamics of the vasomotion of small arteries}, Mathematical
+  biosciences, Vol. 119, No.~2 pp. 127--167.
+
+\bibitem[{Gore and Davis(1984)}]{Gore}
+\textbf{Gore, R. and Davis, M.} (\textbf{1984}): {Mechanics of Smooth Muscle in
+  isolated single Microvessels}, Annals of Biomedical Engineering, Vol.~12 pp.
+  511--520.
+
+\bibitem[{Hai and Murphy(1989)}]{Hai1989}
+\textbf{Hai, C. and Murphy, R.~A.} (\textbf{1989}): {Ca2+ Crossbridge
+  Phosphorylation, and Contraction}, Annual review of physiology, Vol.~51,
+  No.~1 pp. 285--298.
+
+\bibitem[{Koenigsberger et~al.(2005)Koenigsberger, Sauser, B\'{e}ny and
+  Meister}]{Koenigsberger2005}
+\textbf{Koenigsberger, M.; Sauser, R.; B\'{e}ny, J.-L. and Meister, J.-J.}
+  (\textbf{2005}): {Role of the Endothelium on Arterial Vasomotion},
+  Biophysical Journal, Vol.~88, No.~6 pp. 3845--3854.
+
+\bibitem[{Koenigsberger et~al.(2006)Koenigsberger, Sauser, B\'{e}ny and
+  Meister}]{Koenigsberger2006}
+\textbf{Koenigsberger, M.; Sauser, R.; B\'{e}ny, J.-L. and Meister, J.-J.}
+  (\textbf{2006}): {Role of the Endothelium on Arterial Vasomotion},
+  Biophysical Journal, Vol.~88, No.~6 pp. 3845--3854.
+
+\bibitem[{{\O}stby et~al.(2009){\O}stby, {\O}yehaug, Einevoll, Nagelhus,
+  Plahte, Zeuthen, Lloyd, Ottersen and Omholt}]{Ostby2009}
+\textbf{{\O}stby, I.; {\O}yehaug, L.; Einevoll, G.~T.; Nagelhus, E.~a.; Plahte,
+  E.; Zeuthen, T.; Lloyd, C.~M.; Ottersen, O.~P. and Omholt, S.~W.}
+  (\textbf{2009}): {Astrocytic mechanisms explaining neural-activity-induced
+  shrinkage of extraneuronal space.}, PLoS computational biology, Vol.~5, No.~1
+  p. e1000272.
+
+\bibitem[{Shipp(2007)}]{Shipp2007}
+\textbf{Shipp, S.} (\textbf{2007}): {Structure and function of the cerebral
+  cortex.}, Current biology : CB, Vol.~17, No.~12 pp. R443--9.
+
+\end{thebibliography}
