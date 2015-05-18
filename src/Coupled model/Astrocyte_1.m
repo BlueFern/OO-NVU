@@ -50,7 +50,7 @@ classdef Astrocyte_1 < handle
             % Volume-surface ratio
             R_s_1 = p.R_tot - R_k_1; 
             
-            % Scale concentrations to get actual concentrations,
+            % Scale concentrations to get actual concentrations
             K_s_1 = N_K_s_1 ./ R_s_1;
             Na_s_1 = N_Na_s_1 ./ R_s_1;
             Cl_s_1 = N_Cl_s_1 ./ R_s_1;
@@ -151,6 +151,7 @@ classdef Astrocyte_1 < handle
             % The neuronal K+ input signal
             p = self.params;
             f_1 = zeros(size(t));
+            
             ii = p.t_0 <= t & t < p.t_1;
             f_1(ii) = ...
                 p.F_input * p.gab / ...

@@ -4,7 +4,10 @@ classdef SMCEC_2 < handle
     %   Please refer to the relevant sections in the documentation for 
     %   full information on the equations and variable names.
     
-    % SMC and EC of cell 2 of coupled model!
+    % SMC and EC of cell 2 of coupled model
+    
+    %%%%% Both SMC and EC have coupling terms!!!
+    %%%%% Coupling is set to 0 by default
     
     properties
         params
@@ -22,7 +25,7 @@ classdef SMCEC_2 < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R_2, h_2, K_p_2, Ca_i_1, I_i_1, v_i_1)
+        function [du, varargout] = rhs(self, t, u, R_2, h_2, K_p_2, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1)
             % Initalise inputs and parameters
             p = self.params;
             idx = self.index;
@@ -59,9 +62,15 @@ classdef SMCEC_2 < handle
             
             J_degrad_i_2 = p.k_d_i * I_i_2;
             
-            J_Ca_SMCcoup_i_2 = p.D_Ca * (Ca_i_1 - Ca_i_2);
-            J_IP3_SMCcoup_i_2 = p.D_IP3 * (I_i_1 - I_i_2);
-            J_V_SMCcoup_i_2 = p.D_v * (v_i_1 - v_i_2);
+            %% SMC coupling
+            J_Ca_SMCcoup_i_2 = p.D_Ca_i * (Ca_i_1 - Ca_i_2);
+            J_IP3_SMCcoup_i_2 = p.D_IP3_i * (I_i_1 - I_i_2);
+            J_V_SMCcoup_i_2 = p.D_v_i * (v_i_1 - v_i_2);
+            
+            %% EC coupling
+            J_Ca_ECcoup_j_2 = p.D_Ca_j * (Ca_j_1 - Ca_j_2);
+            J_IP3_ECcoup_j_2 = p.D_IP3_j * (I_j_1 - I_j_2);
+            J_V_ECcoup_j_2 = p.D_v_j * (v_j_1 - v_j_2);
             
             %% EC fluxes
             J_IP3_j_2 = p.F_j * I_j_2.^2 ./ (p.K_r_j^2 + I_j_2.^2);
@@ -87,7 +96,7 @@ classdef SMCEC_2 < handle
             J_R_j_2 = p.G_R_j * (v_j_2 - p.v_rest_j);
             J_degrad_j_2 = p.k_d_j * I_j_2;
             
-            %% Coupling
+            %% Coupling between SMC and EC
             V_coup_i_2 = -p.G_coup * (v_i_2 - v_j_2);
             J_IP3_coup_i_2 = -p.P_IP3 * (I_i_2 - I_j_2);
             J_Ca_coup_i_2 = -p.P_Ca * (Ca_i_2 - Ca_j_2);
@@ -113,10 +122,10 @@ classdef SMCEC_2 < handle
             % Endothelial Cell
             du(idx.Ca_j_2, :) = J_IP3_j_2 - J_ER_uptake_j_2 + J_CICR_j_2 - ...
                 J_extrusion_j_2 + J_ER_leak_j_2 + J_cation_j_2 + p.J_0_j_2 + ...
-                J_stretch_j_2 - J_Ca_coup_i_2;
+                J_stretch_j_2 - J_Ca_coup_i_2 + J_Ca_ECcoup_j_2;
             du(idx.s_j_2, :) = J_ER_uptake_j_2 - J_CICR_j_2 - J_ER_leak_j_2;
-            du(idx.v_j_2, :) = -1/p.C_m_j * (J_K_j_2 + J_R_j_2) - V_coup_i_2;
-            du(idx.I_j_2, :) = p.J_PLC_2 - J_degrad_j_2 - J_IP3_coup_i_2;
+            du(idx.v_j_2, :) = -1/p.C_m_j * (J_K_j_2 + J_R_j_2) - V_coup_i_2 + J_V_ECcoup_j_2;
+            du(idx.I_j_2, :) = p.J_PLC_2 - J_degrad_j_2 - J_IP3_coup_i_2 + J_IP3_ECcoup_j_2;
             
             du = bsxfun(@times, self.enabled, du);
             
@@ -160,15 +169,22 @@ classdef SMCEC_2 < handle
                 Uout(self.idx_out.J_Ca_SMCcoup_i_2, :) = J_Ca_SMCcoup_i_2;
                 Uout(self.idx_out.J_IP3_SMCcoup_i_2, :) = J_IP3_SMCcoup_i_2;
                 Uout(self.idx_out.J_V_SMCcoup_i_2, :) = J_V_SMCcoup_i_2;
+                
+                Uout(self.idx_out.J_Ca_ECcoup_j_2, :) = J_Ca_ECcoup_j_2;
+                Uout(self.idx_out.J_IP3_ECcoup_j_2, :) = J_IP3_ECcoup_j_2;
+                Uout(self.idx_out.J_V_ECcoup_j_2, :) = J_V_ECcoup_j_2;
                 varargout{1} = Uout; 
             end
         end
-        function [J_KIR_i_2, Ca_i_2, I_i_2, v_i_2] = shared(self, ~, u, K_p_2)
+        function [J_KIR_i_2, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2] = shared(self, ~, u, K_p_2)
             p = self.params;
             idx = self.index;
             v_i_2 = u(idx.v_i_2, :);
             Ca_i_2 = u(idx.Ca_i_2, :);
             I_i_2 = u(idx.I_i_2, :);
+            v_j_2 = u(idx.v_j_2, :);
+            Ca_j_2 = u(idx.Ca_j_2, :);
+            I_j_2 = u(idx.I_j_2, :);
             v_KIR_i = p.z_1 * K_p_2 - p.z_2;
             g_KIR_i = exp(p.z_5 * v_i_2 + p.z_3 * K_p_2 - p.z_4);
             J_KIR_i_2 = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i_2 - v_KIR_i);
@@ -236,15 +252,24 @@ idx.J_Ca_SMCcoup_i_2 = 34;
 idx.J_IP3_SMCcoup_i_2 = 35;
 idx.J_V_SMCcoup_i_2 = 36;
 
+idx.J_Ca_ECcoup_j_2 = 37;
+idx.J_IP3_ECcoup_j_2 = 38;
+idx.J_V_ECcoup_j_2 = 39;
+
 n = numel(fieldnames(idx));
 end
 
 function params = parse_inputs(varargin)
 parser = inputParser();
-% Coupling constants
-parser.addParameter('D_Ca', 0); % s^-1                          %%%%%%%%%
-parser.addParameter('D_IP3', 0); % s^-1                         %%%%%%%%%
-parser.addParameter('D_v', 0); % s^-1                         %%%%%%%%%
+% Coupling constants for SMC
+parser.addParameter('D_Ca_i', 0); % s^-1                          %%%%%%%%%
+parser.addParameter('D_IP3_i', 0); % s^-1                         %%%%%%%%%
+parser.addParameter('D_v_i', 0); % s^-1                           %%%%%%%%%
+
+% Coupling constants for EC
+parser.addParameter('D_Ca_j', 0); % s^-1                          %%%%%%%%%
+parser.addParameter('D_IP3_j', 0); % s^-1                         %%%%%%%%%
+parser.addParameter('D_v_j', 0); % s^-1                           %%%%%%%%%
 
 % Smooth Muscle Cell ODE Constants
 parser.addParameter('gamma_i', 1970); %mV uM^-1

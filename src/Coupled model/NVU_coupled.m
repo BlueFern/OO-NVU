@@ -3,6 +3,7 @@ classdef NVU_coupled < handle
     %   Mechanics for both systems) together to be solved by the ode15s 
     %   solver for stiff problems. 
     
+    
     properties
         astrocyte_1
         astrocyte_2
@@ -55,9 +56,7 @@ classdef NVU_coupled < handle
             self.i_wall_1 = na_1 + na_2 + ns_1 + ns_2 + (1:nw_1);
             self.i_wall_2 = na_1 + na_2 + ns_1 + ns_2 + nw_1 + (1:nw_2);
             self.n = na_1 + na_2 + ns_1 + ns_2 + nw_1 + nw_2;
-            
-            
-            
+
             self.init_conds()
         end
         function du = rhs(self, t, u)
@@ -73,8 +72,8 @@ classdef NVU_coupled < handle
             % submodels as coupling
             K_p_1 = self.astrocyte_1.shared(t, ua_1);
             K_p_2 = self.astrocyte_2.shared(t, ua_2);
-            [J_KIR_i_1, Ca_i_1, I_i_1, v_i_1] = self.smcec_1.shared(t, us_1, K_p_1);
-            [J_KIR_i_2, Ca_i_2, I_i_2, v_i_2] = self.smcec_2.shared(t, us_1, K_p_2);
+            [J_KIR_i_1, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1] = self.smcec_1.shared(t, us_1, K_p_1);
+            [J_KIR_i_2, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2] = self.smcec_2.shared(t, us_2, K_p_2);
             [R_1, h_1] = self.wall_1.shared(t, uw_1);
             [R_2, h_2] = self.wall_2.shared(t, uw_2);
             
@@ -83,8 +82,8 @@ classdef NVU_coupled < handle
             du(self.i_astrocyte_2, :) = self.astrocyte_2.rhs(t, ua_2, J_KIR_i_2);
             du(self.i_wall_1, :) = self.wall_1.rhs(t, uw_1, Ca_i_1);
             du(self.i_wall_2, :) = self.wall_2.rhs(t, uw_2, Ca_i_2);
-            du(self.i_smcec_1, :) = self.smcec_1.rhs(t, us_1, R_1, h_1, K_p_1, Ca_i_2, I_i_2, v_i_2);
-            du(self.i_smcec_2, :) = self.smcec_2.rhs(t, us_2, R_2, h_2, K_p_2, Ca_i_1, I_i_1, v_i_1);
+            du(self.i_smcec_1, :) = self.smcec_1.rhs(t, us_1, R_1, h_1, K_p_1, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2);
+            du(self.i_smcec_2, :) = self.smcec_2.rhs(t, us_2, R_2, h_2, K_p_2, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1);
         end
         function init_conds(self)
             self.u0 = zeros(self.n, 1);
@@ -110,15 +109,15 @@ classdef NVU_coupled < handle
             
             K_p_1 = self.astrocyte_1.shared(self.T, ua_1);
             K_p_2 = self.astrocyte_2.shared(self.T, ua_2);
-            [J_KIR_i_1, Ca_i_1, I_i_1, v_i_1] = self.smcec_1.shared(self.T, us_1, K_p_1);
-            [J_KIR_i_2, Ca_i_2, I_i_2, v_i_2] = self.smcec_2.shared(self.T, us_2, K_p_2);
+            [J_KIR_i_1, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1] = self.smcec_1.shared(self.T, us_1, K_p_1);
+            [J_KIR_i_2, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2] = self.smcec_2.shared(self.T, us_2, K_p_2);
             [R_1, h_1] = self.wall_1.shared(self.T, uw_1);
             [R_2, h_2] = self.wall_2.shared(self.T, uw_2);
             
             [~, self.outputs{1}] = self.astrocyte_1.rhs(self.T, ua_1, J_KIR_i_1);
             [~, self.outputs{2}] = self.astrocyte_2.rhs(self.T, ua_2, J_KIR_i_2);
-            [~, self.outputs{3}] = self.smcec_1.rhs(self.T, us_1, R_1, h_1, K_p_1, Ca_i_2, I_i_2, v_i_2);
-            [~, self.outputs{4}] = self.smcec_2.rhs(self.T, us_2, R_2, h_2, K_p_2, Ca_i_1, I_i_1, v_i_1);
+            [~, self.outputs{3}] = self.smcec_1.rhs(self.T, us_1, R_1, h_1, K_p_1, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2);
+            [~, self.outputs{4}] = self.smcec_2.rhs(self.T, us_2, R_2, h_2, K_p_2, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1);
             [~, self.outputs{5}] = self.wall_1.rhs(self.T, uw_1, Ca_i_1);
             [~, self.outputs{6}] = self.wall_2.rhs(self.T, uw_2, Ca_i_2);
             
@@ -151,7 +150,8 @@ end
 function params = parse_inputs(varargin)
 parser = inputParser();
 parser.addParameter('odeopts', odeset());
-parser.addParameter('T', linspace(0, 600, 4000));
+parser.addParameter('T', linspace(0, 600, 200000));  
+%parser.addParameter('T', 0:0.1:600);               % for frequency graphs
 parser.parse(varargin{:});
 params = parser.Results;
 end

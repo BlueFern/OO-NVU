@@ -151,6 +151,7 @@ classdef Astrocyte_2 < handle
             % The neuronal K+ input signal
             p = self.params;
             f_2 = zeros(size(t));
+            
             ii = p.t_0 <= t & t < p.t_1;
             f_2(ii) = ...
                 p.F_input * p.gab / ...

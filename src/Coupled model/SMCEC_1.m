@@ -6,6 +6,9 @@ classdef SMCEC_1 < handle
     
     % SMC and EC of cell 1 of coupled model!
     
+    %%%%% Both SMC and EC have coupling terms!!!
+    %%%%% Coupling is set to 0 by default
+    
     properties
         params
         u0
@@ -22,7 +25,7 @@ classdef SMCEC_1 < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R_1, h_1, K_p_1, Ca_i_2, I_i_2, v_i_2)
+        function [du, varargout] = rhs(self, t, u, R_1, h_1, K_p_1, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2)
             % Initalise inputs and parameters
             p = self.params;
             idx = self.index;
@@ -59,9 +62,15 @@ classdef SMCEC_1 < handle
             
             J_degrad_i_1 = p.k_d_i * I_i_1;
             
-            J_Ca_SMCcoup_i_1 = p.D_Ca * (Ca_i_2 - Ca_i_1);
-            J_IP3_SMCcoup_i_1 = p.D_IP3 * (I_i_2 - I_i_1);
-            J_V_SMCcoup_i_1 = p.D_v * (v_i_2 - v_i_1);
+            %% SMC coupling
+            J_Ca_SMCcoup_i_1 = p.D_Ca_i * (Ca_i_2 - Ca_i_1);
+            J_IP3_SMCcoup_i_1 = p.D_IP3_i * (I_i_2 - I_i_1);
+            J_V_SMCcoup_i_1 = p.D_v_i * (v_i_2 - v_i_1);
+            
+            %% EC coupling
+            J_Ca_ECcoup_j_1 = p.D_Ca_j * (Ca_j_2 - Ca_j_1);
+            J_IP3_ECcoup_j_1 = p.D_IP3_j * (I_j_2 - I_j_1);
+            J_V_ECcoup_j_1 = p.D_v_j * (v_j_2 - v_j_1);
             
             %% EC fluxes
             J_IP3_j_1 = p.F_j * I_j_1.^2 ./ (p.K_r_j^2 + I_j_1.^2);
@@ -113,10 +122,10 @@ classdef SMCEC_1 < handle
             % Endothelial Cell
             du(idx.Ca_j_1, :) = J_IP3_j_1 - J_ER_uptake_j_1 + J_CICR_j_1 - ...
                 J_extrusion_j_1 + J_ER_leak_j_1 + J_cation_j_1 + p.J_0_j_1 + ...
-                J_stretch_j_1 - J_Ca_coup_i_1;
+                J_stretch_j_1 - J_Ca_coup_i_1 + J_Ca_ECcoup_j_1;
             du(idx.s_j_1, :) = J_ER_uptake_j_1 - J_CICR_j_1 - J_ER_leak_j_1;
-            du(idx.v_j_1, :) = -1/p.C_m_j * (J_K_j_1 + J_R_j_1) - V_coup_i_1;
-            du(idx.I_j_1, :) = p.J_PLC_1 - J_degrad_j_1 - J_IP3_coup_i_1;
+            du(idx.v_j_1, :) = -1/p.C_m_j * (J_K_j_1 + J_R_j_1) - V_coup_i_1 + J_V_ECcoup_j_1;
+            du(idx.I_j_1, :) = p.J_PLC_1 - J_degrad_j_1 - J_IP3_coup_i_1 + J_IP3_ECcoup_j_1;
             
             du = bsxfun(@times, self.enabled, du);
             
@@ -160,15 +169,22 @@ classdef SMCEC_1 < handle
                 Uout(self.idx_out.J_Ca_SMCcoup_i_1, :) = J_Ca_SMCcoup_i_1;
                 Uout(self.idx_out.J_IP3_SMCcoup_i_1, :) = J_IP3_SMCcoup_i_1;
                 Uout(self.idx_out.J_V_SMCcoup_i_1, :) = J_V_SMCcoup_i_1;
+                
+                Uout(self.idx_out.J_Ca_ECcoup_j_1, :) = J_Ca_ECcoup_j_1;
+                Uout(self.idx_out.J_IP3_ECcoup_j_1, :) = J_IP3_ECcoup_j_1;
+                Uout(self.idx_out.J_V_ECcoup_j_1, :) = J_V_ECcoup_j_1;
                 varargout{1} = Uout; 
             end
         end
-        function [J_KIR_i_1, Ca_i_1, I_i_1, v_i_1] = shared(self, ~, u, K_p_1)
+        function [J_KIR_i_1, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1] = shared(self, ~, u, K_p_1)
             p = self.params;
             idx = self.index;
             v_i_1 = u(idx.v_i_1, :);
             Ca_i_1 = u(idx.Ca_i_1, :);
             I_i_1 = u(idx.I_i_1, :);
+            v_j_1 = u(idx.v_j_1, :);
+            Ca_j_1 = u(idx.Ca_j_1, :);
+            I_j_1 = u(idx.I_j_1, :);
             v_KIR_i = p.z_1 * K_p_1 - p.z_2;
             g_KIR_i = exp(p.z_5 * v_i_1 + p.z_3 * K_p_1 - p.z_4);
             J_KIR_i_1 = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i_1 - v_KIR_i);
@@ -236,15 +252,24 @@ idx.J_Ca_SMCcoup_i_1 = 34;
 idx.J_IP3_SMCcoup_i_1 = 35;
 idx.J_V_SMCcoup_i_1 = 36;
 
+idx.J_Ca_ECcoup_j_1 = 37;
+idx.J_IP3_ECcoup_j_1 = 38;
+idx.J_V_ECcoup_j_1 = 39;
+
 n = numel(fieldnames(idx));
 end
 
 function params = parse_inputs(varargin)
 parser = inputParser();
-% Coupling constants
-parser.addParameter('D_Ca', 0); % s^-1                          %%%%%%%%%
-parser.addParameter('D_IP3', 0); % s^-1                         %%%%%%%%%
-parser.addParameter('D_v', 0); % s^-1                         %%%%%%%%%
+% Coupling constants for SMC
+parser.addParameter('D_Ca_i', 0); % s^-1                          %%%%%%%%%
+parser.addParameter('D_IP3_i', 0); % s^-1                         %%%%%%%%%
+parser.addParameter('D_v_i', 0); % s^-1                           %%%%%%%%%
+
+% Coupling constants for EC
+parser.addParameter('D_Ca_j', 0); % s^-1                          %%%%%%%%%
+parser.addParameter('D_IP3_j', 0); % s^-1                         %%%%%%%%%
+parser.addParameter('D_v_j', 0); % s^-1                           %%%%%%%%%
 
 % Smooth Muscle Cell ODE Constants
 parser.addParameter('gamma_i', 1970); %mV uM^-1

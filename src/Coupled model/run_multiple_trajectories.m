@@ -2,25 +2,34 @@
 
 clear;
 
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-06, 'AbsTol', 1e-06, 'MaxStep', 0.1, 'Vectorized', 1);
 
 % Important constants:
-J_PLC_1 = 0.55;
-J_PLC_2 = 0.65;
+J_PLC_1 = 0.35;
+J_PLC_2 = 0.4;
 
 coords1 = zeros(1,5);
 coords2 = zeros(1,5);
 counter = 0;
 
-for D=0:0.03:0.3     % Choose values of D to plot trajectories for
-    D_Ca = D;
-    D_IP3 = D_Ca; % Optional IP3 coupling
-    D_v = D_Ca; % Optional membrane potential coupling
+for D=0:0.04:0.4     % Choose values of D to plot trajectories for
+    
+    % SMC coupling
+    D_Ca_i = D;
+    D_IP3_i = 0;   % Optional IP3 coupling
+    D_v_i = 0;     % Optional membrane potential coupling
+    
+    % EC coupling - optional!!
+    D_Ca_j = 0;
+    D_IP3_j = D_Ca_j;   % Optional IP3 coupling
+    D_v_j = D_Ca_j;     % Optional membrane potential coupling
 
     nv = NVU_coupled(Astrocyte_1(), Astrocyte_2(), ...
     WallMechanics_1(), WallMechanics_2(), ...
-    SMCEC_1('J_PLC_1', J_PLC_1, 'D_Ca', D_Ca, 'D_IP3', D_IP3, 'D_v', D_v), ...
-    SMCEC_2('J_PLC_2', J_PLC_2, 'D_Ca', D_Ca, 'D_IP3', D_IP3, 'D_v', D_v), ...
+    SMCEC_1('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j), ...
+    SMCEC_2('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j), ...
     'odeopts', odeopts);
     nv.simulate();
 
@@ -40,7 +49,6 @@ for D=0:0.03:0.3     % Choose values of D to plot trajectories for
     Ca_i_2(starttime:endtime,:), ...
     s_i_2(starttime:endtime,:), DD1);
     coords1 = vertcat(coords1,m1);
-    
     
     m2 = horzcat(Ca_i_1(starttime2:length(Ca_i_1),:), ...
     s_i_1(starttime2:length(s_i_1),:), ...
@@ -66,7 +74,7 @@ title('Cell 1 signal on');
 view([70 25])
 xlim([0 1]); zlim([0 1.5]);
 
-figure(111);
+figure(151);
 clf
 hold on
 for i=1:counter
@@ -96,7 +104,7 @@ title('Cell 1 signal off');
 view([70 25])
 xlim([0 1]); zlim([0 1.5]);
 
-figure(121);
+figure(161);
 clf
 hold on
 for i=1:counter
