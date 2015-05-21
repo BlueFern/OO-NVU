@@ -1,5 +1,6 @@
 
 \section{Equations}\label{sec:equations}
+\todo[inline]{Some units need to be corrected in this documentation!}
 
 \subsection{The Neuron and Astrocyte Model}
 
@@ -37,8 +38,8 @@ $t_1$ 			& End of neuronal pulse	& 210 s &   \\
 $t_2$ 			& Start of back-buffering	& 230 s &    \\
 $t_3$ 			& End of back-buffering	& 240 s &    \\
 $F_{input}$ 	& Amplitude scaling factor 	& 2.5 	&    \\
-$\alpha$ 		& Beta-distribution constant	& 2 	&  ME\footnotemark \\
-$\beta$ 		& Beta-distribution constant	& 5 	&  ME  \\
+$\alpha$ 		& Gamma distribution constant	& 2 	&  ME\footnotemark \\
+$\beta$ 		& Gamma distribution constant	& 5 	&  ME  \\
 $\Delta t$ 		& Time-scaling factor	& 10 s	&    \\
 \hline
 \end{tabular}
@@ -76,7 +77,7 @@ $R_{tot}$ 		& Total volume surface ratio AC+SC   		& 8.79$\times$10$^{-8}$ \m & 
 %
 \gls{K} concentration in the \gls{SC} (times the \gls{SC} volume-area ratio $R_s$; in \uMm):
 \begin{equation} \label{eq:KEx}
-\dfrac{\mathrm{d}N_{K_s}}{\mathrm{d}t}= k_C f(t) -\dfrac{\mathrm{d}N_{K_k}}{\mathrm{d}t}
+\dfrac{\mathrm{d}N_{K_s}}{\mathrm{d}t}= k_C f(t) -\dfrac{\mathrm{d}N_{K_k}}{\mathrm{d}t} - J_{BK_k}
 \end{equation}
 %
 \gls{Na} concentration in the \gls{SC}  (times the \gls{SC} volume-area ratio $R_s$; in \uMm):
@@ -120,7 +121,7 @@ $ k_C $  & Input scaling parameter & 7.35$\times$10$^{-5}$ \muMps & \cite{Ostby2
 \dfrac{\mathrm{d}N_{Cl_k}}{\mathrm{d}t}= \dfrac{\mathrm{d}N_{Na_k}}{\mathrm{d}t} + \dfrac{\mathrm{d}N_{K_k}}{\mathrm{d}t} - \dfrac{\mathrm{d}N_{HCO_{3_{k}}}}{\mathrm{d}t}
 \end{equation}
 %
-Open probability of the BK channel (\pers):
+Open probability of the BK channel (non-dim.):
 \begin{equation} \label{eq:dwkdt}
 \frac{\mathrm{d}w_{k}}{\mathrm{d}t} = \phi_{w} \left(w_{\infty}-w_{k} \right) 
 \end{equation}
@@ -194,6 +195,8 @@ $g_{NKCC1_k}$ 	& Specific ion conductance of the NKCC1 cotransporter	 				& 55.4
 $J_{NaK_{max}}$ & Maximum flux through the NaKATPase pump							& 1.42$\times$10$^{-3}$ \uMms 	& \cite{Ostby2009}  \\
 $g_{BK_k}$ 		& Specific ion conductance of the BK channel							& 1.16$\times$10$^3$   \perOhmm & \cite{GonzalezFernandez1994}  \\
 $C_{input}$  & Block function to switch the channel on and off &  0 ; 1 [-] 			&  \\
+$K_{Na_k}$  & Michaelis-Menten constant   &  10$^4$ \uM &   \\
+$K_{K_s}$  & Michaelis-Menten constant   &  1.5 $ \times $ 10$^3$ \uM &   \\
 \hline
 \end{tabular}
 \end{table}
@@ -208,7 +211,7 @@ N_{Cl_s}= N_{Na_s}+N_{K_s}-N_{ HCO_{3_s}}
 
 \paragraph{Astrocyte}~\\
 %
-Membrane voltage of the \gls{AC} (mV):
+Membrane voltage of the \gls{AC} (V):
 \begin{equation} \label{eq:v_k}
 v_k=\frac{g_{Na_k}E_{Na_k}+g_{K_k}E_{K_k}+g_{Cl_k}E_{Cl_k}+g_{NBC_k}E_{NBC_k} + g_{BK_k}w_kE_{BK_k} -J_{NaK_k}F \times 10^3 }{ g_{Na_k}+g_{K_k}+g_{Cl_k}+g_{NBC_k}+g_{BK_k}w_k }
 \end{equation}
@@ -329,7 +332,7 @@ Cytosolic \gls{Ca} concentration in the \gls{EC} (in \uM):
 %
 \gls{Ca} concentration in the \gls{ER} in the \gls{EC} (in \uM): %copied from SMC
 \begin{equation} \label{eq:sj}
-\dfrac{\mathrm{d}\CaConee}{\mathrm{d}t} =  J_{SR_{uptake_{j}}} - J_{CICR_{j}} - J_{SR_{leak_{j}}}
+\dfrac{\mathrm{d}\CaConee}{\mathrm{d}t} =  J_{ER_{uptake_{j}}} - J_{CICR_{j}} - J_{ER_{leak_{j}}}
 \end{equation}
 %
 Membrane potential of the \gls{EC} (in \mV):
@@ -347,7 +350,8 @@ Membrane potential of the \gls{EC} (in \mV):
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
  $C_{m_{j}}$				& Membrane capacitance												& 25.8  \pF		& \cite{Koenigsberger2006} \\
- $ J_{EC,IP_3} $  & \gls{IP3} production rate & \uMps & \cite{Koenigsberger2006}  \\
+ $ J_{EC,IP_3} $  & \gls{IP3} production rate & 0.18 or 0.4 \uMps & \cite{Koenigsberger2006}  \\
+ $J_{0_{j}}$ & leak & & \\ 
 \hline
 \end{tabular}
 \label{tab:JSRuptakei}
@@ -502,14 +506,14 @@ $E_{SAC}$      			& Reversal potential for SACs							& -18 \mV			&\cite{Koenigs
 %
 Flux through the sodium potassium pump (in \uMs): 
 \begin{equation} \label{eq:J_NaK_i}
-J_{NaK_{i}}= F_{NaK}
+J_{Na/K_{i}}= F_{Na/K_i}
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$F_{NaK}$      			& Rate of the potassium influx by the sodium potassium pump 		& 4.32$\times$10$^{-2}$ \uMps 	&\cite{Koenigsberger2006} \\
+$F_{Na/K_i}$      			& Rate of the potassium influx by the sodium potassium pump 		& 4.32$\times$10$^{-2}$ \uMps 	&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JCli}
@@ -534,7 +538,7 @@ $v_{Cli}$      			& Reversal potential for Cl$^{-}$ channels.			& -25.0 \mV			&\
 %
 Potassium flux through potassium channel (in \uMs):
 \begin{equation} \label{eq:JKi}
-J_{K_{i}}= G_{Ki} w_{i} \left(  v_{i} - vK_i  \right) 
+J_{K_{i}}= G_{Ki} w_{i} \left(  v_{i} - v_{K_i}  \right) 
 \end{equation}
 %
 \begin{table}[h!]
@@ -542,7 +546,7 @@ J_{K_{i}}= G_{Ki} w_{i} \left(  v_{i} - vK_i  \right)
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
 $G_{Ki}$      			& Whole-cell conductance for K$^{+}$ efflux.			& 4.46$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
-$vK_i$      			& Nernst potential										& -94 \mV	&\cite{Koenigsberger2006} \\
+$v_{K_i}$      			& Nernst potential										& -94 \mV	&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JKi}
@@ -784,7 +788,7 @@ $k_{dj}$      			& Rate constant of IP$_{3}$ degradation						 		& 0.1 \pers		& 
 %
 \subsubsection*{Coupling}~\\
 %
-Heterocellular electrical coupling between SMCs en ECs (in \mVs):
+Heterocellular electrical coupling between SMCs and ECs (in \mVs):
 \begin{equation} \label{eq:Vcouplingi}
 V_{coupling_{i}}^{SMC-EC}= -G_{coup}(v_{i}-v_{j})
 \end{equation}
@@ -908,7 +912,8 @@ $n_{cross}$      		& Fraction constant of the phosphorylation crossbridge				& 3
 
 Wall thickness of the vessel (in \um):
 \begin{equation} \label{eq:h2}
-h=-R+\sqrt{R^2+2R_{0_{pas}}h_{0_{pas}}+h_{0_{pas}}^2}
+%h=-R+\sqrt{R^2+2R_{0_{pas}}h_{0_{pas}}+h_{0_{pas}}^2}
+h=0.1R
 \end{equation}
 %
 Fraction of attached myosin cross-bridges (dimensionless):
@@ -916,7 +921,7 @@ Fraction of attached myosin cross-bridges (dimensionless):
 F_r = [AM_p] + [AM]
 \end{equation}
 %
-Vessel radius (in \um):
+Vessel radius (in m):
 \begin{equation} \label{eq:dRdt2e}
 \dfrac{\mathrm{d}R}{\mathrm{d}t}= \frac{R_{0_{pas}}}{\eta}\left(   \frac{ R P_{T}}{h}  - E(F_r) \frac{R - R_0(F_r)}{R_0(F_r)} \right)
 \end{equation}
