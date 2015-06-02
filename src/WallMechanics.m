@@ -57,7 +57,7 @@ classdef WallMechanics < handle
         end
         function [R, h] = shared(self, ~, u)
             R = u(self.index.R, :);
-            h = 0.1 * R;
+            h = (0.1 * R);
         end     
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
@@ -92,7 +92,7 @@ parser.addParameter('gamma_cross', 17); %uM^-3 s^-1
 % Mechanical Equation Constants
 parser.addParameter('eta', 1e4); %Pa s
 parser.addParameter('R_0_passive', 20e-6); % m
-parser.addParameter('h_0_passive', 3e-6); % m
+parser.addParameter('h_0_passive', 3e-6); % m       %% Not in use?
 parser.addParameter('P_T', 4000); % Pa
 parser.addParameter('E_passive', 66e3); % Pa
 parser.addParameter('E_active', 233e3); % Pa

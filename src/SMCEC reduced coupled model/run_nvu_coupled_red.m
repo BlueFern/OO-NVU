@@ -1,13 +1,16 @@
 clear;
 
-odeopts = odeset('RelTol', 1e-06, 'AbsTol', 1e-06, 'MaxStep', 0.1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
+
+% Time
+T = linspace(0, 600, 20000);
 
 % Important constants:
-J_PLC_1 = 0.2;
-J_PLC_2 = 0.3;
+J_PLC_1 = 0.14;
+J_PLC_2 = 0.17;
 
 % SMC coupling
-D_Ca_i = 0;
+D_Ca_i = 2;
 D_IP3_i = 0;        % Optional IP3 coupling
 D_v_i = 0;          % Optional membrane potential coupling
 
@@ -16,29 +19,29 @@ D_Ca_j = 0;
 D_IP3_j = D_Ca_j;   % Optional IP3 coupling
 D_v_j = D_Ca_j;     % Optional membrane potential coupling
 
-startpulse = 10;     % ON: 10, OFF: 600, OFF/ON/OFF: 200
-lengthpulse = 1990;  % ON: 590, OFF: any, OFF/ON/OFF: 200
+%K_p = 9300;     % Signal on
+%K_p = 3400;     % Signal off
 
-nv = NVU_coupled(Astrocyte_1('startpulse', startpulse,'lengthpulse',lengthpulse), ...
-    Astrocyte_2('startpulse', startpulse,'lengthpulse',lengthpulse), ...
-    WallMechanics_1(), WallMechanics_2(), ...
-    SMCEC_1('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j), ...
-    SMCEC_2('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j), ...
-    'odeopts', odeopts);
+K_p = 8800;
+
+nv = NVU_coupled_red( WallMechanics_1(), WallMechanics_2(), ...
+    SMCEC_1_red('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_1', K_p), ...
+    SMCEC_2_red('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_2', K_p), ...
+    'odeopts', odeopts, 'T', T);
 
 nv.simulate();
 
 % Plot calcium of each SMC
 %Calcium
-figure(102);
+figure(100);
 plot(nv.T, nv.out('Ca_i_1'));
 xlabel('t'); ylabel('Ca_i');
 title('Cell 1 Ca_i');
 ylim([0 1]);
 
-figure(202);
+figure(200);
 plot(nv.T, nv.out('Ca_i_2'));
 xlabel('t'); ylabel('Ca_i');
 title('Cell 2 Ca_i');
@@ -120,7 +123,3 @@ title('Cell 2 calcium in store');
 %% fgdfgg
 figure(13);
 plot(nv.T, nv.out('s_i_1')+nv.out('Ca_i_1'));
-
-%%
-figure(14);
-plot(nv.T, nv.out('R_1'), nv.T, nv.out('R_2'));

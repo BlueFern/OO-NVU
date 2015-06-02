@@ -1,36 +1,28 @@
 % Bifurcation diagram for single NVU, with J_PLC as parameter
+% REDUCED MODEL
 
 clear;   
 
-odeopts = odeset('RelTol', 1e-06, 'AbsTol', 1e-06, 'MaxStep', 0.1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 0.5, 'Vectorized', 1);
 
 coords = zeros(1,3);
 counter = 0;
 
-%ICs
-Ca_i=0.1; s_i=0.1;
+% Time
+T = 0:0.1:1000;
 
-for JPLC=0.262:0.002:0.268
+K_p = 9300;     % Signal On
+%K_p = 3400;   % Signal Off
+
+for JPLC=0.0525:0.005:0.1225
     
-    % Signal off
-    %nv = NVU(Astrocyte('startpulse', 600), ...
-    %WallMechanics(), ...
-    %SMCEC('J_PLC', JPLC), ...
-    %'odeopts', odeopts);
-
-    % Signal on
-    nv = NVU(Astrocyte('startpulse', 10, 'lengthpulse', 590), ...
-    WallMechanics(), ...
-    SMCEC('J_PLC', JPLC), ...
-    'odeopts', odeopts);
-
-    % Change intitial conditions to last point calculated
-    nv.smcec.u0(nv.smcec.index.Ca_i) = Ca_i(length(Ca_i));
-    nv.smcec.u0(nv.smcec.index.s_i) = s_i(length(s_i));
+    nv = NVU_red(WallMechanics(), ...
+    SMCEC_red('J_PLC', JPLC, 'K_p', K_p), ...
+    'odeopts', odeopts, 'T', T);
 
     nv.simulate();
     
-    starttime = floor(300/nv.T(length(nv.T))*length(nv.T));
+    starttime = floor(600/nv.T(length(nv.T))*length(nv.T));
     endtime = length(nv.T);
     
     Ca_i = nv.out('Ca_i'); s_i = nv.out('s_i');
