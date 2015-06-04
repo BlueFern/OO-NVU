@@ -1,16 +1,16 @@
 clear;
 
-odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 0.5, 'Vectorized', 1);
 
 % Time
 T = linspace(0, 600, 20000);
 
 % Important constants:
-J_PLC_1 = 0.14;
-J_PLC_2 = 0.17;
+J_PLC_1 = 0.25;
+J_PLC_2 = 0.35;
 
 % SMC coupling
-D_Ca_i = 2;
+D_Ca_i = 0.3;
 D_IP3_i = 0;        % Optional IP3 coupling
 D_v_i = 0;          % Optional membrane potential coupling
 
@@ -22,7 +22,7 @@ D_v_j = D_Ca_j;     % Optional membrane potential coupling
 %K_p = 9300;     % Signal on
 %K_p = 3400;     % Signal off
 
-K_p = 8800;
+K_p = 9300;
 
 nv = NVU_coupled_red( WallMechanics_1(), WallMechanics_2(), ...
     SMCEC_1_red('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
@@ -66,6 +66,7 @@ ylim([0 1]);
 % starttime = floor((nv.astrocyte_1.params.startpulse+80)/nv.T(length(nv.T))*length(nv.T));
 % endtime = floor((nv.astrocyte_1.params.startpulse+nv.astrocyte_1.params.lengthpulse)/nv.T(length(nv.T))*length(nv.T));
 
+%% 
 starttime = floor(300/nv.T(length(nv.T))*length(nv.T));
 endtime = length(nv.T);
 

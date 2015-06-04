@@ -1,5 +1,4 @@
-% Plot trajectories for multiple D
-% For no signal change
+% Plot trajectories for multiple D for reduced model
 
 clear;   
 
@@ -14,10 +13,15 @@ t = 0:0.1:1000;
 coords = zeros(1,5);
 counter = 0;
 
-startpulse = 2000;     % ON: 10, OFF: 600, OFF/ON/OFF: 200
-lengthpulse = 2000;  % ON: 590, OFF: any, OFF/ON/OFF: 200
+K_p = 9300;
 
-for D=0:0.025:0.15   % Choose values of D to plot trajectories for
+startofD = 0;
+endofD = 0.15;
+space = 0.025;
+DD = startofD:space:endofD;
+num_iterations = length(DD);
+
+for D=startofD:space:endofD   % Choose values of D to plot trajectories for
     
     % SMC coupling
     D_Ca_i = D;
@@ -29,14 +33,12 @@ for D=0:0.025:0.15   % Choose values of D to plot trajectories for
     D_IP3_j = 0;   % Optional IP3 coupling
     D_v_j = 0;     % Optional membrane potential coupling
 
-    nv = NVU_coupled(Astrocyte_1('startpulse', startpulse,'lengthpulse',lengthpulse), ...
-    Astrocyte_2('startpulse', startpulse,'lengthpulse',lengthpulse), ...
-    WallMechanics_1(), WallMechanics_2(), ...
-    SMCEC_1('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j), ...
-    SMCEC_2('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j), ...
-    'odeopts', odeopts,'T',t);
+    nv = NVU_coupled_red( WallMechanics_1(), WallMechanics_2(), ...
+    SMCEC_1_red('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_1', K_p), ...
+    SMCEC_2_red('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_2', K_p), ...
+    'odeopts', odeopts, 'T', t);
 
     nv.simulate();
     
@@ -55,10 +57,13 @@ for D=0:0.025:0.15   % Choose values of D to plot trajectories for
     s_i_2(starttime:endtime,:), DD);
     coords = vertcat(coords,m);
 
-    counter = counter+1
+    counter = counter + 1;
+    amount_done = counter/num_iterations;
+    percentage_done = amount_done*100;
+    fprintf('%.2f%% done, %d iterations left \n', percentage_done, num_iterations-counter);
 end
 
-figure(1100);
+figure(11);
 clf
 hold on
 for i=1:counter
@@ -69,11 +74,11 @@ end
 hold off
 xlabel('Calcium in cytosol'); ylabel('D'); zlabel('Calcium in store');
 grid on
-title('Cell 1 (signal ON)');
+title('Cell 1');
 view([70 25])
 xlim([0 1]); zlim([0 1.5]);
 
-figure(2100);
+figure(21);
 clf
 hold on
 for i=1:counter
@@ -84,7 +89,7 @@ end
 hold off
 xlabel('Calcium in cytosol'); ylabel('D'); zlabel('Calcium in store');
 grid on
-title('Cell 2 (signal ON)');
+title('Cell 2');
 view([70 25])
 xlim([0 1]); zlim([0 1.5]);
 
