@@ -263,10 +263,6 @@ parser.addParameter('z_K', 1);% [-]
 parser.addParameter('z_Na', 1);% [-]
 parser.addParameter('z_Cl', -1);% [-]
 parser.addParameter('z_NBC', -1);% [-]
-parser.addParameter('BK_end', 40);% [-]
-parser.addParameter('K_ex', 0.26); %uM
-parser.addParameter('B_ex', 11.35); %uM
-parser.addParameter('K_G', 8.82); %uM
 parser.addParameter('v_4', 14.5e-3); %V
 parser.addParameter('v_5', 8e-3); %V
 parser.addParameter('v_6', 22e-3); %V
@@ -274,7 +270,7 @@ parser.addParameter('psi_w', 2.664); %s^-1
 
 parser.parse(varargin{:})
 params = parser.Results;
-params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k;
+params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k; % pS gets converted to mho m^-2
 params.t_0 = params.startpulse;
 params.t_1 = params.t_0 + params.lengtht1;
 params.t_2 = params.t_0 + params.lengthpulse;
