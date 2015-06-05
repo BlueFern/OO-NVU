@@ -129,7 +129,7 @@ Open probability of the BK channel (non-dim.):
 \paragraph{Perivascular Space}~\\
 \gls{K} concentration in the PVS  (in \uM):
 \begin{equation} \label{eq:K_p}
-\dfrac{\mathrm{d}K_{p}}{\mathrm{d}t}= \frac{J_{BK_k}}{R_k R_{pa}} + \frac{J_{KIR_i}}{ R_{ps}}
+\dfrac{\mathrm{d}K_{p}}{\mathrm{d}t}= \frac{J_{BK_k}}{R_k R_{pa}} + \frac{J_{KIR_i}}{R_{ps}} - R_{decay}(K_p - K_{p,min});
 \end{equation}
 %
 \begin{table}[h!]
@@ -138,6 +138,8 @@ Open probability of the BK channel (non-dim.):
 \hline
 $ R_{pa} $  & Volume ratio of PVS to AC & 10$^{-3}$ [-] & \cite{Nagelhus1999} \\
 $ R_{ps} $  & Volume ratio of PVS to SMC & 10$^{-3}$ [-] & \cite{Nagelhus1999} \\
+$ R_{decay} $  & Decay rate & 0.05 s$^{-1}$ & M.E. \\
+$ K_{p,min} $  & min K+ concentration & 3 $\times$ 10$^{3}$ \textmu M & M.E. \\
 \hline
 \end{tabular}
 \end{table}
@@ -192,11 +194,14 @@ $g_{Na_k}$ 		& Specific ion conductance of sodium 									& 1.314$\times$10$^3$
 $g_{NBC_k}$ 	& Specific ion conductance of the NBC cotransporter						& 7.57$\times$10$^2$ \perOhmm 	& \cite{Ostby2009}  \\
 $g_{KCC1_k}$ 	& Specific ion conductance of the KCC1 cotransporter					& 10 \perOhmm 	& \cite{Ostby2009}  \\
 $g_{NKCC1_k}$ 	& Specific ion conductance of the NKCC1 cotransporter	 				& 55.4 \perOhmm 	& \cite{Ostby2009}  \\
-$J_{NaK_{max}}$ & Maximum flux through the NaKATPase pump							& 1.42$\times$10$^{-3}$ \uMms 	& \cite{Ostby2009}  \\
-$g_{BK_k}$ 		& Specific ion conductance of the BK channel							& 1.16$\times$10$^3$   \perOhmm & \cite{GonzalezFernandez1994}  \\
+$J_{NaK_{max}}$ & Maximum flux through the NaKATPase pump						     	& 1.42$\times$10$^{-3}$ \uMms 	& \cite{Ostby2009}  \\
+$G_{BK_k}$ 		& Specific ion conductance of the BK channel							& 4.3$\times$10$^3$   pS & \cite{GonzalezFernandez1994}  \\
+$A_{ef,k}$		& Membrane area														    & 3.7 $\times$ 10$^{-9}$ & \cite{GonzalezFernandez1994} \\
+$g_{BK_k}$ 		& Specific ion conductance of the BK channel							&  $G_{BK_k}$ $\times$10$^{-12}$/A$_{ef,k}$ = 1.16$\times$10$^3$ \perOhmm & \cite{GonzalezFernandez1994}  \\
 $C_{input}$  & Block function to switch the channel on and off &  0 ; 1 [-] 			&  \\
 $K_{Na_k}$  & Michaelis-Menten constant   &  10$^4$ \uM &   \\
 $K_{K_s}$  & Michaelis-Menten constant   &  1.5 $ \times $ 10$^3$ \uM &   \\
+$C_{unit}$ & Unit converting factor   & 10$^{3}$ & M.E. \\
 \hline
 \end{tabular}
 \end{table}
@@ -213,7 +218,7 @@ N_{Cl_s}= N_{Na_s}+N_{K_s}-N_{ HCO_{3_s}}
 %
 Membrane voltage of the \gls{AC} (V):
 \begin{equation} \label{eq:v_k}
-v_k=\frac{g_{Na_k}E_{Na_k}+g_{K_k}E_{K_k}+g_{Cl_k}E_{Cl_k}+g_{NBC_k}E_{NBC_k} + g_{BK_k}w_kE_{BK_k} -J_{NaK_k}F \times 10^3 }{ g_{Na_k}+g_{K_k}+g_{Cl_k}+g_{NBC_k}+g_{BK_k}w_k }
+v_k=\frac{g_{Na_k}E_{Na_k}+g_{K_k}E_{K_k}+g_{Cl_k}E_{Cl_k}+g_{NBC_k}E_{NBC_k} + g_{BK_k}w_kE_{BK_k} -J_{NaK_k}F C_{unit} }{ g_{Na_k}+g_{K_k}+g_{Cl_k}+g_{NBC_k}+g_{BK_k}w_k }
 \end{equation}
 %
 Nernst potential for the potassium channel (in mV):
@@ -350,8 +355,8 @@ Membrane potential of the \gls{EC} (in \mV):
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
  $C_{m_{j}}$				& Membrane capacitance												& 25.8  \pF		& \cite{Koenigsberger2006} \\
- $ J_{EC,IP_3} $  & \gls{IP3} production rate & 0.18 or 0.4 \uMps & \cite{Koenigsberger2006}  \\
- $J_{0_{j}}$ & leak & & \\ 
+ $ J_{PLC} $  & PLC / \gls{IP3} production rate & 0.18 or 0.4 \uMps & \cite{Koenigsberger2006}  \\
+ $J_{0_{j}}$ & Constant Ca2+ leak term (influx) & 0.029 \uMps & \cite{Koenigsberger2006} \\ 
 \hline
 \end{tabular}
 \label{tab:JSRuptakei}
@@ -943,8 +948,8 @@ R_0(F_r)=R_{0_{pas}} + F_r (\alpha -1) R_{0_{pas}}
 $\eta   $				& viscosity															& 10$^4$ Pa s 		&  \cite{Koenigsberger2006}\\
 $R_{0_{pas}}$			& Radius of the vessel when passive and no stress is applied		& 20  \um 		& ME \\
 $P_T$					& Transmural pressure												& 4$\times$10$^3$ \Pa		& ME \\
-${E}_{pas}$				& Young's moduli for the passive vessel								& 66$\times$10$^3$ \Pa 		&  \cite{Gore1985}\\
-${E}_{act}$				& Additional component of the Young's moduli when vessel is active	& 167$\times$10$^3$ \Pa 	& \cite{Gore1985}\\
+${E}_{pas}$				& Young's modulus for the passive vessel								& 66$\times$10$^3$ \Pa 		&  \cite{Gore1985}\\
+${E}_{act}$				& Young's modulus for the active vessel								& 233$\times$10$^3$ \Pa 	& \cite{Gore1985}\\
 $\alpha$				& Scaling factor initial radius										& 0.6    		& \cite{Gore1985}\\
 \hline
 \end{tabular}
