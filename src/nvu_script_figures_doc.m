@@ -99,9 +99,31 @@ plot(nv.T, 0.001*nv.out('K_p')); xlim([0 500])
 xlabel('Time [s]'); ylabel('[K^+]_p (mM)'); grid on
 %%
 
+
 figure(3)
 set(gcf, 'Position', [70 10 1800 900]);
 set(gcf, 'Name', 'AC Fluxes');
+subplot(2,4,1)
+plot(nv.T, nv.out('J_KCC1_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{KCC1_k} [\muM m s^{-1}]'); grid on
+subplot(2,4,2)
+plot(nv.T, nv.out('J_NKCC1_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{NKCC1_k} [\muM m s^{-1}]'); grid on
+subplot(2,4,3)
+plot(nv.T, nv.out('J_K_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{K_k} [\muM m s^{-1}]'); grid on
+subplot(2,4,4)
+plot(nv.T, nv.out('J_NaK_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{NaK_k} [\muM m s^{-1}]'); grid on
+subplot(2,4,5)
+plot(nv.T, nv.out('J_Na_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{Na_k} [\muM m s^{-1}]'); grid on
+subplot(2,4,6)
+plot(nv.T, nv.out('J_NBC_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{NBC_k} [\muM m s^{-1}]'); grid on
+subplot(2,4,7)
+plot(nv.T, nv.out('J_BK_k')); xlim([0 500])
+xlabel('Time [s]'); ylabel('J_{BK_k} [\muM m s^{-1}]'); grid on
 
 %%
 figure(4) 
@@ -277,11 +299,9 @@ if strcmp(save1,'y') || strcmp(save1,'yes')
         clc; fprintf('Figures and parameters have been saved in the folder "%s".\n', filename);
         value=1;
         cd ..
-     
 elseif strcmp(save1,'n') || strcmp(save1,'no')
         clc; fprintf('Figures and parameters have not been saved.\n');
         value=1;
-      
 elseif strcmp(save1,'p') || strcmp(save1,'p')
         fprintf('Please wait!');
         cl = clock;
@@ -302,9 +322,7 @@ elseif strcmp(save1,'p') || strcmp(save1,'p')
         clc; fprintf('Figures and parameters have been saved in the folder "%s".\n', filename);
         value=1;
         cd ..
-        
 else
         clc; fprintf('Warning: "%s" is not a valid input!\n', save1);
-       
 end
 

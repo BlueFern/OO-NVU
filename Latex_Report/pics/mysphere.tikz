@@ -1,0 +1,59 @@
+% This file was created by matlab2tikz.
+% Minimal pgfplots version: 1.3
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.95092\figurewidth,
+height=\figureheight,
+at={(0\figurewidth,0\figureheight)},
+scale only axis,
+xmin=0,
+xmax=25,
+xlabel={\# of generation},
+xmajorgrids,
+xminorgrids,
+ymin=0.32,
+ymax=0.42,
+ylabel={probability of mutation},
+ymajorgrids,
+yminorgrids,
+title style={font=\bfseries},
+title={Change of average mutation rate},
+legend style={legend cell align=left,align=left,draw=white!15!black}
+]
+\addplot [color=mycolor1,solid]
+  table[row sep=crcr]{%
+1	0.374449970646542\\
+2	0.381615849916566\\
+3	0.348336537999253\\
+4	0.323362825069278\\
+5	0.387089223160582\\
+6	0.411966149604173\\
+7	0.394221258660934\\
+8	0.394126761790358\\
+9	0.385645301436773\\
+10	0.417453134966139\\
+11	0.367308009011024\\
+12	0.355115285832119\\
+13	0.356601008405163\\
+14	0.335437409213666\\
+15	0.385589753066814\\
+16	0.365525082998872\\
+17	0.40585620178174\\
+18	0.393846479078876\\
+19	0.336630183223332\\
+20	0.335713174432453\\
+21	0.346638662604246\\
+22	0.353720039538017\\
+};
+\addlegendentry{Change of average mutation rate};
+
+\end{axis}
+\end{tikzpicture}%

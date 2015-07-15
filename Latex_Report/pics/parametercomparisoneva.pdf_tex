@@ -1,0 +1,87 @@
+%% Creator: Inkscape 0.91_64bit, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'parametercomparisoneva.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{443.99026484bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.502725)%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{parametercomparisoneva.pdf}}%
+    \put(0.09056412,0.03950817){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{$lambda_{i}$}}}%
+    \put(0.11571746,0.05593903){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0.23822725,0.03823344){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{$J_{PLC}$}}}%
+    \put(0.39042194,0.03823344){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{$F_{i}$}}}%
+    \put(0.39769056,0.05593903){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0.5355378,0.03823344){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{$Kr_i$}}}%
+    \put(0.54339632,0.05593903){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0.54575593,0.05593903){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0.67662085,0.03823344){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{$L_i$}}}%
+    \put(0.69028189,0.05593903){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0.97560462,0.03823345){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{$B_{j}$}}}%
+    \put(0.98346314,0.05593903){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{parametercomparisoneva.pdf}}%
+    \put(0.03995417,0.06776452){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{-0.15}}}%
+    \put(0.04421915,0.13933927){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{-0.1}}}%
+    \put(0.03995417,0.21091406){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{-0.05}}}%
+    \put(0.05316849,0.2824888){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0}}}%
+    \put(0.04250791,0.35406359){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.05}}}%
+    \put(0.04677289,0.42563834){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.1}}}%
+    \put(0.04250791,0.49721311){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.15}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{parametercomparisoneva.pdf}}%
+    \put(0.31851243,0.31458869){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{7th best result}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{parametercomparisoneva.pdf}}%
+    \put(0.31875439,0.33828576){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{6th best result}}}%
+    \put(0.31865759,0.36204935){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{5th best result}}}%
+    \put(0.31937136,0.38577071){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{4th best result}}}%
+    \put(0.31910524,0.40949787){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{3rd best result}}}%
+    \put(0.31857293,0.43307999){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{2nd best result}}}%
+    \put(0.31765356,0.45695245){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{1st best result}}}%
+    \put(0.80532044,0.03497332){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{$G_{Cai}$}}}%
+    \put(0.02867888,0.52016838){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.05778638\unitlength}\raggedright \end{minipage}}}%
+    \put(0.47930928,0.00029034){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Parameter}}}%
+    \put(0.01773468,0.08184103){\color[rgb]{0,0,0}\rotatebox{90}{\makebox(0,0)[lb]{\smash{Distance to best result [-]}}}}%
+  \end{picture}%
+\endgroup%

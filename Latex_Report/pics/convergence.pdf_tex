@@ -1,0 +1,86 @@
+%% Creator: Inkscape 0.91_64bit, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'convergence.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{444.16991747bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.52323374)%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{convergence.pdf}}%
+    \put(-0.0008224,0.43090018){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.30747833\unitlength}\raggedright output\end{minipage}}}%
+    \put(0.37643834,0.00682277){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{best result of generation}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{convergence.pdf}}%
+    \put(0.20269656,0.04406438){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{4}}}%
+    \put(0.33259441,0.04437218){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{8}}}%
+    \put(0.45080206,0.04406438){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{12}}}%
+    \put(0.58117814,0.04437218){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{16}}}%
+    \put(0.70807753,0.04437218){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{20}}}%
+    \put(-0.0003144,0.37182431){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{value}}}%
+    \put(0.83464163,0.04533122){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{24}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{convergence.pdf}}%
+    \put(0.21938818,0.22332652){\color[rgb]{0.12941176,0.47058824,0.26666667}\makebox(0,0)[lb]{\smash{convergence boundary}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{convergence.pdf}}%
+    \put(0.35256937,0.27112603){\color[rgb]{1,0,0}\makebox(0,0)[lb]{\smash{count = 3}}}%
+    \put(0.12485661,0.28788625){\color[rgb]{0.50196078,0.50196078,0.50196078}\makebox(0,0)[lb]{\smash{count = 0}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{convergence.pdf}}%
+    \put(0.12461091,0.10593585){\color[rgb]{0.4,0.4,0.4}\makebox(0,0)[lb]{\smash{count = 0}}}%
+    \put(0.21742355,0.33294913){\color[rgb]{0.50196078,0.50196078,0.50196078}\makebox(0,0)[lb]{\smash{count = 0}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{convergence.pdf}}%
+    \put(0.77102644,0.40250105){\color[rgb]{1,0.16470588,0.16470588}\makebox(0,0)[lb]{\smash{count = 12}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{convergence.pdf}}%
+    \put(0.51305351,0.30724082){\color[rgb]{0,0,1}\makebox(0,0)[lb]{\smash{current result compared to 'result y'}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{convergence.pdf}}%
+    \put(0.64647715,0.16913638){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{stop if count is bigger than 12}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{convergence.pdf}}%
+    \put(0.73817196,0.50550624){\color[rgb]{0.12941176,0.47058824,0.26666667}\makebox(0,0)[lb]{\smash{convergence boundary }}}%
+    \put(0.12351447,0.24501286){\color[rgb]{0,0,1}\makebox(0,0)[lb]{\smash{result z}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{convergence.pdf}}%
+    \put(0.21625778,0.19696205){\color[rgb]{0.12941176,0.47058824,0.26666667}\makebox(0,0)[lb]{\smash{= percentage x result z}}}%
+    \put(0.73496324,0.47801465){\color[rgb]{0.12941176,0.47058824,0.26666667}\makebox(0,0)[lb]{\smash{= percentage x result y}}}%
+    \put(0.38016674,0.44385265){\color[rgb]{0,0,1}\makebox(0,0)[lb]{\smash{result y}}}%
+    \put(-0.03601476,0.46675352){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.11925384\unitlength}\raggedright \end{minipage}}}%
+  \end{picture}%
+\endgroup%

@@ -1,0 +1,81 @@
+%% Creator: Inkscape 0.91_64bit, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'Ca_i_aimed_value_eva.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{423.66887131bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.49476937)%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{Ca_i_aimed_value_eva.pdf}}%
+    \put(0.5181001,0.0018328){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{generation}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{Ca_i_aimed_value_eva.pdf}}%
+    \put(0.08971845,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0}}}%
+    \put(0.17784454,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{10}}}%
+    \put(0.2680695,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{20}}}%
+    \put(0.35829447,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{30}}}%
+    \put(0.44851941,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{40}}}%
+    \put(0.53874438,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{50}}}%
+    \put(0.62896936,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{60}}}%
+    \put(0.71919433,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{70}}}%
+    \put(0.80941924,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{80}}}%
+    \put(0.89964421,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{90}}}%
+    \put(0.98777033,0.02610882){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{100}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{Ca_i_aimed_value_eva.pdf}}%
+    \put(0.03447185,0.0457673){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.07}}}%
+    \put(0.03027414,0.10121435){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.072}}}%
+    \put(0.03027414,0.15666159){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.074}}}%
+    \put(0.03027414,0.21210862){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.076}}}%
+    \put(0.03027414,0.26755586){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.078}}}%
+    \put(0.03447185,0.32300289){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.08}}}%
+    \put(0.03027414,0.37845013){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.082}}}%
+    \put(0.03027414,0.43389716){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.084}}}%
+    \put(0.03027414,0.4893444){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0.086}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{Ca_i_aimed_value_eva.pdf}}%
+    \put(0.54012449,0.19502242){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{best organism's $Ca_i$ }}}%
+    \put(0.53826362,0.1685985){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{user defined value}}}%
+    \put(0.0202968,0.179989){\color[rgb]{0,0,0}\rotatebox{90}{\makebox(0,0)[lb]{\smash{$Ca_i [\mu$$M]$}}}}%
+  \end{picture}%
+\endgroup%

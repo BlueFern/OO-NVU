@@ -1,0 +1,84 @@
+%% Creator: Inkscape 0.91_64bit, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'R_change_rate_eva.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{412.52109835bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.53880936)%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{R_change_rate_eva.pdf}}%
+    \put(0.50128796,0.00198742){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{ generation}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{R_change_rate_eva.pdf}}%
+    \put(0.05676213,0.02308861){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{0}}}%
+    \put(0.14588008,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{10}}}%
+    \put(0.23956167,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{20}}}%
+    \put(0.3332433,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{30}}}%
+    \put(0.4269249,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{40}}}%
+    \put(0.52060649,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{50}}}%
+    \put(0.61428812,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{60}}}%
+    \put(0.70796968,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{70}}}%
+    \put(0.8016513,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{80}}}%
+    \put(0.89533286,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{90}}}%
+    \put(0.98673857,0.02076906){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{100}}}%
+    \put(0.00738251,0.28679671){\color[rgb]{0.14901961,0.14901961,0.14901961}\rotatebox{90.00000257}{\makebox(0,0)[lb]{\smash{$R [m]$}}}}%
+    \put(0.06137675,0.52744426){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{10}}}%
+    \put(0.05979766,0.51692282){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{}}}%
+    \put(0.09014154,0.53383173){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{-6}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{R_change_rate_eva.pdf}}%
+    \put(0.02579851,0.05166233){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{5.5}}}%
+    \put(0.0326243,0.11044943){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{6}}}%
+    \put(0.02579851,0.16923653){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{6.5}}}%
+    \put(0.0326243,0.22802362){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{7}}}%
+    \put(0.02579851,0.2868107){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{7.5}}}%
+    \put(0.0326243,0.3455978){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{8}}}%
+    \put(0.02579851,0.40438489){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{8.5}}}%
+    \put(0.0326243,0.46317199){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{9}}}%
+    \put(0.02579851,0.52195908){\color[rgb]{0.14901961,0.14901961,0.14901961}\makebox(0,0)[lb]{\smash{9.5}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{R_change_rate_eva.pdf}}%
+    \put(0.52228979,0.31080806){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{best organism's R }}}%
+    \put(0.52037863,0.28367007){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{inital value}}}%
+  \end{picture}%
+\endgroup%

@@ -1,0 +1,75 @@
+%% Creator: Inkscape 0.48.3.1, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'Timepoints.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{1440bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.32135417)%
+    \put(0,0){\includegraphics[width=\unitlength]{Timepoints.pdf}}%
+    \put(0.50121667,0.01399986){\makebox(0,0)[lb]{\smash{time (s)}}}%
+    \put(0.12832569,0.02583174){\makebox(0,0)[lb]{\smash{050100150200250300350400450500}}}%
+    \put(0.115625,0.15572917){\rotatebox{90}{\makebox(0,0)[lb]{\smash{(}}}}%
+    \put(0.115625,0.159375){\rotatebox{90}{\makebox(0,0)[lb]{\smash{µ}}}}%
+    \put(0.115625,0.165625){\rotatebox{90}{\makebox(0,0)[lb]{\smash{m)}}}}%
+    \put(0.11989931,0.03260743){\makebox(0,0)[lb]{\smash{14
+16
+18
+20
+22
+24
+26}}}%
+    \put(0.49296875,0.30232431){\makebox(0,0)[lb]{\smash{Radius (R)}}}%
+    \put(0.78839963,0.18676877){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Average Value (A)}}}%
+    \put(0.47318851,0.17026897){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Chaning rate (R)}}}%
+    \put(0.22347583,0.1816836){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Time point (P)}}}%
+    \put(0.22930232,0.01071032){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Time point 1}}}%
+    \put(0.37921304,0.01070743){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Time point 1}}}%
+    \put(0.56155103,0.01042937){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Time point 1  }}}%
+    \put(0.72881656,0.01041987){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Time point 1}}}%
+    \put(0.83995073,0.01042937){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Time point 2}}}%
+  \end{picture}%
+\endgroup%

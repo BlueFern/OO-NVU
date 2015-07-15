@@ -1,0 +1,88 @@
+%% Creator: Inkscape 0.91_64bit, www.inkscape.org
+%% PDF/EPS/PS + LaTeX output extension by Johan Engelen, 2010
+%% Accompanies image file 'FitFunction.pdf' (pdf, eps, ps)
+%%
+%% To include the image in your LaTeX document, write
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics{<filename>.pdf}
+%% To scale the image, write
+%%   \def\svgwidth{<desired width>}
+%%   \input{<filename>.pdf_tex}
+%%  instead of
+%%   \includegraphics[width=<desired width>]{<filename>.pdf}
+%%
+%% Images with a different path to the parent latex file can
+%% be accessed with the `import' package (which may need to be
+%% installed) using
+%%   \usepackage{import}
+%% in the preamble, and then including the image with
+%%   \import{<path to file>}{<filename>.pdf_tex}
+%% Alternatively, one can specify
+%%   \graphicspath{{<path to file>/}}
+%% 
+%% For more information, please see info/svg-inkscape on CTAN:
+%%   http://tug.ctan.org/tex-archive/info/svg-inkscape
+%%
+\begingroup%
+  \makeatletter%
+  \providecommand\color[2][]{%
+    \errmessage{(Inkscape) Color is used for the text in Inkscape, but the package 'color.sty' is not loaded}%
+    \renewcommand\color[2][]{}%
+  }%
+  \providecommand\transparent[1]{%
+    \errmessage{(Inkscape) Transparency is used (non-zero) for the text in Inkscape, but the package 'transparent.sty' is not loaded}%
+    \renewcommand\transparent[1]{}%
+  }%
+  \providecommand\rotatebox[2]{#2}%
+  \ifx\svgwidth\undefined%
+    \setlength{\unitlength}{459.77991351bp}%
+    \ifx\svgscale\undefined%
+      \relax%
+    \else%
+      \setlength{\unitlength}{\unitlength * \real{\svgscale}}%
+    \fi%
+  \else%
+    \setlength{\unitlength}{\svgwidth}%
+  \fi%
+  \global\let\svgwidth\undefined%
+  \global\let\svgscale\undefined%
+  \makeatother%
+  \begin{picture}(1,0.49257095)%
+    \put(0,0){\includegraphics[width=\unitlength,page=1]{FitFunction.pdf}}%
+    \put(-0.00104001,0.44981392){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\begin{minipage}{0.29703912\unitlength}\raggedright output\end{minipage}}}%
+    \put(0.39272603,0.00622411){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{parameter combinations}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=2]{FitFunction.pdf}}%
+    \put(0.1517005,0.23342658){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{1}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{FitFunction.pdf}}%
+    \put(0.25118904,0.41850611){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{2}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{FitFunction.pdf}}%
+    \put(0.41870212,0.22202454){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{3}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{FitFunction.pdf}}%
+    \put(0.5270189,0.17458357){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{4}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=6]{FitFunction.pdf}}%
+    \put(0.59419205,0.19305623){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{5}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=7]{FitFunction.pdf}}%
+    \put(0.9304188,0.2106998){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{6}}}%
+    \put(0.22976582,0.04480192){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{4}}}%
+    \put(0.35525351,0.04509928){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{8}}}%
+    \put(0.46944789,0.04480192){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{12}}}%
+    \put(0.59539757,0.04509928){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{16}}}%
+    \put(0.7179886,0.04509928){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{20}}}%
+    \put(0.86813697,0.04480192){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{n-2}}}%
+    \put(0.94142929,0.04510947){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{n}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=8]{FitFunction.pdf}}%
+    \put(0.39062212,0.46123896){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{P1}}}%
+    \put(0.43500387,0.46123896){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{P2}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=9]{FitFunction.pdf}}%
+    \put(0.45664906,0.41446014){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{parameter set}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=10]{FitFunction.pdf}}%
+    \put(0.48082912,0.46137149){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{P3}}}%
+    \put(0.57257648,0.46139698){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{P5}}}%
+    \put(0.61877896,0.46126954){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{Pn}}}%
+    \put(0.39046832,0.46123896){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{P1}}}%
+    \put(0.52676142,0.46126954){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{P4}}}%
+    \put(-0.00039761,0.38862195){\color[rgb]{0,0,0}\makebox(0,0)[lb]{\smash{value }}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=11]{FitFunction.pdf}}%
+  \end{picture}%
+\endgroup%
