@@ -1,34 +1,42 @@
 clear;
 
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 0.5, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-4, 'AbsTol', 1e-4, 'MaxStep', 0.1, 'Vectorized', 1);
 
 % Time
-T = linspace(0, 600, 20000);
+T = 0:0.1:1400;
+startnum = 400;
 
-% Important constants:
-J_PLC_1 = 0.25;
-J_PLC_2 = 0.35;
+% Important constants
+J_PLC_1 = 0.12;
+J_PLC_2 = 0.12;
 
 % SMC coupling
-D_Ca_i = 0.3;
+D_Ca_i = 0;
 D_IP3_i = 0;        % Optional IP3 coupling
 D_v_i = 0;          % Optional membrane potential coupling
 
-% EC coupling - optional!!
+% EC coupling - optional!!!!!!!!!!!!!!!!!!
 D_Ca_j = 0;
-D_IP3_j = D_Ca_j;   % Optional IP3 coupling
+D_IP3_j = 0;   % Optional IP3 coupling
 D_v_j = D_Ca_j;     % Optional membrane potential coupling
+
+% SMC-EC coupling
+P_Ca = 0.05;       % 0.05
+P_IP3 = 0.05;      % 0.05
+G_coup = 0.5;     % 0.5
 
 %K_p = 9300;     % Signal on
 %K_p = 3400;     % Signal off
 
-K_p = 9300;
+K_p = 9200;
 
 nv = NVU_coupled_red( WallMechanics_1(), WallMechanics_2(), ...
     SMCEC_1_red('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_1', K_p), ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, ...
+    'K_p_1', K_p, 'P_Ca', P_Ca, 'P_IP3', P_IP3, 'G_coup', G_coup), ...
     SMCEC_2_red('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_2', K_p), ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, ...
+    'K_p_2', K_p, 'P_Ca', P_Ca, 'P_IP3', P_IP3, 'G_coup', G_coup), ...
     'odeopts', odeopts, 'T', T);
 
 nv.simulate();
@@ -39,13 +47,13 @@ figure(100);
 plot(nv.T, nv.out('Ca_i_1'));
 xlabel('t'); ylabel('Ca_i');
 title('Cell 1 Ca_i');
-ylim([0 1]);
+%ylim([0 1]);
 
-figure(200);
+figure(255);
 plot(nv.T, nv.out('Ca_i_2'));
 xlabel('t'); ylabel('Ca_i');
 title('Cell 2 Ca_i');
-ylim([0 1]);
+%ylim([0 1]);
 
 % Plot another case on the same graph %
 % figure(1);
@@ -66,8 +74,8 @@ ylim([0 1]);
 % starttime = floor((nv.astrocyte_1.params.startpulse+80)/nv.T(length(nv.T))*length(nv.T));
 % endtime = floor((nv.astrocyte_1.params.startpulse+nv.astrocyte_1.params.lengthpulse)/nv.T(length(nv.T))*length(nv.T));
 
-%% 
-starttime = floor(300/nv.T(length(nv.T))*length(nv.T));
+% 
+starttime = floor(startnum/nv.T(length(nv.T))*length(nv.T));
 endtime = length(nv.T);
 
 Ca_i_1 = nv.out('Ca_i_1'); s_i_1 = nv.out('s_i_1');
@@ -124,3 +132,4 @@ title('Cell 2 calcium in store');
 %% fgdfgg
 figure(13);
 plot(nv.T, nv.out('s_i_1')+nv.out('Ca_i_1'));
+

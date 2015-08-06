@@ -109,4 +109,10 @@ u0(idx.Mp) = .25;
 u0(idx.AMp) = .25;
 u0(idx.AM) = .25;
 u0(idx.R) = 15e-6;
+
+% Alternate ICs (ignore)
+% u0(idx.Mp) = 1;
+% u0(idx.AMp) = 1;
+% u0(idx.AM) = 1;
+% u0(idx.R) = 1;
 end

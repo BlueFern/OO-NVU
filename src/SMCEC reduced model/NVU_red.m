@@ -14,6 +14,7 @@ classdef NVU_red < handle
         T
         U
         odeopts
+        elapsedtime
     end
     methods 
         function self = NVU_red(wall, smcec, varargin)
@@ -74,7 +75,7 @@ classdef NVU_red < handle
             [~, self.outputs{2}] = self.smcec.rhs(self.T, us, R, h);
 
             
-            toc
+            self.elapsedtime = toc;
         end
         function u = out(self, input_str)
             success = false;

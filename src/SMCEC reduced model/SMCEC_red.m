@@ -48,6 +48,8 @@ classdef SMCEC_red < handle
             J_stretch_i = p.G_stretch ./ ...
                 (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
                 (v_i - p.E_SAC);
+%             J_stretch_i = 0;
+            
             J_NaK_i = p.F_NaK_i;
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
             J_K_i = p.G_K_i * w_i .* (v_i - p.v_K_i);
@@ -67,6 +69,7 @@ classdef SMCEC_red < handle
             J_stretch_j = p.G_stretch ./ ...
                 (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
                 (v_j - p.E_SAC);
+%             J_stretch_j = 0;
             
             J_ER_leak_j = p.L_j * s_j;
             
@@ -348,6 +351,20 @@ u0(idx.Ca_j) = 0.1;
 u0(idx.s_j) = 0.1;
 u0(idx.v_j) = -75;
 u0(idx.I_j) = 0.1;
+
+% Alternate ICS (ignore)
+% u0(idx.Ca_i) = 1;
+% u0(idx.s_i) = 1;
+% u0(idx.v_i) = 1;
+% u0(idx.w_i) = 1;
+% u0(idx.I_i) = 1;
+% 
+% u0(idx.K_i) = 1;
+% 
+% u0(idx.Ca_j) = 1;
+% u0(idx.s_j) = 1;
+% u0(idx.v_j) = 1;
+% u0(idx.I_j) = 1;
 end
 
 

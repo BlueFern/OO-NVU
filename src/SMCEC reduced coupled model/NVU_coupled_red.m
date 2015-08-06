@@ -20,6 +20,7 @@ classdef NVU_coupled_red < handle
         T
         U
         odeopts
+        elapsedtime
     end
     methods 
         function self = NVU_coupled_red(wall_1, wall_2, smcec_1, smcec_2, varargin)
@@ -96,9 +97,8 @@ classdef NVU_coupled_red < handle
             [~, self.outputs{2}] = self.wall_2.rhs(self.T, uw_2, Ca_i_2);
             [~, self.outputs{3}] = self.smcec_1.rhs(self.T, us_1, R_1, h_1, Ca_i_2, I_i_2, v_i_2, Ca_j_2, I_j_2, v_j_2);
             [~, self.outputs{4}] = self.smcec_2.rhs(self.T, us_2, R_2, h_2, Ca_i_1, I_i_1, v_i_1, Ca_j_1, I_j_1, v_j_1);
-
             
-            toc
+            self.elapsedtime = toc;
         end
         function u = out(self, input_str)
             success = false;

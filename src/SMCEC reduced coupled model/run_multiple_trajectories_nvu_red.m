@@ -2,26 +2,33 @@
 
 clear;   
 
-odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.1, 'Vectorized', 1);
+% use 1e-06 for small JPLC high Kp area
+odeopts = odeset('RelTol', 1e-4, 'AbsTol', 1e-4, 'MaxStep', 0.5, 'Vectorized', 1);
 
 % Important constants:
-J_PLC_1 = 0.5;
-J_PLC_2 = 0.6;
+J_PLC_1 = 0.08;
+J_PLC_2 = 0.085;
+K_p_1 = 9200;
+K_p_2 = 9200;
 
 t = 0:0.1:1000;
+startnum = 800;
 
 coords = zeros(1,5);
 counter = 0;
 
-K_p = 9300;
 
-startofD = 0;
-endofD = 0.15;
-space = 0.025;
+startofD = 0.5;
+endofD = 1.9;
+space = 0.2;
 DD = startofD:space:endofD;
 num_iterations = length(DD);
+time_per_iteration = zeros(1,length(DD));
+i = 1;
 
-for D=startofD:space:endofD   % Choose values of D to plot trajectories for
+fprintf('%d total iterations \n', num_iterations);
+
+for D=DD   
     
     % SMC coupling
     D_Ca_i = D;
@@ -35,14 +42,14 @@ for D=startofD:space:endofD   % Choose values of D to plot trajectories for
 
     nv = NVU_coupled_red( WallMechanics_1(), WallMechanics_2(), ...
     SMCEC_1_red('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_1', K_p), ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_1', K_p_1), ...
     SMCEC_2_red('J_PLC_2', J_PLC_2, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
-    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_2', K_p), ...
+    'D_v_i', D_v_i, 'D_Ca_j', D_Ca_j, 'D_IP3_j', D_IP3_j, 'D_v_j', D_v_j, 'K_p_2', K_p_2), ...
     'odeopts', odeopts, 'T', t);
 
     nv.simulate();
     
-    starttime = floor(300/nv.T(length(nv.T))*length(nv.T));
+    starttime = floor(startnum/nv.T(length(nv.T))*length(nv.T));
     endtime = length(nv.T);
     
     Ca_i_1 = nv.out('Ca_i_1'); s_i_1 = nv.out('s_i_1');
@@ -60,11 +67,17 @@ for D=startofD:space:endofD   % Choose values of D to plot trajectories for
     counter = counter + 1;
     amount_done = counter/num_iterations;
     percentage_done = amount_done*100;
-    fprintf('%.2f%% done, %d iterations left \n', percentage_done, num_iterations-counter);
+    time_per_iteration(i) = nv.elapsedtime;
+    time_left = mean(nonzeros(time_per_iteration))*(num_iterations-counter);
+    min = floor(time_left/60);
+    sec = rem(time_left, 60);
+    i = i + 1;
+    
+    fprintf('%.1f%% done, %d iterations left, ETA: %.f min %.f sec \n', percentage_done, num_iterations-counter, min, sec);
 end
 
-figure(11);
-clf
+figure(3);
+%clf
 hold on
 for i=1:counter
     plot3( coords((i-1)*length(m)+i+1 : i*length(m) , 1) , ...
@@ -76,10 +89,10 @@ xlabel('Calcium in cytosol'); ylabel('D'); zlabel('Calcium in store');
 grid on
 title('Cell 1');
 view([70 25])
-xlim([0 1]); zlim([0 1.5]);
+%xlim([0 1]); zlim([0 1.5]);
 
-figure(21);
-clf
+figure(28);
+%clf
 hold on
 for i=1:counter
     plot3( coords((i-1)*length(m)+i+1 : i*length(m) , 3) , ...
@@ -91,5 +104,32 @@ xlabel('Calcium in cytosol'); ylabel('D'); zlabel('Calcium in store');
 grid on
 title('Cell 2');
 view([70 25])
-xlim([0 1]); zlim([0 1.5]);
+%xlim([0 1]); zlim([0 1.5]);
 
+% figure(54);
+% %clf
+% hold on
+% for i=1:counter
+%     plot3( coords((i-1)*length(m)+i+1 : i*length(m) , 1) , ...
+%         coords((i-1)*length(m)+i+1 : i*length(m) , 5) , ...
+%         coords((i-1)*length(m)+i+1 : i*length(m) , 3) );
+% end
+% hold off
+% xlabel('Cell 1 Cai'); ylabel('D'); zlabel('Cell 2 Cai');
+% grid on
+% title('Cai');
+% view([70 25])
+% 
+% figure(55);
+% %clf
+% hold on
+% for i=1:counter
+%     plot3( coords((i-1)*length(m)+i+1 : i*length(m) , 2) , ...
+%         coords((i-1)*length(m)+i+1 : i*length(m) , 5) , ...
+%         coords((i-1)*length(m)+i+1 : i*length(m) , 4) );
+% end
+% hold off
+% xlabel('Cell 1 Cas'); ylabel('D'); zlabel('Cell 2 Cas');
+% grid on
+% title('Cas');
+% view([70 25])

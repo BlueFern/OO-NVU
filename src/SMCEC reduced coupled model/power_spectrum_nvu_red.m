@@ -4,18 +4,18 @@ odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized',
 
 fs = 10;    %sampling frequency (per second)
 nfft = 2^13;
-endtime = 1300;
-starttime = 300;
+endtime = 2000;
+starttime = 400;
 
 % Time
 t = 0:1/fs:endtime;
 
 % Important constants:
 J_PLC_1 = 0.25;
-J_PLC_2 = 0.35;
+J_PLC_2 = 0.3;
 
 % SMC coupling
-D_Ca_i = 0;
+D_Ca_i = 2;
 D_IP3_i = 0;        % Optional IP3 coupling
 D_v_i = 0;          % Optional membrane potential coupling
 
@@ -24,7 +24,7 @@ D_Ca_j = 0;
 D_IP3_j = D_Ca_j;   % Optional IP3 coupling
 D_v_j = D_Ca_j;     % Optional membrane potential coupling
 
-K_p = 9300;
+K_p = 9200;
 
 nv = NVU_coupled_red( WallMechanics_1(), WallMechanics_2(), ...
     SMCEC_1_red('J_PLC_1', J_PLC_1, 'D_Ca_i', D_Ca_i, 'D_IP3_i', D_IP3_i, ...
@@ -60,22 +60,22 @@ fftz2 = fft(z2,nfft);
 absfftz2 = abs(fftz2); 
 
 figure(40);
-plot(fs*(5:nfft/2-1)/nfft, absfftz1(6:nfft/2),'r','LineWidth',1); %Ignore first point - very high
-xlim([0 1.5]);
+plot(fs*(2:nfft/2-1)/nfft, absfftz1(3:nfft/2),'r','LineWidth',1); %Ignore first point - very high
+xlim([0 1]);
 title('Power Spectrum of the Cytosolic Calcium in Cell 1');
 xlabel('Frequency (Hz)');
 ylabel('Power');
 
 figure(41);
-plot(fs*(5:nfft/2-1)/nfft, absfftz2(6:nfft/2),'r','LineWidth',1); %Ignore first point - very high
-xlim([0 1.5]);
+plot(fs*(2:nfft/2-1)/nfft, absfftz2(3:nfft/2),'r','LineWidth',1); %Ignore first point - very high
+xlim([0 1]);
 title('Power Spectrum of the Cytosolic Calcium in Cell 2');
 xlabel('Frequency (Hz)');
 ylabel('Power');
 
-figure(42);
+figure(43);
 plot(fs*(2:nfft/2-1)/nfft, absfftz1(3:nfft/2)-absfftz2(3:nfft/2));
-xlim([0 1.5]);
+xlim([0 1]);
 title('Difference between the cells');
 xlabel('Frequency (Hz)');
 ylabel('Power');
