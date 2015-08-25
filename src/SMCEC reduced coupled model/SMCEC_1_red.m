@@ -4,7 +4,7 @@ classdef SMCEC_1_red < handle
     %   Please refer to the relevant sections in the documentation for 
     %   full information on the equations and variable names.
     
-    % SMC and EC of cell 1 of coupled model!
+    % SMC and EC of cell 1 of coupled model
     
     %%%%% Both SMC and EC have coupling terms!!!
     %%%%% Coupling is set to 0 by default

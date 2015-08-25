@@ -13,14 +13,14 @@ starttime = 400;
 T = 0:1/fs:endtime;
 
 % Important constants:
-J_PLC_1 = 0.25;
-J_PLC_2 = 0.3;
+J_PLC_1 = 0.53;
+J_PLC_2 = 0.58;
 
 K_p = 9200;
 
-startofD = 0.02;
-endofD = 0.03;
-space = 0.00001;
+startofD = 0;
+endofD = 0.3;
+space = 0.001;
 
 [cmap]=buildcmap('kwr');
 
