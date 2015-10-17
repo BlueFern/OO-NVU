@@ -168,6 +168,8 @@ classdef Astrocyte < handle
                Uout(self.idx_out.J_IP3, :) = J_IP3;
                Uout(self.idx_out.J_pump, :) = J_pump;
                Uout(self.idx_out.J_ER_leak, :) = J_ER_leak;
+               Uout(self.idx_out.K_k, :) = K_k;
+
               
                varargout = {Uout};
             end
@@ -242,7 +244,8 @@ idx.phi_w = 11;
 idx.J_IP3 = 12;
 idx.J_pump = 13;
 idx.J_ER_leak = 14;
-                    
+idx.J_K_k = 15;
+            
 n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)
@@ -271,10 +274,10 @@ parser.addParameter('delta', 1.235e-2); %THIS MAY BE WRONG
 parser.addParameter('VR_ER_cyt', 0.185)
 parser.addParameter('k_on', 2); %uM s^-1
 parser.addParameter('K_inh', 0.1); %uM
-parser.addParameter('r_h', 4.8); % uM
-parser.addParameter('k_deg', 1.25); % s^-1
-parser.addParameter('V_eet', 72); % uM
-parser.addParameter('k_eet', 7.2); % uM
+parser.addParameter('r_h', 4.8); % uM       estimation by Hannah Farr to match Bennett et al. [20]
+parser.addParameter('k_deg', 1.25); % s^-1  estimation by Hannah Farr
+parser.addParameter('V_eet', 72); % uM %    estimation by Hannah Farr
+parser.addParameter('k_eet', 7.2); % uM     estimation by Hannah Farr
 parser.addParameter('c_k_min', 0.1); % uM
 
 parser.addParameter('v_7', -15e-3); %V
