@@ -244,7 +244,7 @@ idx.phi_w = 11;
 idx.J_IP3 = 12;
 idx.J_pump = 13;
 idx.J_ER_leak = 14;
-idx.J_K_k = 15;
+idx.K_k = 15;
             
 n = numel(fieldnames(idx));
 end
