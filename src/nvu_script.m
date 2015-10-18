@@ -61,7 +61,7 @@ ylabel('R (m)')
 % of the model components of the |NVU| object.
 %
 % Parameters can be adjusted directly like so:
-nv.smcec.params.J_PLC = 0.04;
+nv.smcec.params.J_PLC = 0.4;
 
 %%
 % Initial conditions can also be done in a single statement, but you end up

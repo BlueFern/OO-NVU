@@ -261,8 +261,8 @@ parser.addParameter('X_k', 12.41e-3); % uM m
 parser.addParameter('R_tot', 8.79e-8); % m
 
 % Input signal
-parser.addParameter('startpulse', 100); % s
-parser.addParameter('lengthpulse',250); % s
+parser.addParameter('startpulse', 200); % s
+parser.addParameter('lengthpulse',200); % s
 parser.addParameter('lengtht1', 10); % s
 parser.addParameter('F_input', 2.5); % s
 parser.addParameter('alpha', 2);% [-]
