@@ -44,7 +44,7 @@ classdef WallMechanics < handle
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
             R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
            % R_new = self.input_R(t);
-            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * pR*p.P_T ./ h - ...
+            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * pR * p.P_T ./ h - ...
                 E .* (R - R_0) ./ R_0);
 
             du = bsxfun(@times, self.enabled, du);
@@ -63,12 +63,12 @@ classdef WallMechanics < handle
 %         end
         function [pR] = inflate(self, t)
 %             t_scalar = t(end,:);
-            pR =1;%5*(0.5 .* tanh((t-75)./0.8)-0.5.* tanh((t-76) ./1.9)); %u(self.index.R, :);
+            pR = 1; %5*(0.5 .* tanh((t-75)./0.8)-0.5.* tanh((t-76) ./1.9)); %u(self.index.R, :);
             
         end   
         function [R, h] = shared(self, ~,u)
            
-           R=  u(self.index.R, :);
+            R = u(self.index.R, :);
             h = 0.1 * R;
             
         end  

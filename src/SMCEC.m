@@ -100,7 +100,7 @@ classdef SMCEC < handle
             du(idx.s_i, :) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
             du(idx.v_i, :) = p.gamma_i * (...
                 -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i ...
-                -J_stretch_i - J_KIR_i)+ V_coup_i;
+                -J_stretch_i - J_KIR_i) + V_coup_i;
             du(idx.w_i, :) = p.lambda_i * (K_act_i - w_i);
             du(idx.I_i, :) = J_IP3_coup_i - J_degrad_i;
             du(idx.K_i, :) = J_NaK_i - J_KIR_i - J_K_i;
@@ -153,7 +153,7 @@ classdef SMCEC < handle
                 varargout{1} = Uout; 
             end
         end
-        function [ J_KIR_i, Ca_i, J_VOCC_i] = shared(self, t, u, K_p)
+        function [J_KIR_i, Ca_i, J_VOCC_i] = shared(self, t, u, K_p)
             p = self.params;
             idx = self.index;
             v_i = u(idx.v_i, :);
@@ -161,7 +161,7 @@ classdef SMCEC < handle
             
             
             v_KIR_i = p.z_1 * K_p - p.z_2;
-            g_KIR_i = exp(p.z_5 .* v_i + p.z_3 .* K_p - p.z_4);
+            g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
             J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
             J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ ...
                 (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));

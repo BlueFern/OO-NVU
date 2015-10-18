@@ -77,12 +77,12 @@ classdef Astrocyte < handle
                 Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
                                     
             % Nernst potentials
-            E_K_k =  p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
+            E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
             E_Na_k = p.R_g * p.T / (p.z_Na * p.F) * log(Na_s ./ Na_k);
-            E_Cl_k =  p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
-            E_NBC_k =  p.R_g * p.T / (p.z_NBC * p.F) * ...
+            E_Cl_k = p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
+            E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * ...
                log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
-            E_BK_k =p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
+            E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
             E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./c_k); % Nernst potential TRPV
             
            
@@ -93,33 +93,27 @@ classdef Astrocyte < handle
                 K_s ./ (K_s + p.K_K_s);
             
             % Membrane voltage
-            g_BK_k = p.G_BK_k*1e-12 / p.A_ef_k;
             g_TRPV_k = (p.G_TRPV_k* 1e-12)/(p.A_ef_k);%mho m^-2
             v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + ...
                p.g_Cl_k * E_Cl_k +  p.g_NBC_k * E_NBC_k + ...
-               g_BK_k * w_k .* E_BK_k - ...                 
+               p.g_BK_k * w_k .* E_BK_k - ...                 
                J_NaK_k * p.F / p.C_correction) ./ ...
                 (p.g_Na_k +p.g_K_k +   p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + ... %TRPV
-                g_BK_k * w_k);
+                p.g_BK_k * w_k);
            
            
             % Fluxes
-            
-             J_BK_k = g_BK_k / p.F * w_k .* ...
-               ((v_k) -E_BK_k) * p.C_correction;
+             J_BK_k = p.g_BK_k / p.F * w_k .* ...
+               (v_k - E_BK_k) * p.C_correction;
             J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
-
             J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k) * p.C_correction;
             J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
-          
             J_KCC1_k = self.flux_ft(t) .* p.g_KCC1_k / p.F * p.R_g * ...
                 p.T / p.F .* ...
                 log((K_s .* Cl_s) ./ (K_k .* Cl_k)) * p.C_correction;
-            
-            J_NKCC1_k =  self.flux_ft(t) * p.g_NKCC1_k / p.F * p.R_g * ...
+            J_NKCC1_k = self.flux_ft(t) * p.g_NKCC1_k / p.F * p.R_g * ...
                 p.T / p.F .* log((Na_s .* K_s .* Cl_s.^2) ./ ...
                 (Na_k .* K_k .* Cl_k.^2)) * p.C_correction;
-
             
             %% Calcium Equations
             % Flux
@@ -152,8 +146,8 @@ classdef Astrocyte < handle
             J_VOCC_k=J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
             %% Conservation Equations
             % Differential Equations in the Astrocyte
-            du(idx.N_K_k, :) = (-J_K_k + 2*J_NaK_k + J_NKCC1_k + ...
-                J_KCC1_k - J_BK_k);
+            du(idx.N_K_k, :) = -J_K_k + 2*J_NaK_k + J_NKCC1_k + ...
+                J_KCC1_k - J_BK_k;
             du(idx.N_Na_k, :) = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
             
             du(idx.N_HCO3_k, :) = 2*J_NBC_k;
@@ -167,7 +161,7 @@ classdef Astrocyte < handle
             du(idx.m_k, :) = p.trpv_switch.*((minf_k-m_k)./(t_Ca_k.*Ca_p)) ; %TRPV open probability, the trpv_switch can switch the turn the channel on or off.
             du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - ...
                 p.k_eet * eet_k;
-            du(idx.w_k, :) =  phi_w .* (w_inf - w_k);
+            du(idx.w_k, :) = phi_w .* (w_inf - w_k);
             
             
 
@@ -223,26 +217,26 @@ classdef Astrocyte < handle
             p = self.params;
             f = zeros(size(t));
             ii = p.t_0 <= t & t < p.t_1;
-            f(ii) =((...
+            f(ii) = ...
                 p.F_input * p.gab / ...
                 (p.ga * p.gb) * ...
                 (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
-                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1)));
-            f(p.t_2 <= t & t <= p.t_3) =((-p.F_input));
+                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
+            f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
         end
         function rho = input_rho(self, t)
             % Input signal; the smooth pulse function rho
             p = self.params;
-            rho = (((p.Amp - p.base) * ( ...
+            rho = (p.Amp - p.base) * ( ...
                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
-               0.5 * tanh((t - p.t_2) / p.theta_R)))) + p.base;
+                0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
         end
         function out = flux_ft(self, t)
             % C_input Block function to switch channel on and off
             p = self.params;
-            out = (( ...
+            out = ...
                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
-                0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005)));
+                0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005);
             out = out(:).';
         end
       
@@ -262,7 +256,7 @@ parser.addParameter('R_tot', 8.79e-8); % m
 
 % Input signal
 parser.addParameter('startpulse', 200); % s
-parser.addParameter('lengthpulse',200); % s
+parser.addParameter('lengthpulse', 200); % s
 parser.addParameter('lengtht1', 10); % s
 parser.addParameter('F_input', 2.5); % s
 parser.addParameter('alpha', 2);% [-]
@@ -287,16 +281,16 @@ parser.addParameter('V_eet', 72); % uM
 parser.addParameter('k_eet', 7.2); % uM
 parser.addParameter('c_k_min', 0.1); % uM
 
-parser.addParameter('v_7', -15e-3); %V
+parser.addParameter('v_7', -15e-3); %V  -13.57e-3
 
 parser.addParameter('Ca_3', 0.4);
-parser.addParameter('Ca_4', 0.15);
+parser.addParameter('Ca_4', 0.15); % 0.35 uM
 parser.addParameter('eet_shift', 2e-3);
 
 parser.addParameter('K_I', 0.03); % uM
 
-parser.addParameter('reverseBK', 0); %V
-parser.addParameter('switchBK', 1);
+parser.addParameter('reverseBK', 0); %V     % -0.08135
+parser.addParameter('switchBK', 1);         %  0
 
 %TRPV4
 parser.addParameter('Capmin_k', 2000); %uM
@@ -309,10 +303,10 @@ parser.addParameter('kappa_k', 0.1);
 parser.addParameter('v1_TRPV_k', 0.120); %mV
 parser.addParameter('v2_TRPV_k', 0.013); %mV
 parser.addParameter('t_TRPV_k', 0.9); %mV
-parser.addParameter('R_0_passive_k', 20e-6)
-parser.addParameter('trpv_switch', 0)
-parser.addParameter('Ca_decay_k', 0.5)
-parser.addParameter('G_TRPV_k', 50) %pS
+parser.addParameter('R_0_passive_k', 20e-6);
+parser.addParameter('trpv_switch', 0);   % 1
+parser.addParameter('Ca_decay_k', 0.5);
+parser.addParameter('G_TRPV_k', 50); %pS
 % Synpatic cleft
 parser.addParameter('k_C', 7.35e-5); %uM m s^-1
 
@@ -334,7 +328,7 @@ parser.addParameter('g_NKCC1_k', 5.54e-2); % mho m^-2
 parser.addParameter('J_NaK_max', 1.42e-3); % uM m s^-1
 parser.addParameter('K_Na_k', 10000); % uM
 parser.addParameter('K_K_s', 1500); % uM
-parser.addParameter('G_BK_k',4.3e3); % pS (later converted to mho m^-2)
+parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
 parser.addParameter('A_ef_k', 3.7e-9); % m2
 parser.addParameter('C_correction', 1e3); % [-]
 parser.addParameter('J_max', 2880); %uM s^-1
@@ -349,7 +343,6 @@ parser.addParameter('z_Na', 1);% [-]
 parser.addParameter('z_Cl', -1);% [-]
 parser.addParameter('z_NBC', -1);% [-]
 parser.addParameter('z_Ca', 2);% [-]
-
 parser.addParameter('g_Cl_k', 8.797e-1); % mho m^-2
 parser.addParameter('BK_end', 40);% [-]
 parser.addParameter('K_ex', 0.26); %uM
@@ -357,13 +350,13 @@ parser.addParameter('B_ex', 11.35); %uM
 parser.addParameter('K_G', 8.82); %uM
 parser.addParameter('v_4', 14.5e-3); %V
 parser.addParameter('v_5', 8e-3); %V
-parser.addParameter('v_6', 22e-3); %V
+%parser.addParameter('v_6', 22e-3); %V
 parser.addParameter('psi_w', 2.664); %s^-1
 
 parser.parse(varargin{:})
 params = parser.Results;
 
-
+params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k;
 params.t_0 = params.startpulse;
 params.t_1 = params.t_0 + params.lengtht1;
 params.t_2 = params.t_0 + params.lengthpulse;
@@ -447,7 +440,7 @@ u0(idx.N_K_s) = 0.0807e-3;
 u0(idx.N_HCO3_s) = 0.432552e-3;
 u0(idx.K_p) = 3e3;
 u0(idx.w_k) = 0.1815e-3;
-u0(idx.c_k) = 0.1;
+u0(idx.c_k) = 0.05e-3; %0.1; % Michelle: 0.05e-3 !!!
 u0(idx.s_k) = 400;
 u0(idx.h_k) = 0.1e-3;
 u0(idx.i_k) = 0.01e-3;
