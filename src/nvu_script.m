@@ -181,12 +181,12 @@ nv.astrocyte.params.v_7 = -15e-3; % V
 % Re-run simulation:
 nv.simulate()
 
-%% Switch TRPV4 channel on: 
+%% Switch TRPV4 channel back on (default): 
 % This set of parameters is chosen to be the "correct" one. For variations,
 % see nvu_script_easy_run by Joerik!
 nv.astrocyte.params.switchBK = 0;
 nv.astrocyte.params.reverseBK = -0.08135; % V
-nv.astrocyte.params.G_BK_k = 225; % mho m^{-2}
+nv.astrocyte.params.G_BK_k = 225; % pS (later converted to mho m^-2)
 nv.astrocyte.params.trpv_switch = 1;
 nv.astrocyte.params.epshalf_k = 0.1;
 nv.astrocyte.params.Ca_4 = 0.35; % uM

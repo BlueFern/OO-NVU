@@ -279,13 +279,13 @@ parser.addParameter('c_k_min', 0.1); % uM
 parser.addParameter('v_7', -15e-3); %V  -13.57e-3
 
 parser.addParameter('Ca_3', 0.4);
-parser.addParameter('Ca_4', 0.15); % 0.35 uM
+parser.addParameter('Ca_4', 0.35); %  uM
 parser.addParameter('eet_shift', 2e-3);
 
 parser.addParameter('K_I', 0.03); % uM
 
-parser.addParameter('reverseBK', 0); %V     % -0.08135
-parser.addParameter('switchBK', 1);         %  0
+parser.addParameter('reverseBK', -0.08135); %V   
+parser.addParameter('switchBK', 0);        
 
 %TRPV4
 parser.addParameter('Capmin_k', 2000); %uM
@@ -293,13 +293,13 @@ parser.addParameter('C_astr_k', 40);%pF
 parser.addParameter('gamma_k',834.3);%mV/uM
 parser.addParameter('gam_cae_k', 200); %uM
 parser.addParameter('gam_cai_k', 0.01); %uM
-parser.addParameter('epshalf_k', 0.16);
+parser.addParameter('epshalf_k', 0.1);
 parser.addParameter('kappa_k', 0.1);
 parser.addParameter('v1_TRPV_k', 0.120); %mV
 parser.addParameter('v2_TRPV_k', 0.013); %mV
 parser.addParameter('t_TRPV_k', 0.9); %mV
 parser.addParameter('R_0_passive_k', 20e-6);
-parser.addParameter('trpv_switch', 0);   % 1
+parser.addParameter('trpv_switch', 1);  
 parser.addParameter('Ca_decay_k', 0.5);
 parser.addParameter('G_TRPV_k', 50); %pS
 % Synpatic cleft
@@ -323,7 +323,7 @@ parser.addParameter('g_NKCC1_k', 5.54e-2); % mho m^-2
 parser.addParameter('J_NaK_max', 1.42e-3); % uM m s^-1
 parser.addParameter('K_Na_k', 10000); % uM
 parser.addParameter('K_K_s', 1500); % uM
-parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
+parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2)
 parser.addParameter('A_ef_k', 3.7e-9); % m2
 parser.addParameter('C_correction', 1e3); % [-]
 parser.addParameter('J_max', 2880); %uM s^-1
