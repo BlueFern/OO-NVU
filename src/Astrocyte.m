@@ -87,16 +87,17 @@ classdef Astrocyte < handle
                 K_s ./ (K_s + p.K_K_s);
             
             % Membrane voltage
+            g_BK_k = p.G_BK_k*1e-12 / p.A_ef_k;
             g_TRPV_k = (p.G_TRPV_k* 1e-12)/(p.A_ef_k);%mho m^-2
             v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + ...
                p.g_Cl_k * E_Cl_k +  p.g_NBC_k * E_NBC_k + ...
-               p.g_BK_k * w_k .* E_BK_k - ...                 
+               g_BK_k * w_k .* E_BK_k - ...                 
                J_NaK_k * p.F / p.C_correction) ./ ...
                 (p.g_Na_k +p.g_K_k +   p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + ... %TRPV
-                p.g_BK_k * w_k);
+                g_BK_k * w_k);
            
             % Fluxes
-            J_BK_k = p.g_BK_k / p.F * w_k .* ...
+            J_BK_k = g_BK_k / p.F * w_k .* ...
                 (v_k - E_BK_k) * p.C_correction;
             J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
             
@@ -350,7 +351,7 @@ parser.addParameter('psi_w', 2.664); %s^-1
 parser.parse(varargin{:})
 params = parser.Results;
 
-params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k;
+%params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k;
 params.t_0 = params.startpulse;
 params.t_1 = params.t_0 + params.lengtht1;
 params.t_2 = params.t_0 + params.lengthpulse;

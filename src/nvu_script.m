@@ -169,6 +169,32 @@ xlabel('Time')
 ylabel('\mu m')
 title('Radius')
 
+%% Switch TRPV4 channel off:
+nv.astrocyte.params.switchBK = 1;
+nv.astrocyte.params.reverseBK = 0; % V
+nv.astrocyte.params.G_BK_k = 4.3e3; % mho m^{-2}
+nv.astrocyte.params.trpv_switch = 0;
+nv.astrocyte.params.epshalf_k = 0.16;
+nv.astrocyte.params.Ca_4 = 0.15; % uM
+nv.astrocyte.params.v_7 = -15e-3; % V
+
+% Re-run simulation:
+nv.simulate()
+
+%% Switch TRPV4 channel on: 
+% This set of parameters is chosen to be the "correct" one. For variations,
+% see nvu_script_easy_run by Joerik!
+nv.astrocyte.params.switchBK = 0;
+nv.astrocyte.params.reverseBK = -0.08135; % V
+nv.astrocyte.params.G_BK_k = 225; % mho m^{-2}
+nv.astrocyte.params.trpv_switch = 1;
+nv.astrocyte.params.epshalf_k = 0.1;
+nv.astrocyte.params.Ca_4 = 0.35; % uM
+nv.astrocyte.params.v_7 = -13.57e-3; % V
+
+% Re-run simulation:
+nv.simulate()
+
 %% plot all state variables:
 for i = 1:15
     figure(1)
