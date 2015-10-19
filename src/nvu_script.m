@@ -13,12 +13,12 @@
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
 clear all
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+%odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
 nv = NVU(Astrocyte(), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.18), ...
-    'odeopts', odeopts);
+    SMCEC('J_PLC', 0.18));
+    %'odeopts', odeopts);
 
 nv.simulate()
 %%
@@ -172,7 +172,7 @@ title('Radius')
 %% Switch TRPV4 channel off:
 nv.astrocyte.params.switchBK = 1;
 nv.astrocyte.params.reverseBK = 0; % V
-nv.astrocyte.params.G_BK_k = 4.3e3; % mho m^{-2}
+nv.astrocyte.params.G_BK_k = 4.3e3; % pS (later converted to mho m^-2)
 nv.astrocyte.params.trpv_switch = 0;
 nv.astrocyte.params.epshalf_k = 0.16;
 nv.astrocyte.params.Ca_4 = 0.15; % uM

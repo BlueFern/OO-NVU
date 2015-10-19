@@ -125,7 +125,7 @@ classdef Astrocyte < handle
                 (p.K_ex + c_k).^2);
             G = (self.input_rho(t) + p.delta) ./ ...
                 (p.K_G + self.input_rho(t) + p.delta);
-            v_3 = -p.v_5 / 2 * tanh((c_k - p.Ca_3) / p.Ca_4)+p.v_7;
+            v_3 = -p.v_5 / 2 * tanh((c_k - p.Ca_3) / p.Ca_4) + p.v_7;
             
             %% Parent Calcium equations
             w_inf = 0.5 * ...
@@ -276,10 +276,10 @@ parser.addParameter('V_eet', 72); % uM
 parser.addParameter('k_eet', 7.2); % uM
 parser.addParameter('c_k_min', 0.1); % uM
 
-parser.addParameter('v_7', -15e-3); %V  -13.57e-3
+parser.addParameter('v_7', -13.57e-3); %V  
 
 parser.addParameter('Ca_3', 0.4);
-parser.addParameter('Ca_4', 0.35); %  uM
+parser.addParameter('Ca_4', 0.35); % uM
 parser.addParameter('eet_shift', 2e-3);
 
 parser.addParameter('K_I', 0.03); % uM
