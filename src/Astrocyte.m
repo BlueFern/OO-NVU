@@ -20,7 +20,8 @@ classdef Astrocyte < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices(self);
         end
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i)
+
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, J_Na_n)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -142,15 +143,18 @@ classdef Astrocyte < handle
                 p.VR_ps - p.R_decay*(K_p - p.K_p_min);
             du(idx.Ca_p, :) =(-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
-                du(idx.N_K_k, :) - J_BK_k;
-            du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
-                du(idx.N_Na_k, :);
+%             du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
+%                 du(idx.N_K_k, :) - J_BK_k;
+%             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
+%                 du(idx.N_Na_k, :);
+            du(idx.N_K_s, :) = J_Na_n - du(idx.N_K_k, :) + J_BK_k;
+            du(idx.N_Na_s, :) = -J_Na_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+            
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
+
                 Uout = zeros(self.n_out, size(u, 2));
-                Uout(self.idx_out.ft, :) = self.input_f(t);
                 Uout(self.idx_out.v_k, :) = v_k;
                 Uout(self.idx_out.K_s, :) = K_s;
                 Uout(self.idx_out.K_p, :) = K_p;
@@ -166,7 +170,7 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.J_ER_leak, :) = J_ER_leak;
                 Uout(self.idx_out.J_TRPV_k, :) = J_TRPV_k;
                 Uout(self.idx_out.E_BK_k, :) = E_BK_k;
-                Uout(self.idx_out.E_TRPV_k, :) = E_TRPV_k;
+                Uout(self.idx_out.J_NBC_k, :) = J_NBC_k;
                 Uout(self.idx_out.E_Na_k, :) = E_Na_k;
                 Uout(self.idx_out.E_K_k, :) = E_K_k;
                 Uout(self.idx_out.E_NBC_k, :) = E_NBC_k;
@@ -176,25 +180,29 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.J_K_k, :) = J_K_k;
                 Uout(self.idx_out.J_Na_k, :) = J_Na_k;
                 Uout(self.idx_out.K_k, :) = K_k;
-                Uout(self.idx_out.J_NBC_k, :) = J_NBC_k;
+                Uout(self.idx_out.w_inf, :) = w_inf;
+                Uout(self.idx_out.phi_w, :) = phi_w;
+                
                 varargout = {Uout};
             end
         end
         function K_p = shared(self, ~, u)
             K_p = u(self.index.K_p, :);
         end
-        function f = input_f(self, t)
-            % The neuronal K+ input signal
-            p = self.params;
-            f = zeros(size(t));
-            ii = p.t_0 <= t & t < p.t_1;
-            f(ii) = ...
-                p.F_input * p.gab / ...
-                (p.ga * p.gb) * ...
-                (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
-                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
-            f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
-        end
+
+%         function f = input_f(self, t)
+%             % The neuronal K+ input signal
+%             p = self.params;
+%             f = zeros(size(t));
+%             ii = p.t_0 <= t & t < p.t_1;
+%             f(ii) = ...
+%                 p.F_input * p.gab / ...
+%                 (p.ga * p.gb) * ...
+%                 (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
+%                 ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
+%             f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
+%         end
+
         function rho = input_rho(self, t)
             % Input signal; the smooth pulse function rho
             p = self.params;
@@ -202,6 +210,7 @@ classdef Astrocyte < handle
                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
                 0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
         end
+        
         function out = flux_ft(self, t)
             % C_input Block function to switch channel on and off
             p = self.params;
@@ -213,14 +222,69 @@ classdef Astrocyte < handle
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
-    end
+    end   
 end
+
+function idx = indices(self)
+% Index of state variables
+    idx.R_k = 1;
+    idx.K_p = 2;
+    idx.N_Na_k = 3;
+    idx.N_K_k = 4;
+    idx.N_Cl_k = 5;
+    idx.N_HCO3_k = 6;
+    idx.N_Na_s = 7;
+    idx.N_K_s = 8;
+    idx.N_HCO3_s = 9;
+    idx.w_k = 10;
+    idx.i_k = 11;
+    idx.c_k = 12;
+    idx.h_k = 13;
+    idx.s_k = 14;
+    idx.eet_k = 15;
+    idx.m_k = 16;
+    idx.Ca_p = 17;
+    %idx.v_k = 18;
+end
+
+function [idx, n] = output_indices(self)
+    % Index of all other output parameters
+    idx.K_k  = 1;
+    idx.v_k  = 2;
+    idx.K_s  = 3;
+    idx.K_p  = 4;
+    idx.J_BK_k  = 5;
+    idx.rho  = 6;
+    idx.B_cyt  = 7;
+    idx.G  = 8;
+    idx.v_3  = 9;
+    idx.w_inf  = 10;
+    idx.phi_w  = 11;
+    idx.J_IP3  = 12;
+    idx.J_pump  = 13;
+    idx.J_ER_leak  = 14;
+    idx.J_TRPV_k  = 15;
+    idx.E_BK_k  = 16;
+    idx.J_NBC_k  = 17;
+    idx.E_Na_k  = 18; 
+    idx.E_K_k  = 19; 
+    idx.E_NBC_k  = 20; 
+    idx.E_Cl_k  = 21; 
+    idx.I_TRPV_k  = 22; 
+    idx.J_VOCC_k  = 23;
+    idx.J_K_k  = 24; 
+    idx.J_Na_k  = 25;
+
+    n = numel(fieldnames(idx));
+end
+
 function params = parse_inputs(varargin)
     parser = inputParser();
     % Scaling Constants
     parser.addParameter('L_p', 2.1e-9); % m uM^-1 s^-1
     parser.addParameter('X_k', 12.41e-3); % uM m
     parser.addParameter('R_tot', 8.79e-8); % m
+
     % Input signal
     parser.addParameter('startpulse', 200); % s
     parser.addParameter('lengthpulse', 200); % s
@@ -229,6 +293,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('alpha', 2);% [-]
     parser.addParameter('beta', 5);% [-]
     parser.addParameter('delta_t', 10); % s
+    
+    % Synpatic cleft
+    parser.addParameter('k_C', 7.35e-5); %uM m s^-1
+    
     % Calcium in the Astrocyte Equations Constants
     parser.addParameter('Amp', 0.7);
     parser.addParameter('base', 0.1);
@@ -251,6 +319,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_I', 0.03); % uM
     parser.addParameter('reverseBK', -0.08135); %V
     parser.addParameter('switchBK', 0);
+    
     %TRPV4
     parser.addParameter('Capmin_k', 2000); %uM
     parser.addParameter('C_astr_k', 40);%pF
@@ -266,13 +335,14 @@ function params = parse_inputs(varargin)
     parser.addParameter('trpv_switch', 1);
     parser.addParameter('Ca_decay_k', 0.5);
     parser.addParameter('G_TRPV_k', 50); %pS
-    % Synpatic cleft
-    parser.addParameter('k_C', 7.35e-5); %uM m s^-1
+    
+    
     % Perivascular space
     parser.addParameter('VR_pa', 0.001);% [-]
     parser.addParameter('VR_ps', 0.001);% [-]
     parser.addParameter('R_decay', 0.05);% s^-1
     parser.addParameter('K_p_min', 3e3);% uM
+
     % Fluxes Constants
     parser.addParameter('F', 9.65e4); %C mol^-1
     parser.addParameter('R_g', 8.315); %J mol^-1 K^-1
@@ -293,6 +363,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('P_L', 0.0804); %uM
     parser.addParameter('V_max', 20); %uM s^-1
     parser.addParameter('k_pump', 0.24); %uM
+
     % Additional Equations; Astrocyte Constants
     parser.addParameter('g_Cl_k', 8.797e-1); % mho m^-2
     parser.addParameter('z_K', 1);% [-]
@@ -308,6 +379,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('v_5', 8e-3); %V
     %parser.addParameter('v_6', 22e-3); %V
     parser.addParameter('psi_w', 2.664); %s^-1
+
     parser.parse(varargin{:})
     params = parser.Results;
     %params.g_BK_k = params.G_BK_k*1e-12 / params.A_ef_k;
@@ -318,62 +390,9 @@ function params = parse_inputs(varargin)
     params.gab = factorial(params.alpha + params.beta - 1);
     params.ga = factorial(params.alpha - 1);
     params.gb = factorial(params.beta - 1);
+
 end
-function idx = indices(self)
-    p = self.params;
-    % Index of parameters needing inital conditions
-    idx.R_k = 1;
-    idx.K_p = 2;
-    idx.N_Na_k = 3;
-    idx.N_K_k = 4;
-    idx.N_Cl_k = 5;
-    idx.N_HCO3_k = 6;
-    idx.N_Na_s = 7;
-    idx.N_K_s = 8;
-    idx.N_HCO3_s = 9;
-    idx.w_k = 10;
-    idx.i_k = 11;
-    idx.c_k = 12;
-    idx.h_k = 13;
-    idx.s_k = 14;
-    idx.eet_k = 15;
-    idx.m_k = 16;
-    idx.Ca_p = 17;
-    %idx.v_k = 18;
-end
-function [idx, n] = output_indices(self)
-    % Index of all other output parameters
-    p = self.params;
-    idx.ft = 1;
-    idx.J_VOCC_k = 2;
-    idx.J_BK_k = 3;
-    idx.K_s = 4;
-    idx.K_p = 5;
-    idx.rho = 6;
-    idx.B_cyt = 7;
-    idx.G = 8;
-    idx.v_3 = 9;
-    idx.w_inf = 10;
-    idx.phi_w = 11;
-    idx.J_IP3 = 12;
-    idx.J_pump = 13;
-    idx.J_ER_leak = 14;
-    idx.J_TRPV_k = 15;
-    idx.E_BK_k = 16;
-    idx.E_TRPV_k = 17;
-    idx.I_TRPV_k = 18;
-    idx.E_Na_k = 19;
-    idx.E_K_k = 20;
-    idx.E_NBC_k = 21;
-    idx.E_Cl_k = 22;
-    idx.I_TRPV_k = 23;
-    idx.v_k = 24;
-    idx.J_K_k = 25;
-    idx.J_Na_k = 26;
-    idx.K_k = 27;
-    idx.J_NBC_k = 28;
-    n = numel(fieldnames(idx));
-end
+
 function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
