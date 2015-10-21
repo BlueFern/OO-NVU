@@ -32,7 +32,7 @@ classdef WallMechanics < handle
             AM = u(idx.AM, :);
             
             %% Contraction Equations
-            K_1 = p.gamma_cross * Ca_i.^3;
+            K_1 = p.gamma_cross * Ca_i.^p.n_cross;
             K_6 = K_1;
             M = 1 - AM - AMp - Mp;
             du(idx.Mp, :) = p.K_4 * AMp + K_1 .* M - (p.K_2 + p.K_3) * Mp;
@@ -103,10 +103,10 @@ parser.addParameter('K_4', 0.1); % s^-1
 parser.addParameter('K_5', 0.5); % s^-1
 parser.addParameter('K_7', 0.1); % s^-1
 parser.addParameter('gamma_cross', 17); %uM^-3 s^-1
+parser.addParameter('n_cross', 3); % fraction constant of the phosphorylation crossbridge
 % Mechanical Equation Constants
 parser.addParameter('eta', 1e4); %Pa s
 parser.addParameter('R_0_passive', 20e-6); % m
-parser.addParameter('h_0_passive', 3e-6); % m
 parser.addParameter('P_T', 4000); % Pa
 parser.addParameter('E_passive', 66e3); % Pa
 parser.addParameter('E_active', 233e3); % Pa

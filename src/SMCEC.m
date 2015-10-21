@@ -237,7 +237,7 @@ parser.addParameter('lambda_i', 45); % s^-1
 % Endothelial Cell ODE Constants
 parser.addParameter('C_m_j', 25.8); %pF
 parser.addParameter('J_PLC', 0.18); % uMs^-1
-parser.addParameter('J_0_j', 0.029); %constant Ca influx (EC)
+parser.addParameter('J_0_j', 0.029); %constant Ca influx (EC)uMs^-1
 
 % Smooth Muscle Cell Flux Constants
 parser.addParameter('F_i', 0.23); %uM s^-1
