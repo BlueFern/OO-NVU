@@ -26,7 +26,7 @@ classdef WallMechanics < handle
             % Make the output function compute these so as to avoid
             % duplicating equations
             [R, h] = self.shared(t, u);
-            
+            [pR] = self.inflate(t);
             Mp = u(idx.Mp, :);
             AMp = u(idx.AMp, :);
             AM = u(idx.AM, :);
@@ -43,22 +43,35 @@ classdef WallMechanics < handle
             F_r = AMp + AM;
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
             R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
-            du(idx.R, :) = p.R_0_passive / p.eta * ( R * p.P_T ./ h - ...
+           % R_new = self.input_R(t);
+            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * pR * p.P_T ./ h - ...
                 E .* (R - R_0) ./ R_0);
-            
+
             du = bsxfun(@times, self.enabled, du);
             
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));
                Uout(self.idx_out.M, :) = M;
                Uout(self.idx_out.F_r, :) = F_r;
+               Uout(self.idx_out.R, :) = R;
                varargout{1} = Uout;
             end
         end
-        function [R, h] = shared(self, ~, u)
+%         function R_input = input_R(~, t)
+%             % Input signal; the smooth pulse function rho
+%             R_input = 7.74e-6* (0.5* tanh((t-110)/0.8)-0.5* tanh((t-115) /1.9))+19.37e-6;
+%         end
+        function [pR] = inflate(self, t)
+%             t_scalar = t(end,:);
+            pR = 1; %5*(0.5 .* tanh((t-75)./0.8)-0.5.* tanh((t-76) ./1.9)); %u(self.index.R, :);
+            
+        end   
+        function [R, h] = shared(self, ~,u)
+           
             R = u(self.index.R, :);
             h = 0.1 * R;
-        end     
+            
+        end  
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
@@ -77,6 +90,7 @@ function [idx, n] = output_indices()
 % Index of all other output parameters
 idx.M = 1;
 idx.F_r = 2;
+idx.R = 3;
 n = numel(fieldnames(idx));
 end
 
@@ -97,7 +111,6 @@ parser.addParameter('P_T', 4000); % Pa
 parser.addParameter('E_passive', 66e3); % Pa
 parser.addParameter('E_active', 233e3); % Pa
 parser.addParameter('alpha', 0.6); % [-]
-
 parser.parse(varargin{:});
 params = parser.Results;
 

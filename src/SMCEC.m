@@ -41,8 +41,8 @@ classdef SMCEC < handle
                 Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
             J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
             J_SR_leak_i = p.L_i * s_i;
-            J_VOCC_i = p.G_Ca_i * (v_i - p.v_Ca1_i) ./ ...
-                (1 + exp(-(v_i - p.v_Ca2_i) / p.R_Ca_i));
+            J_VOCC_i =p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ ...
+                (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
             J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* ...
                 (v_i - p.v_NaCa_i);
             J_stretch_i = p.G_stretch ./ ...
@@ -53,6 +53,7 @@ classdef SMCEC < handle
             J_K_i = p.G_K_i * w_i .* (v_i - p.v_K_i);
             
             J_KIR_i = self.shared(t, u, K_p);
+            
             
             J_degrad_i = p.k_d_i * I_i;
             
@@ -152,14 +153,18 @@ classdef SMCEC < handle
                 varargout{1} = Uout; 
             end
         end
-        function [J_KIR_i, Ca_i] = shared(self, ~, u, K_p)
+        function [J_KIR_i, Ca_i, J_VOCC_i] = shared(self, t, u, K_p)
             p = self.params;
             idx = self.index;
             v_i = u(idx.v_i, :);
             Ca_i = u(idx.Ca_i, :);
+            
+            
             v_KIR_i = p.z_1 * K_p - p.z_2;
             g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
             J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
+            J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ ...
+                (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
         end
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
