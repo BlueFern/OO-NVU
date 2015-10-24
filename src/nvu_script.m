@@ -197,10 +197,20 @@ nv.astrocyte.params.v_7 = -13.57e-3; % V
 nv.simulate()
 
 %% plot all state variables:
-for i = 1:15
+for i = 1:2
     figure(1)
-    set(gcf,'name','Astrocyte')
-    subplot(3,5,i)
+    set(gcf,'name','Neuron and Astrocyte')
+    subplot(5,4,i)
+    plot(nv.T, nv.out(nv.neuron.varnames{i}))
+    h1(i) = gca();
+    ylabel(nv.neuron.varnames{i})
+    hold on
+end
+    linkaxes(h1, 'x');
+
+for i = 1:17
+    figure(1)
+    subplot(5,4,2+i)
     plot(nv.T, nv.out(nv.astrocyte.varnames{i}))
     h1(i) = gca();
     ylabel(nv.astrocyte.varnames{i})

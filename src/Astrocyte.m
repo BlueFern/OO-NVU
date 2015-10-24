@@ -37,8 +37,8 @@ classdef Astrocyte < handle
             N_K_s = u(idx.N_K_s, :);
             N_HCO3_s = u(idx.N_HCO3_s, :);
             w_k = u(idx.w_k, :);
-            i_k = u(idx.i_k, :);
-            c_k = u(idx.c_k, :);
+            I_k = u(idx.I_k, :);
+            Ca_k = u(idx.Ca_k, :);
             h_k = u(idx.h_k, :);
             s_k = u(idx.s_k, :);
             m_k = u(idx.m_k, :); % open probability TRPV
@@ -70,7 +70,7 @@ classdef Astrocyte < handle
             E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * ...
                 log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
             E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
-            E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./c_k); % Nernst potential TRPV
+            E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV
             % Flux through the Sodium Potassium pump
             J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ ...
                 (Na_k.^1.5 + p.K_Na_k^1.5) .* ...
@@ -99,24 +99,24 @@ classdef Astrocyte < handle
             %% Calcium Equations
             % Flux
             J_IP3 = p.J_max * (...
-                i_k ./ (i_k + p.K_I) .* ...
-                c_k ./ (c_k + p.K_act) .* h_k).^3 .* (1 - c_k ./ s_k);
-            J_ER_leak = p.P_L * (1 - c_k ./ s_k);
-            J_pump = p.V_max * c_k.^2 ./ (c_k.^2 + p.k_pump^2);
+                I_k ./ (I_k + p.K_I) .* ...
+                Ca_k ./ (Ca_k + p.K_act) .* h_k).^3 .* (1 - Ca_k ./ s_k);
+            J_ER_leak = p.P_L * (1 - Ca_k ./ s_k);
+            J_pump = p.V_max * Ca_k.^2 ./ (Ca_k.^2 + p.k_pump^2);
             I_TRPV_k = p.G_TRPV_k * m_k .*(v_k-E_TRPV_k) * p.C_correction; %current TRPV
             J_TRPV_k = -0.5*I_TRPV_k/(p.C_astr_k*p.gamma_k); %flux TRPV, not scaled according Ostby!
             % Other equations
             B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
-                (p.K_ex + c_k).^2);
+                (p.K_ex + Ca_k).^2);
             G = (self.input_rho(t) + p.delta) ./ ...
                 (p.K_G + self.input_rho(t) + p.delta);
-            v_3 = -p.v_5 / 2 * tanh((c_k - p.Ca_3) / p.Ca_4) + p.v_7;
+            v_3 = -p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4) + p.v_7;
             %% Parent Calcium equations
             w_inf = 0.5 * ...
                 (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4));
             phi_w = p.psi_w * cosh((v_k - v_3) / (2*p.v_4));
             %% TRPV Channel open probabilty equations
-            H_Ca_k = c_k./p.gam_cai_k+Ca_p./p.gam_cae_k;
+            H_Ca_k = Ca_k./p.gam_cai_k+Ca_p./p.gam_cae_k;
             eta=(R-p.R_0_passive_k)./(p.R_0_passive_k);
             minf_k=(1./(1+exp(-(eta-p.epshalf_k)./p.kappa_k))).*((1./(1+H_Ca_k)).*(H_Ca_k+tanh(((v_k)-p.v1_TRPV_k)./p.v2_TRPV_k))); %Define epsilon
             t_Ca_k= p.t_TRPV_k./Ca_p;
@@ -130,12 +130,12 @@ classdef Astrocyte < handle
             du(idx.N_Cl_k, :) = du(idx.N_Na_k, :) + du(idx.N_K_k, :) - ...
                 du(idx.N_HCO3_k, :);
             % Differential Calcium Equations in Astrocyte
-            du(idx.c_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k); % TRPV flux is buffered.
+            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k); % TRPV flux is buffered.
             du(idx.s_k, :) = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak)) ./ (p.VR_ER_cyt); % rewritten in fluxes
-            du(idx.h_k, :) = p.k_on * (p.K_inh - (c_k + p.K_inh) .* h_k);
-            du(idx.i_k, :) = p.r_h * G - p.k_deg * i_k;
+            du(idx.h_k, :) = p.k_on * (p.K_inh - (Ca_k + p.K_inh) .* h_k);
+            du(idx.I_k, :) = p.r_h * G - p.k_deg * I_k;
             du(idx.m_k, :) = p.trpv_switch .* ((minf_k - m_k) ./ (t_Ca_k .* Ca_p)) ; %TRPV open probability, the trpv_switch can switch the turn the channel on or off.
-            du(idx.eet_k, :) = p.V_eet * max(c_k - p.c_k_min, 0) - ...
+            du(idx.eet_k, :) = p.V_eet * max(Ca_k - p.Ca_k_min, 0) - ...
                 p.k_eet * eet_k;
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
             % Differential Equations in the Perivascular space
@@ -237,8 +237,8 @@ function idx = indices(self)
     idx.N_K_s = 8;
     idx.N_HCO3_s = 9;
     idx.w_k = 10;
-    idx.i_k = 11;
-    idx.c_k = 12;
+    idx.I_k = 11;
+    idx.Ca_k = 12;
     idx.h_k = 13;
     idx.s_k = 14;
     idx.eet_k = 15;
@@ -311,7 +311,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('k_deg', 1.25); % s^-1
     parser.addParameter('V_eet', 72); % uM
     parser.addParameter('k_eet', 7.2); % uM
-    parser.addParameter('c_k_min', 0.1); % uM
+    parser.addParameter('Ca_k_min', 0.1); % uM
     parser.addParameter('v_7', -13.57e-3); %V
     parser.addParameter('Ca_3', 0.4);
     parser.addParameter('Ca_4', 0.35); % uM
@@ -407,10 +407,10 @@ function u0 = initial_conditions(idx,self)
     u0(idx.N_HCO3_s) = 0.432552e-3;
     u0(idx.K_p) = 3e3;
     u0(idx.w_k) = 0.1815e-3;
-    u0(idx.c_k) = 0.1; % Michelle: 0.05e-3 !!!
+    u0(idx.Ca_k) = 0.1; % Michelle: 0.05e-3 !!!
     u0(idx.s_k) = 400;
     u0(idx.h_k) = 0.1e-3;
-    u0(idx.i_k) = 0.01e-3;
+    u0(idx.I_k) = 0.01e-3;
     u0(idx.eet_k) = 0.1e-3;
     u0(idx.m_k) = 0;
     u0(idx.Ca_p) = 2000; %5.1
