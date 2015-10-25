@@ -13,6 +13,7 @@
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
 clear all
+clc
 %odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
 nv = NVU(Neuron(), ...

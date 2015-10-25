@@ -19,7 +19,7 @@ classdef WallMechanics < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, Ca_i)
+        function [du, varargout] = rhs(self, t, u, Ca_i, R_cGMP2)
             % Initalise inputs and parameters
             idx = self.index;
             p = self.params;
@@ -34,6 +34,10 @@ classdef WallMechanics < handle
             %% Contraction Equations
             K_1 = p.gamma_cross * Ca_i.^p.n_cross;
             K_6 = K_1;
+            
+            K_2 = 58.1395 * p.k_mlcp_b + 58.1395 * p.k_mlcp_c * R_cGMP2;  % 17.64 / 16.75 errechnet sich aus dem Shift, um K2_c = 0.5 bei der baseline zu bekommen - muss vllt noch geaendert werden! 
+            K_5 = K_2;
+            
             M = 1 - AM - AMp - Mp;
             du(idx.Mp, :) = p.K_4 * AMp + K_1 .* M - (p.K_2 + p.K_3) * Mp;
             du(idx.AMp, :) = p.K_3 * Mp + K_6 .* AM - (p.K_4 + p.K_5) * AMp;
@@ -111,6 +115,9 @@ parser.addParameter('P_T', 4000); % Pa
 parser.addParameter('E_passive', 66e3); % Pa
 parser.addParameter('E_active', 233e3); % Pa
 parser.addParameter('alpha', 0.6); % [-]
+parser.addParameter('k_mlcp_b', 0.0086); % [s^-1]
+parser.addParameter('k_mlcp_c', 0.0327); % [s^-1]
+
 parser.parse(varargin{:});
 params = parser.Results;
 
