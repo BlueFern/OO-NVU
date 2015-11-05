@@ -30,8 +30,7 @@ classdef Neuron < handle
             NO_n = u(idx.NO_n, :);
             
             % Algebraic expressions
-            J_Na_n = p.k_C * self.input_f(t);
-            J_K_n = -J_Na_n;
+            J_NaK_n = p.k_C * self.input_f(t);
             
             % NO pathway
             w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
@@ -48,7 +47,7 @@ classdef Neuron < handle
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
             
-            du(idx.N_Na_n, :) = J_Na_n; 
+            du(idx.N_Na_n, :) = J_NaK_n; 
             du(idx.N_K_n, :) = -du(idx.N_Na_n, :);
             du(idx.Ca_n, :) = (I_Ca_tot / (2 * p.F * p.V_spine) - (p.k_ex * (Ca_n - p.Ca_rest))) / (1 + p.lambda_buf); %[uM/s]
             du(idx.nNOS_act_n, :) = p.V_maxNOS * CaM ./ (p.K_actNOS + CaM) - p.mu2_n * nNOS_act_n; %[uM/s]
@@ -59,8 +58,7 @@ classdef Neuron < handle
             if nargout == 2
             	Uout = zeros(self.n_out, size(u, 2));
             	Uout(self.idx_out.ft, :) = self.input_f(t);
-            	Uout(self.idx_out.J_Na_n, :) = J_Na_n;
-            	Uout(self.idx_out.J_K_n, :) = J_K_n;
+            	Uout(self.idx_out.J_Na_n, :) = J_NaK_n;
                 Uout(self.idx_out.Glu, :) = self.input_Glu(t);
             	Uout(self.idx_out.w_NR2A, :) = w_NR2A;
             	Uout(self.idx_out.w_NR2B, :) = w_NR2B;
@@ -124,20 +122,19 @@ end
 function [idx, n] = output_indices()    %for variables in nargout loop
     idx.ft = 1;
     idx.J_Na_n = 2;
-    idx.J_K_n = 3; 
-    idx.Glu = 4; 
-    idx.w_NR2A = 5; 
-    idx.w_NR2B = 6; 
-    idx.I_Ca = 7; 
-    idx.I_Ca_tot = 8; 
-    idx.phi_N = 9; 
-    idx.dphi_N = 10; 
-    idx.m_c = 11; 
-    idx.CaM = 12; 
-    idx.tau_nk = 13; 
-    idx.p_NO_n = 14;    
-    idx.c_NO_n = 15; 
-    idx.d_NO_n = 16;       
+    idx.Glu = 3; 
+    idx.w_NR2A = 4; 
+    idx.w_NR2B = 5; 
+    idx.I_Ca = 6; 
+    idx.I_Ca_tot = 7; 
+    idx.phi_N = 8; 
+    idx.dphi_N = 9; 
+    idx.m_c = 10; 
+    idx.CaM = 11; 
+    idx.tau_nk = 12; 
+    idx.p_NO_n = 13;    
+    idx.c_NO_n = 14; 
+    idx.d_NO_n = 15;       
     
     n = numel(fieldnames(idx));
 end
@@ -151,7 +148,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('T', 300); % K; Temperature
     
     % input 
-    parser.addParameter('startpulse', 200);     %Used for f(t)
+    parser.addParameter('startpulse', 400);     %Used for f(t)
     parser.addParameter('lengthpulse', 200);
     parser.addParameter('lengtht1', 10);
     parser.addParameter('F_input', 2.5);        %s  

@@ -32,7 +32,7 @@ classdef SMCEC < handle
             NO_i = u(idx.NO_i, :);
             E_b = u(idx.E_b, :);
             E_6c = u(idx.E_6c, :);
-            cGMP = u(idx.cGMP, :);
+            cGMP_i = u(idx.cGMP_i, :);
             
             Ca_j = u(idx.Ca_j, :);
             s_j = u(idx.s_j, :);
@@ -94,15 +94,15 @@ classdef SMCEC < handle
             J_IP3_coup_i = -p.P_IP3 * (I_i - I_j);
             J_Ca_coup_i = -p.P_Ca * (Ca_i - Ca_j);
             
-            c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP));
-            K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i));
-
-%             K_act_i = (Ca_i + p.c_w_i).^2 ./ ...
-%                 ((Ca_i + p.c_w_i).^2 + ...
-%                 p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i));
+%           c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
+%           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.beta_i * cGMP_i)); % NO included - new
+            c_w_i = 0; % NO excluded
+            
+            K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
             tau_wss = R * 5.7177e5 / (2*pi); %!!!!!!!!!!!!!!
-            
+%             tau_wss = R * 9.1e4; %!!!!!!!!!!!!!! (same)
+
             % NO pathway 
             tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
             tau_ij = p.x_ij ^ 2 ./  (2 * p.D_cNO);
@@ -110,16 +110,17 @@ classdef SMCEC < handle
             c_NO_i = p.k_dno * NO_i;
             d_NO_i = (NO_k - NO_i) ./ tau_ki + (NO_j - NO_i) ./ tau_ij;
             
-            k4 = p.C_4 * cGMP.^2;
-%           R_cGMP2 = cGMP.^2 ./ (cGMP.^2 + p.K_m_mlcp^2);
+            k4 = p.C_4 * cGMP_i.^2;
+%           R_cGMP2 = cGMP_i.^2 ./ (cGMP_i.^2 + p.K_m_mlcp^2);
             E_5c = 1 - E_b - E_6c;
 
-            V_max_pde = p.k_pde * cGMP;
+            V_max_pde = p.k_pde * cGMP_i;
 
             p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
             d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
-            
+%             d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
+
             W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)) ; 
             F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss (!)
 
@@ -154,7 +155,7 @@ classdef SMCEC < handle
             du(idx.E_b, :)  = -p.k1 * E_b .* NO_i + p.k_1 * E_6c + k4 .* E_5c;     
             du(idx.E_6c, :) = p.k1 * E_b .* NO_i - (p.k_1 + p.k2) * E_6c - p.k3 * E_6c .* NO_i;
 %             du(idx.E_5c, :) = p.k3 * E_6c .* NO_i + p.k2 * E_6c - k4 .* E_5c;
-            du(idx.cGMP, :) = p.V_max_sGC * E_5c - V_max_pde .* cGMP.^2 ./ (p.K_m_pde + cGMP); % ^ 2 is correct! (Yang2005)
+            du(idx.cGMP_i, :) = p.V_max_sGC * E_5c - V_max_pde .* cGMP_i ./ (p.K_m_pde + cGMP_i); 
 
             du(idx.eNOS_act_j, :) = (p.gam_eNOS * Act_eNOS_Ca  + (1 - p.gam_eNOS) * Act_eNOS_wss - p.mu2_j * eNOS_act_j); 
             du(idx.NO_j, :) = p_NO_j - c_NO_j + d_NO_j;
@@ -200,7 +201,9 @@ classdef SMCEC < handle
                 Uout(self.idx_out.J_R_j, :) = J_R_j;
                 Uout(self.idx_out.J_degrad_j, :) = J_degrad_j;
                 Uout(self.idx_out.c_w_i, :) = c_w_i;
-                Uout(self.idx_out.K_act_i, :) = K_act_i;
+                Uout(self.idx_out.tau_wss, :) = tau_wss;
+                Uout(self.idx_out.E_5c, :) = E_5c;
+
                 varargout{1} = Uout; 
             end
         end
@@ -210,9 +213,9 @@ classdef SMCEC < handle
             v_i = u(idx.v_i, :);
             Ca_i = u(idx.Ca_i, :);
             NO_i = u(idx.NO_i, :);
-            cGMP = u(idx.cGMP, :);
+            cGMP_i = u(idx.cGMP_i, :);
 
-            R_cGMP2 = cGMP.^2 ./ (cGMP.^2 + p.K_m_mlcp^2);
+            R_cGMP2 = cGMP_i.^2 ./ (cGMP_i.^2 + p.K_m_mlcp^2);
             
             v_KIR_i = p.z_1 * K_p - p.z_2;
             g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
@@ -239,7 +242,7 @@ function idx = indices()
     idx.NO_i = 7;
     idx.E_b = 8;
     idx.E_6c = 9;
-    idx.cGMP = 10;
+    idx.cGMP_i = 10;
 
     idx.Ca_j = 11;
     idx.s_j = 12;
@@ -287,7 +290,9 @@ function [idx, n] = output_indices()
     idx.J_R_j = 32;
     idx.J_degrad_j = 33;
     idx.c_w_i = 34;
-    idx.K_act_i = 35;
+    idx.tau_wss = 35;
+    idx.E_5c = 36;
+    
 
     n = numel(fieldnames(idx));
 end
@@ -403,7 +408,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_mArg_j', 1.5); % [] ;
     parser.addParameter('K_mO2_j', 7.7); % [] ; Chen2006
     parser.addParameter('k_dno', 0.01); % [s^-1] ;
-    parser.addParameter('C_4', 0.011); % [s^{-1} microM^{-2}] ;
     parser.addParameter('K_m_mlcp', 5.5); % [uM] ;
     parser.addParameter('V_NOj_max', 1.22); % [s^-1] ; maximum catalytic rate of NO production (Chen2006) - obtained from fig 6 & equ 17 & 18
     parser.addParameter('O2_j', 200); % [uM] ; O2 concentration in the EC (ME)
@@ -417,6 +421,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('k3', 3); % [uM^-1 s^-1] ;
     parser.addParameter('V_max_sGC', 0.8520); % [] ;
     parser.addParameter('k_pde', 0.0195); % [s^-1] ;
+    parser.addParameter('C_4', 0.011); % [s^{-1} microM^{-2}] ;
     parser.addParameter('K_m_pde', 2); % [uM] ;
     parser.addParameter('gam_eNOS', 0.1); % [-] ;
     parser.addParameter('mu2_j', 0.0167); % [] ;
@@ -436,23 +441,23 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     % Inital estimations of parameters from experimental data
-    u0(idx.Ca_i) = 0.1;
-    u0(idx.s_i) = 0.1;
-    u0(idx.v_i) = -60;
-    u0(idx.w_i) = 0.1;
-    u0(idx.I_i) = 0.1;
-    u0(idx.K_i) = 100e3;
-    u0(idx.NO_i) = 0.05;
-    u0(idx.E_b) = 0.33;
-    u0(idx.E_6c) = 0.33;
-    u0(idx.cGMP) = 6;
+    u0(idx.Ca_i) = 0.1649; % 0.1;
+    u0(idx.s_i) = 1.361; % 0.1;
+    u0(idx.v_i) = -50.3; % -60;
+    u0(idx.w_i) = 0.234; % 0.1;
+    u0(idx.I_i) = 0.45; % 0.1;
+    u0(idx.K_i) = 100e3; % 100e3;
+    u0(idx.NO_i) = 0.05; % 0.05;
+    u0(idx.E_b) = 1/3; % 1/3;
+    u0(idx.E_6c) = 1/3; % 1/3;
+    u0(idx.cGMP_i) = 6; % 8;
 
-    u0(idx.Ca_j) = 0.1;
-    u0(idx.s_j) = 0.1;
-    u0(idx.v_j) = -75;
-    u0(idx.I_j) = 0.1;
-    u0(idx.eNOS_act_j) = 0.7;
-    u0(idx.NO_j) = 0.05;
+    u0(idx.Ca_j) = 0.5628; % 0.1;
+    u0(idx.s_j) = 0.8392; % 0.1;
+    u0(idx.v_j) = -65.24; % -75;
+    u0(idx.I_j) = 1.35; % 0.1;
+    u0(idx.eNOS_act_j) = 0.7; % 0.7;
+    u0(idx.NO_j) = 0.05; % 0.05;
 
 end
 
