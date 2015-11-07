@@ -1,4 +1,3 @@
-
 \section{Equations}\label{sec:equations}
 \todo[inline]{Some units need to be corrected in this documentation!}
 
@@ -6,88 +5,95 @@
 
 \subsubsection*{Input signals} \label{sec:InputSignal}
 
-Neuronal \gls{K} input signal (-):\\
-\vspace{0.25cm}
-%
-For $ t<t_0$ and $t>t_3$:
+Neuronal \gls{K} input signal (dim.less):
 \begin{equation}
-f(t)=0
+f_{\text{K/Na}}(t) = 
+	\begin{cases} 
+		F_{\text{input}} \dfrac{(\alpha + \beta-1)!}{(\alpha-1)!(\beta-1)!} \left( \dfrac{1-(t-t_{0})}{\Delta t_2}\right) ^{\beta -1} \left( \dfrac{t-t_{0}}{\Delta t_2}\right) ^{\alpha -1}, & \text{for}\: t_{0} \leq t < t_{1} \\
+		-F_{\text{input}}, & \text{for}\: t_{2} \leq t \leq t_{3} \\	
+		0, & \text{otherwise}\\	
+	\end{cases} 
 \end{equation}
-%
-For $ t_0 \leq t \leq t_1$:
+
+End of neuronal pulse (s):
 \begin{equation}
-f(t)=F_{input} \dfrac{(\alpha+\beta-1)!}{(\alpha-1)!(\beta-1)!} \left( \dfrac{1-(t-t_0)}{\Delta t}\right) ^{\beta -1} \left( \dfrac{t-t_0}{\Delta t}\right) ^{\alpha -1} 
+	t_{1} = t_{0} + \Delta t
 \end{equation}
-%
-For $ t_1 \leq t \leq t_2$:
+
+Start of back-buffering (s):
 \begin{equation}
-f(t)=0
+	t_{2} = t_{0} + \Delta t_1
 \end{equation}
-%
-For $ t_2 \leq t \leq t_3$:
+
+End of back buffering (s):
 \begin{equation}
-f(t)=-F_{input}
+	t_{3} = t_{1} + \Delta t_1
 \end{equation}
-%
+
+
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$t_0$ 			& Start of neuronal pulse	& 200 s &    \\
-$t_1$ 			& End of neuronal pulse	& 210 s &   \\
-$t_2$ 			& Start of back-buffering	& 230 s &    \\
-$t_3$ 			& End of back-buffering	& 240 s &    \\
-$F_{input}$ 	& Amplitude scaling factor 	& 2.5 	&    \\
-$\alpha$ 		& Gamma distribution constant	& 2 	&  ME\footnotemark \\
-$\beta$ 		& Gamma distribution constant	& 5 	&  ME  \\
-$\Delta t$ 		& Time-scaling factor	& 10 s	&    \\
+$F_{\text{input}}$ 		& amplitude scaling factor 		& 2.5 		& ME\footnotemark[1]  \\ % on the basis of Filosa2008
+$\alpha$ 				& beta distribution constant	& 2 		& ME  \\ % on the basis of Ostby2009
+$\beta$ 				& beta distribution constant	& 5 		& ME  \\ % on the basis of Ostby2009
+$t_{0}$ 				& start of neuronal activation	& 400 s 	& ME  \\
+$\Delta t_1$ 			& length of neuronal activation & 200 s 	& ME  \\
+$\Delta t_2$ 			& time-scaling factor			& 10 s		& \citep{Ostby2009}   \\
 \hline
 \end{tabular}
 \end{table}
-% 
-\footnotetext{Model Estimation}
+\footnote[1]{Model Estimation}
+
 \subsubsection*{Scaling}
-%
-\gls{AC}  volume-area ratio (in m):
+\gls{AC} volume-area ratio (in m):
 \begin{equation} \label{eq:R_k}
-\begin{aligned}
-\dfrac{\mathrm{d}R_k}{\mathrm{d}t}= L_p( Na_k+K_k+Cl_k+HCO_{3_k}-Na_s-K_s-Cl_s\\
--HCO_{3_{s}}+\frac{X_k}{R_k})
-\end{aligned}
+	\begin{aligned}
+	\dfrac{\mathrm{d}R_k}{\mathrm{d}t}= L_p([\Na]_k + [\K]_k + [\Cl]_k + [\HCO]_k - [\Na]_s - [\K]_s - [\Cl]_s - [\HCO]_s + \frac{X_k}{R_k})
+	\end{aligned}
 \end{equation}
 %
 \gls{SC} volume-surface ratio  (in m):
 \begin{equation} \label{eq:R_tot}
-R_s = R_{tot} - R_k  
+R_s = R_{\text{tot}} - R_k  
 \end{equation}
-%
+
+%Total volume-surface ratio (m):
+%\begin{equation}
+%	R_{\text{tot}} = \frac{V_{sc} + V_{k}}{A_k}
+%\end{equation}
+
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$L_p$ 			& Total water permeability per unit area of the astrocyte 			& 2.1$\times$10$^{-9}$ \mperuMs &  \cite{Ostby2009}  \\
+$L_p$ 			& total water permeability per unit area of the astrocyte  & 2.1\e{-9} \mperuMs &  \cite{Ostby2009}\footnotemark[2]  \\
 $X_k$			& Number of negatively charged impermeable ions trapped within the astrocyte divided by the astrocyte membrane area								& 12.41$\times$10$^{-3}$ \uMm & \cite{Ostby2009}  \\
-$R_{tot}$ 		& Total volume surface ratio AC+SC   		& 8.79$\times$10$^{-8}$ \m & \cite{Ostby2009}  \\
+$R_{\text{tot}}$ 		& Total volume surface ratio AC + SC $ ((V_{sc} + V_{k})/A_k)  $ 		& 8.79$\times$10$^{-8}$ \m & \cite{Ostby2009}\footnotemark[2]  \\
+%$V_{sc}$ 		& \gls{SC} volume   & 
+$A_k$			& characteristic exchange surface area 	& 3.7\e{-9} m$^2$ & \citep{Ostby2009}\footnotemark[3]\\
 \hline
 \end{tabular}
 \end{table}
-
+\footnotetext[2]{corrected value/unit obtained from \texttt{CellML}}
+\footnotetext[3]{corrected value/unit obtained from communication with author}
 \subsubsection*{Conservation Equations}
 \paragraph{Synaptic Cleft}~\\
 %
 \gls{K} concentration in the \gls{SC} (times the \gls{SC} volume-area ratio $R_s$; in \uMm):
 \begin{equation} \label{eq:KEx}
-\dfrac{\mathrm{d}N_{K_s}}{\mathrm{d}t}= k_C f(t) -\dfrac{\mathrm{d}N_{K_k}}{\mathrm{d}t} - J_{BK_k}
+\dfrac{\mathrm{d}N_{\text{K},s}}{\mathrm{d}t}= k_C f(t) -\dfrac{\mathrm{d}N_{\text{K},k}}{\mathrm{d}t} - J_{\text{BK},k}\,; \text{~~~} [\K]_s = \frac{N_{\text{K},s}}{R_s}
 \end{equation}
 %
 \gls{Na} concentration in the \gls{SC}  (times the \gls{SC} volume-area ratio $R_s$; in \uMm):
 \begin{equation} \label{eq:NaEx}
-\dfrac{\mathrm{d}N_{Na_s}}{\mathrm{d}t}= - k_C f(t) -\dfrac{\mathrm{d}N_{Na_k}}{\mathrm{d}t}
+\dfrac{\mathrm{d}N_{\text{Na},s}}{\mathrm{d}t}= - k_C f(t) -\dfrac{\mathrm{d}N_{\text{Na},k}}{\mathrm{d}t}\,; \text{~~~} [\Na]_s = \frac{N_{\text{Na},s}}{R_s}
 \end{equation}
 %
 \gls{HCO3} concentration in the SC  (times the \gls{SC} volume-area ratio $R_s$; in \uMm):
 \begin{equation} \label{eq:HCOEx}
-\dfrac{\mathrm{d}N_{HCO_{3_{s}}}}{\mathrm{d}t}=-\dfrac{\mathrm{d}N_{HCO_{3_{k}}}}{\mathrm{d}t}
+\dfrac{\mathrm{d}N_{\text{HCO}_3,s}}{\mathrm{d}t}=-\dfrac{\mathrm{d}N_{\text{HCO}_3,k}}{\mathrm{d}t}\,; \text{~~~} [\HCO]_s = \frac{N_{\text{HCO}_3,s}}{R_s}
 \end{equation}
 \begin{table}[h!]
 \centering
@@ -102,23 +108,22 @@ $ k_C $  & Input scaling parameter & 7.35$\times$10$^{-5}$ \muMps & \cite{Ostby2
 %
 \gls{K} concentration in the AC  (times the AC volume-area ratio $R_k$; in \uMm):
 \begin{equation} \label{eq:KInt}
-\dfrac{\mathrm{d}N_{K_k}}{\mathrm{d}t}=- J_{K_k} + 2 J_{NaK_{k}} + J_{NKCC1_{k}} +  J_{KCC1_{k}}
-- J_{BK_k}  
+\dfrac{\mathrm{d}N_{\text{K},k}}{\mathrm{d}t}=- J_{\text{K},k} + 2 J_{\text{NaK},k} + J_{NKCC1_{k}} +  J_{KCC1_{k}} - J_{\text{BK},k} \,; \text{~~~} [\K]_k = \frac{N_{\text{K},k}}{R_k}
 \end{equation}
 %
 \gls{Na} concentration in the AC  (times the AC volume-area ratio $R_k$; in \uMm):
 \begin{equation} \label{eq:NaInt}
-\dfrac{\mathrm{d}N_{Na_k}}{\mathrm{d}t}=-J_{Na_k} - 3 J_{NaK_{k}} + J_{NKCC1_{k}} +  J_{NBC_{k}}
+\dfrac{\mathrm{d}N_{\text{Na},k}}{\mathrm{d}t}=-J_{\text{Na},k} - 3 J_{\text{NaK},k} + J_{NKCC1_{k}} +  J_{\text{NBC},k}\,; \text{~~~} [\Na]_k = \frac{N_{\text{Na},k}}{R_k}
 \end{equation}
 %
 \gls{HCO3} concentration in the AC  (times the AC volume-area ratio $R_k$; in \uMm):
 \begin{equation} \label{eq:HCOInt}
-\dfrac{\mathrm{d}N_{HCO_{3_k}}}{\mathrm{d}t}= 2 J_{NBC_{k}} 
+\dfrac{\mathrm{d}N_{\text{HCO}_3,k}}{\mathrm{d}t}= 2 J_{\text{NBC},k}\,; \text{~~~} [\HCO]_k = \frac{N_{\text{HCO}_3,k}}{R_k}
 \end{equation}
 %
 \gls{Cl} concentration in the AC  (times the AC volume-area ratio $R_k$; in \uMm):
 \begin{equation} \label{eq:ClInt}
-\dfrac{\mathrm{d}N_{Cl_k}}{\mathrm{d}t}= \dfrac{\mathrm{d}N_{Na_k}}{\mathrm{d}t} + \dfrac{\mathrm{d}N_{K_k}}{\mathrm{d}t} - \dfrac{\mathrm{d}N_{HCO_{3_{k}}}}{\mathrm{d}t}
+\dfrac{\mathrm{d}N_{\text{Cl},k}}{\mathrm{d}t}= \dfrac{\mathrm{d}N_{\text{Na},k}}{\mathrm{d}t} + \dfrac{\mathrm{d}N_{\text{K},k}}{\mathrm{d}t} - \dfrac{\mathrm{d}N_{\text{HCO}_3,k}}{\mathrm{d}t}\,; \text{~~~} [\Cl]_k = \frac{N_{\text{Cl},k}}{R_k}
 \end{equation}
 %
 Open probability of the BK channel (non-dim.):
@@ -129,17 +134,17 @@ Open probability of the BK channel (non-dim.):
 \paragraph{Perivascular Space}~\\
 \gls{K} concentration in the PVS  (in \uM):
 \begin{equation} \label{eq:K_p}
-\dfrac{\mathrm{d}K_{p}}{\mathrm{d}t}= \frac{J_{BK_k}}{R_k R_{pa}} + \frac{J_{KIR_i}}{R_{ps}} - R_{decay}(K_p - K_{p,min});
+\dfrac{\mathrm{d}K_{p}}{\mathrm{d}t}= \frac{J_{\text{BK},k}}{R_k R_{pk}} + \frac{J_{\text{KIR},i}}{R_{ps}} - R_{\text{decay}}([\K]_p - [\K]_{p,\min});
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$ R_{pa} $  & Volume ratio of PVS to AC & 10$^{-3}$ [-] & \cite{Nagelhus1999} \\
+$ R_{pk} $  & Volume ratio of PVS to AC & 10$^{-3}$ [-] & \cite{Nagelhus1999} \\
 $ R_{ps} $  & Volume ratio of PVS to SMC & 10$^{-3}$ [-] & \cite{Nagelhus1999} \\
-$ R_{decay} $  & Decay rate & 0.05 s$^{-1}$ & M.E. \\
-$ K_{p,min} $  & min K+ concentration & 3 $\times$ 10$^{3}$ \textmu M & M.E. \\
+$ R_{\text{decay}} $  & Decay rate & 0.05 s$^{-1}$ & M.E. \\
+$ [\K]_{p,\min} $  & min \gls{K} concentration & 3 $\times$ 10$^{3}$ \textmu M & M.E. \\
 \hline
 \end{tabular}
 \end{table}
@@ -147,37 +152,37 @@ $ K_{p,min} $  & min K+ concentration & 3 $\times$ 10$^{3}$ \textmu M & M.E. \\
 %
 \gls{K} flux (times the AC volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_K}
-J_{K_k}=\frac{g_{K_{k}}}{F}(v_k - E_{K_k})
+J_{\text{K},k}=\frac{g_{K_{k}}}{F}(v_k - E_{\text{K},k})
 \end{equation}
 %
 \gls{Na} flux (times the AC volume-area ratio $R_k$; in \uMmps):
 \begin{equation} \label{eq:J_Na}
-J_{Na_k}=\frac{g_{Na_{k}}}{F}(v_k - E_{Na_k})
+J_{\text{Na},k}=\frac{g_{Na_{k}}}{F}(v_k - E_{\text{Na},k})
 \end{equation}
 %
 \gls{Na} and \gls{HCO3} flux through the NBC channel  (times the AC volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_NBC}
-J_{NBC_k}=\frac{g_{NBC_k}}{F}\left(  v_k -E_{NBC_k}  \right)
+J_{\text{NBC},k}=\frac{g_{\text{NBC},k}}{F}\left(  v_k -E_{\text{NBC},k}  \right)
 \end{equation}
 %
 \gls{Cl} and \gls{K} flux through the KCC1 channel  (times the AC volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_KCC1}
-J_{KCC1_k}=C_{input}\frac{g_{KCC1_k}}{F}\frac{R_gT}{F}ln \left(\frac{K_s Cl_s }{K_k Cl_k}\right)
+J_{\text{KCC1},k}=C_{input}\frac{g_{\text{KCC1},k}}{F}\frac{R_{\text{gas}}T}{F}ln \left(\frac{[\K]_s [\Cl]_s }{K_k [\Cl]_k}\right)
 \end{equation}
 %
 \gls{Na}, \gls{K} and \gls{Cl} flux through the NKCC1 channel   (times the AC volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_NKCC1}
-J_{NKCC1_k}=C_{input}\frac{g_{NKCC1_k}}{F}\frac{R_gT}{F}ln \left(\frac{Na_s K_s {Cl_s}^2}{Na_k K_k {Cl_k}^2}\right)
+J_{\text{NKCC1},k}=C_{input}\frac{g_{\text{NKCC1},k}}{F}\frac{R_{\text{gas}}T}{F}ln \left(\frac{Na_s [\K]_s {[\Cl]_s}^2}{Na_k K_k {[\Cl]_k}^2}\right)
 \end{equation}
 %
 Flux through the sodium potassium pump   (times the \gls{AC} volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_NaK_s}
-J_{NaK_{k}}=J_{NaK_{max}}\frac{{Na_k}^{1.5}}{{Na_k}^{1.5}+{K_{Na_k}}^{1.5}}\frac{K_s}{K_s+K_{K_s}}
+J_{\text{NaK},k}=J_{\text{NaK,max}}\frac{{Na_k}^{1.5}}{{Na_k}^{1.5}+{K_{\text{Na},k}}^{1.5}}\frac{[\K]_s}{[\K]_s+K_{K_s}}
 \end{equation}
 %
 \gls{K} flux through the BK channel  (times the \gls{AC} volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_BK}
-J_{BK_k}=\frac{g_{BK_k}}{F}w_k\left( v_k-E_{BK_k} \right)
+J_{\text{BK},k}=\frac{g_{\text{BK},k}}{F}w_k \left(v_k - E_{\text{BK},k} \right)
 \end{equation}
 %
 %
@@ -187,21 +192,21 @@ J_{BK_k}=\frac{g_{BK_k}}{F}w_k\left( v_k-E_{BK_k} \right)
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline	
 $F$ 			& Faraday's constant														& 9.649$\times$10$^4$ \Cmol 	& \\
-$R_g$ 			& Gas constant 															& 8.315 \JmolK		& \\
+$R_{\text{gas}}$ 			& Gas constant 															& 8.315 \JmolK		& \\
 $T$ 	    	& Temperature 															& 300 \Kelvin		& \\
 $g_{K_{k}}$ 	& Specific ion conductance of potassium 								& 40$\times$10$^3$ \perOhmm 		& \cite{Ostby2009}  \\
-$g_{Na_k}$ 		& Specific ion conductance of sodium 									& 1.314$\times$10$^3$  \perOhmm 	& \cite{Ostby2009}  \\
-$g_{NBC_k}$ 	& Specific ion conductance of the NBC cotransporter						& 7.57$\times$10$^2$ \perOhmm 	& \cite{Ostby2009}  \\
-$g_{KCC1_k}$ 	& Specific ion conductance of the KCC1 cotransporter					& 10 \perOhmm 	& \cite{Ostby2009}  \\
-$g_{NKCC1_k}$ 	& Specific ion conductance of the NKCC1 cotransporter	 				& 55.4 \perOhmm 	& \cite{Ostby2009}  \\
-$J_{NaK_{max}}$ & Maximum flux through the NaKATPase pump						     	& 1.42$\times$10$^{-3}$ \uMms 	& \cite{Ostby2009}  \\
-$G_{BK_k}$ 		& Specific ion conductance of the BK channel							& 4.3$\times$10$^3$   pS & \cite{GonzalezFernandez1994}  \\
+$g_{\text{Na},k}$ 		& Specific ion conductance of sodium 									& 1.314$\times$10$^3$  \perOhmm 	& \cite{Ostby2009}  \\
+$g_{\text{NBC},k}$ 	& Specific ion conductance of the NBC cotransporter						& 7.57$\times$10$^2$ \perOhmm 	& \cite{Ostby2009}  \\
+$g_{\text{KCC1},k}$ 	& Specific ion conductance of the KCC1 cotransporter					& 10 \perOhmm 	& \cite{Ostby2009}  \\
+$g_{\text{NKCC1},k}$ 	& Specific ion conductance of the NKCC1 cotransporter	 				& 55.4 \perOhmm 	& \cite{Ostby2009}  \\
+$J_{\text{NaK,max}}$ & Maximum flux through the NaKATPase pump						     	& 1.42$\times$10$^{-3}$ \uMms 	& \cite{Ostby2009}  \\
+$G_{\text{BK},k}$ 		& Specific ion conductance of the BK channel							& 4.3$\times$10$^3$   pS & \cite{GonzalezFernandez1994}  \\
 $A_{ef,k}$		& Membrane area														    & 3.7 $\times$ 10$^{-9}$ & \cite{GonzalezFernandez1994} \\
-$g_{BK_k}$ 		& Specific ion conductance of the BK channel							&  $G_{BK_k}$ $\times$10$^{-12}$/A$_{ef,k}$ = 1.16$\times$10$^3$ \perOhmm & \cite{GonzalezFernandez1994}  \\
+$g_{\text{BK},k}$ 		& Specific ion conductance of the BK channel							&  $G_{\text{BK},k}$ $\times$10$^{-12}$/A$_{ef,k}$ = 1.16$\times$10$^3$ \perOhmm & \cite{GonzalezFernandez1994}  \\
 $C_{input}$  & Block function to switch the channel on and off &  0 ; 1 [-] 			&  \\
-$K_{Na_k}$  & Michaelis-Menten constant   &  10$^4$ \uM &   \\
+$K_{\text{Na},k}$  & Michaelis-Menten constant   &  10$^4$ \uM &   \\
 $K_{K_s}$  & Michaelis-Menten constant   &  1.5 $ \times $ 10$^3$ \uM &   \\
-$C_{unit}$ & Unit converting factor   & 10$^{3}$ & M.E. \\
+$C_{\text{unit}}$ & Unit converting factor   & 10$^{3}$ & M.E. \\
 \hline
 \end{tabular}
 \end{table}
@@ -211,58 +216,58 @@ $C_{unit}$ & Unit converting factor   & 10$^{3}$ & M.E. \\
 %
 \gls{Cl} concentration  (times the SC volume-area ratio $R_s$; in \uMm): 
 \begin{equation} \label{eq:ClEx}
-N_{Cl_s}= N_{Na_s}+N_{K_s}-N_{ HCO_{3_s}}
+N_{\text{Cl},s}= N_{\text{Na},s}+N_{\text{K},s}-N_{ HCO_{3,s}}\,; \text{~~~} [\Cl]_s = \frac{N_{\text{Cl},s}}{R_s}
 \end{equation}
 
 \paragraph{Astrocyte}~\\
 %
 Membrane voltage of the \gls{AC} (V):
 \begin{equation} \label{eq:v_k}
-v_k=\frac{g_{Na_k}E_{Na_k}+g_{K_k}E_{K_k}+g_{Cl_k}E_{Cl_k}+g_{NBC_k}E_{NBC_k} + g_{BK_k}w_kE_{BK_k} -J_{NaK_k}F C_{unit} }{ g_{Na_k}+g_{K_k}+g_{Cl_k}+g_{NBC_k}+g_{BK_k}w_k }
+v_k = \frac{g_{\text{Na},k} E_{\text{Na},k} + g_{\text{K},k} E_{\text{K},k} + g_{\text{Cl},k}E_{\text{Cl},k}+g_{\text{NBC},k}E_{\text{NBC},k} + g_{\text{BK},k}w_kE_{\text{BK},k} -J_{\text{NaK},k}F C_{\text{unit}} } { g_{\text{Na},k}+g_{\text{K},k} + g_{\text{Cl},k} + g_{\text{NBC},k} + g_{\text{BK},k}w_k }
 \end{equation}
 %
 Nernst potential for the potassium channel (in mV):
 \begin{equation} \label{eq:E_K}
-E_{K_k}=\frac{R_gT}{z_K F}ln\left( \frac{K_s}{K_k}\right) 
+E_{\text{K},k}=\frac{R_{\text{gas}}T}{z_K F}ln\left( \frac{[\K]_s}{[\K]_k}\right) 
 \end{equation}
 %
 Nernst potential for the sodium channel (in mV):
 \begin{equation} \label{eq:E_Na}
-E_{Na_k}=\frac{R_gT}{z_{Na} F}ln\left( \frac{Na_s}{Na_k}\right) 
+E_{\text{Na},k}=\frac{R_{\text{gas}}T}{z_{\text{Na}} F}ln\left( \frac{Na_s}{Na_k}\right) 
 \end{equation}
 %
 Nernst potential for the chloride channel (in mV):
 \begin{equation} \label{eq:E_Cl}
-E_{Cl_k}=\frac{R_gT}{z_{Cl} F}ln\left( \frac{Cl_s}{Cl_k}\right) 
+E_{\text{Cl},k} = \frac{R_{\text{gas}}T}{z_{\text{Cl}} F}ln\left( \frac{[\Cl]_s}{[\Cl]_k}\right) 
 \end{equation}
 %
 Nernst potential for the NBC channel (in mV):
 \begin{equation} \label{eq:E_NBC}
-E_{NBC_k}=\frac{R_gT}{z_{NBC} F}ln\left( \frac{Na_s {HCO_{3_s}}^2}{Na_k {HCO_{3_k}}^2}\right) 
+E_{\text{NBC},k} = \frac{R_{\text{gas}}T}{z_{NBC} F}ln\left( \frac{Na_s {HCO_{3,s}}^2}{Na_k {HCO_{3,k}}^2}\right) 
 \end{equation}
 Nernst potential for the BK channel (in mV):
 \begin{equation} \label{eq:E_BK}
-E_{BK_k}=\frac{R_gT}{z_K F}ln\left( \frac{K_p}{K_k}\right) 
+E_{\text{BK},k} = \frac{R_{\text{gas}} T}{z_K F}\ln\left( \frac{[\K]_p}{[\K]_k}\right) 
 \end{equation}
 %
 Equilibrium state BK-channel (-):
 \begin{equation} \label{eq:winf}
-w_{\infty}=0.5 \left(1+\mathrm{tanh}\left(\frac{v_{k}+v_{6} }{v_{4}} \right)  \right) 
+w_{\infty} = 0.5 \left(1+\tanh\left(\frac{v_{k}+v_{6} }{v_{4}} \right)  \right) 
 \end{equation}
 %
 Time constant associated with the opening of BK channels	 (in \pers):
 \begin{equation} \label{eq:phin}
-\phi_{w}=\psi_{w}\mathrm{cosh}\left( \frac{v_{k}+v_{6}}{2v_{4}}\right) 
+\phi_{w} = \psi_{w}\cosh\left( \frac{v_{k}+v_{6}}{2v_{4}}\right) 
 \end{equation}
 
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.6\linewidth}  >{\footnotesize} p{0.17\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$g_{Cl_k}$ 		& Specific ion conductance of chloride 									& 0.879 \perOhmm & \cite{Ostby2009}  \\
+$g_{\text{Cl},k}$ 		& Specific ion conductance of chloride 									& 0.879 \perOhmm & \cite{Ostby2009}  \\
 $z_K$			& Valence of a potassium ion										& 1   & \\ 
-$z_{Na}$			& Valence of a sodium ion											& 1   & \\ 
-$z_{Cl}$			& Valence of a chloride ion											& -1  & \\ 
+$z_{\text{Na}}$			& Valence of a sodium ion											& 1   & \\ 
+$z_{\text{Cl}}$			& Valence of a chloride ion											& -1  & \\ 
 $z_{NBC}$ 		& Effective valence of the NBC cotransporter complex 				& -1 & \\
 $v_{6}$			& Voltage associated with the opening of half the population		& 22 mV  & \cite{GonzalezFernandez1994}  \\
 $v_{4}$			& A measure of the spread of the distribution of the open probability of the BK channel	& 14.5 mV   &  \cite{GonzalezFernandez1994}  
@@ -280,21 +285,21 @@ $ \psi_{w}$    	& A characteristic time for the open probability of the BK chann
 Cytosolic [\gls{Ca}] in the \gls{SMC} (in \uM):
 \begin{equation}\label{eq:ci}
 \begin{split}
-\dfrac{\mathrm{d}\CaConsc}{\mathrm{d}t} = J_{IP_{3i}} - J_{SR_{uptake_{i}}} + J_{CICR_{i}} - J_{extrusion_{i}} +  J_{SR_{leak_{i}}}\dots \\
- - J_{VOCC_{i}} + J_{Na/Ca_{i}}  + 0.1J_{stretch_{i}} + J_{Ca^{2+}-coupling_{i}}^{SMC-EC}
+\dfrac{\mathrm{d}\CaConsc}{\mathrm{d}t} = J_{\text{IP}_3,i} - J_{\text{upt},i} + J_{\text{CICR}_i} - J_{\text{extr},i} +  J_{\text{leak},i}\dots \\
+ - J_{\text{VOCC},i} + J_{\text{Na/Ca},i}  + 0.1J_{\text{stretch},i} + J_{Ca^{2+}-coupling_{i}}^{SMC-EC}
 \end{split} 
 \end{equation}
 %
 [Ca$^{2+}$] in the \gls{SR} of the \gls{SMC} (in \uM):
 \begin{equation} \label{eq:si}
-\dfrac{\mathrm{d}\CaConse}{\mathrm{d}t} =  J_{SR_{uptake_{i}}} - J_{CICR_{i}} - J_{SR_{leak_{i}}}
+\dfrac{\mathrm{d}\CaConse}{\mathrm{d}t} =  J_{\text{upt},i} - J_{\text{CICR}_i} - J_{\text{leak},i}
 \end{equation}
 %
 Membrane potential of the \gls{SMC} (in \mV):
 \begin{equation} \label{eq:vi}
 \begin{split}
-\dfrac{\mathrm{d}v_{i}}{\mathrm{d}t} = \gamma_{i}( -J_{Na/K_{i}} - J_{Cl_{i}} - 2J_{VOCC_{i}}- J_{Na/Ca_{i}} - J_{K_{i}} \dots \\
-- J_{stretch_{i}} - J_{KIR_{i}} ) +V^{SMC-EC}_{coupling_{i}}
+\dfrac{\mathrm{d}v_{i}}{\mathrm{d}t} = \gamma_{i}( -J_{\text{Na/K},i} - J_{\text{Cl},i} - 2J_{\text{VOCC},i}- J_{\text{Na/Ca},i} - J_{\text{K},i} \dots \\
+- J_{\text{stretch},i} - J_{\text{KIR},i} ) +V^{SMC-EC}_{coupling_{i}}
 \end{split}
 \end{equation}
 %
@@ -305,12 +310,12 @@ Open state probability of calcium-activated potassium channels (dim.less):
 %
 \gls{IP3} concentration om the \gls{SMC} (in \uM):
 \begin{equation} \label{eq:dIidt}
-\dfrac{\mathrm{d}\IP _{i}}{\mathrm{d}t} = J^{SMC-EC}_{IP_{3}-coupling_{i}} - J_{degrad_{i}}
+\dfrac{\mathrm{d}\IP _{i}}{\mathrm{d}t} = J^{SMC-EC}_{IP_{3}-coupling_{i}} - J_{\text{degr},i}
 \end{equation}
 %
 \gls{K} concentration in the \gls{SMC} (in \uM):
 \begin{equation} \label{eq:dkidt}
-\dfrac{\mathrm{d} [K^+_{i}]}{\mathrm{d}t}  = J_{Na/K_{i}}  - J_{KIR_{i}} - J_{K_{i}}
+\dfrac{\mathrm{d} [\K]_i}{\mathrm{d}t}  = J_{\text{Na/K},i}  - J_{\text{KIR},i} - J_{\text{K},i}
 \end{equation}
 
 \begin{table}[h!]
@@ -330,14 +335,14 @@ $\lambda_{i} $				& Rate constant for opening											& 45.0 \pers 	& \cite{Ko
 Cytosolic \gls{Ca} concentration in the \gls{EC} (in \uM):
 \begin{equation} \label{eq:cj}
 \begin{split}
-\dfrac{\mathrm{d}\CaConec}{\mathrm{d}t} = J_{IP_{3j}} - J_{ER_{uptake_{j}}} + J_{CICR_{j}} - J_{extrusion_{j}}\dots \\
- + J_{ER_{leak_{j}}} + J_{cation_{j}} + J_{0_{j}} + J_{stretch_{j}} - J_{Ca^{2+}-coupling_{j}}^{SMC-EC}
+\dfrac{\mathrm{d}\CaConec}{\mathrm{d}t} = J_{\text{IP}_3,j} - J_{\text{upt},j} + J_{CICR_{j}} - J_{\text{extr},j}\dots \\
+ + J_{\text{leak},j} + J_{cation_{j}} + J_{0_{j}} + J_{\text{stretch},j} - J_{Ca^{2+}-coupling_{j}}^{SMC-EC}
 \end{split}
 \end{equation}
 %
 \gls{Ca} concentration in the \gls{ER} in the \gls{EC} (in \uM): %copied from SMC
 \begin{equation} \label{eq:sj}
-\dfrac{\mathrm{d}\CaConee}{\mathrm{d}t} =  J_{ER_{uptake_{j}}} - J_{CICR_{j}} - J_{ER_{leak_{j}}}
+\dfrac{\mathrm{d}\CaConee}{\mathrm{d}t} =  J_{\text{upt},j} - J_{CICR_{j}} - J_{\text{leak},j}
 \end{equation}
 %
 Membrane potential of the \gls{EC} (in \mV):
@@ -347,7 +352,7 @@ Membrane potential of the \gls{EC} (in \mV):
 %
 \gls{IP3} concentration of the \gls{EC} (in \uM):
 \begin{equation} \label{eq:dIjdt}
-\dfrac{\mathrm{d}\IP_{j}}{\mathrm{d}t} =  J_{EC,IP_3}- J_{degrad_{j}}  - J^{SMC-EC}_{IP_{3}-coupling_{j}}
+\dfrac{\mathrm{d}\IP_{j}}{\mathrm{d}t} =  J_{\text{EC,IP}_3}- J_{\text{degr},j}  - J^{SMC-EC}_{IP_{3}-coupling_{j}}
 \end{equation}
 
 \begin{table}[h!]
@@ -369,7 +374,7 @@ Membrane potential of the \gls{EC} (in \mV):
 %
 Release of calcium from IP$_{3}$ sensitive stores in the SMC (in \uMps):
 \begin{equation} \label{eq:IP3i}
-J_{IP_{3i}} = F_{i}\frac{\IP_{i}^{2}}{K_{ri}^{2}+\IP_{i}^{2}}
+J_{\text{IP}_3,i} = F_{i}\frac{\IP_{i}^{2}}{K_{ri}^{2}+\IP_{i}^{2}}
 \end{equation}
 %
 \begin{table}[h!]
@@ -386,7 +391,7 @@ $K_{ri}$				& Half-saturation constant for agonist-dependent calcium entry	& 1 \
 %
 Uptake of calcium into the sarcoplasmic reticulum (in \uMs):
 \begin{equation} \label{eq:JSRuptakei}
-J_{SR_{uptake_{i}}} = B_{i}\frac{\CaConsc^{2}}{c_{bi}^{2}+\CaConsc^{2}}
+J_{\text{upt},i} = B_{i}\frac{\CaConsc^{2}}{c_{bi}^{2}+\CaConsc^{2}}
 \end{equation}
 %
 \begin{table}[h!]
@@ -403,7 +408,7 @@ $c_{bi}$				& Half-point of the SR ATPase activation sigmoidal 	& 1.0 \uM					& 
 %
 Calcium-induced calcium release (CICR; in \uMs):
 \begin{equation} \label{eq:JCICRi}
-J_{CICR_{i}} = C_{i}\frac{\CaConse^{2}}{s_{ci}^{2}+\CaConse^{2}}    \frac{\CaConsc^{4}}{c_{ci}^{4}+\CaConsc^{4}}
+J_{\text{CICR}_i} = C_{i}\frac{\CaConse^{2}}{s_{ci}^{2}+\CaConse^{2}}    \frac{\CaConsc^{4}}{c_{ci}^{4}+\CaConsc^{4}}
 \end{equation}
 %
 \begin{table}[h!]
@@ -421,7 +426,7 @@ $c_{ci}$				& Half-point of the CICR activation sigmoidal			& 0.9 \uM		& \cite{K
 %
 Calcium extrusion by Ca$^{2+}$-ATPase pumps (in \uMs):
 \begin{equation} \label{eq:Jextrusioni}
-J_{extrusion_{i}} = D_{i}\CaConsc   \left( 1+ \frac{v_{i}-v_{d}}{R_{di}}\right)
+J_{\text{extr},i} = D_{i}\CaConsc   \left( 1+ \frac{v_{i}-v_{d}}{R_{di}}\right)
 \end{equation}
 %
 \begin{table}[h!]
@@ -439,7 +444,7 @@ $R_{di}$				& Slope of voltage dependence of extrusion ATPase.				 & 250.0 \mV		
 %
 Leak current from the SR (in \uMs):
 \begin{equation} \label{eq:JSRleaki}
-J_{SR_{leak_{i}}} = L_{i}\CaConse
+J_{\text{leak},i} = L_{i}\CaConse
 \end{equation}
 \begin{table}[h!]
 \centering
@@ -454,16 +459,16 @@ $L_{i}$      			& Leak from SR rate constant						 & 0.025 \pers				& \cite{Koen
 
 Calcium influx through VOCCs (in \uMs): 
 \begin{equation} \label{eq:JVOCCi}
-J_{VOCC_{i}} = G_{Cai} \frac{v_{i}-v_{Ca_{1i}}}     {1+ exp(-\left[ \left(  v_{i}-v_{Ca_{2i}}\right) /R_{Cai}      \right] )}
+J_{\text{VOCC},i} = G_{\text{Ca},i} \frac{v_{i}-v_{\text{Ca}_1,i}}     {1+ \exp(-\left[ \left(  v_{i}-v_{\text{Ca}_2,i}\right) /R_{\text{Ca},i}      \right] )}
 \end{equation}
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$G_{Cai}$      	& Whole-cell conductance for VOCCs	 					& 1.29$\times$10$^{-3}$  \uMpmVs					& \cite{Koenigsberger2006} \\
-$v_{Ca_{1i}}$   & Reversal potential for VOCCs	 						& 100.0 \mV							& \cite{Koenigsberger2006} \\
-$v_{Ca_{2i}}$  	& Half-point of the VOCC activation sigmoidal		 	& -24.0 \mV							& \cite{Koenigsberger2006} \\
-$R_{Cai}$      	& Maximum slope of the VOCC	activation sigmoidal		& 8.5 \mV							& \cite{Koenigsberger2006} \\
+$G_{\text{Ca},i}$      	& Whole-cell conductance for VOCCs	 					& 1.29$\times$10$^{-3}$  \uMpmVs					& \cite{Koenigsberger2006} \\
+$v_{\text{Ca}_1,i}$   & Reversal potential for VOCCs	 						& 100.0 \mV							& \cite{Koenigsberger2006} \\
+$v_{\text{Ca}_2,i}$  	& Half-point of the VOCC activation sigmoidal		 	& -24.0 \mV							& \cite{Koenigsberger2006} \\
+$R_{\text{Ca},i}$      	& Maximum slope of the VOCC	activation sigmoidal		& 8.5 \mV							& \cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JVOCCi}
@@ -471,16 +476,16 @@ $R_{Cai}$      	& Maximum slope of the VOCC	activation sigmoidal		& 8.5 \mV					
 \newpage
 Flux of calcium exchanging with sodium in the Na$^{+}$Ca$^{2+}$ exchange (in \uMs): 
 \begin{equation} \label{eq:JNaCai}
-J_{Na/Ca_{i}} = G_{Na/Ca_{i}} \frac{\CaConsc}     {\CaConsc + c_{Na/Cai}} \left( v_{i}-v_{Na/Ca_{i}} \right)
+J_{\text{Na/Ca},i} = G_{\text{Na/Ca},i} \frac{\CaConsc}     {\CaConsc + c_{\text{Na/Ca},i}} \left( v_{i}-v_{\text{Na/Ca},i} \right)
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$G_{Na/Cai}$   	& Whole-cell conductance for Na$^{+}$/Ca$^{2+}$ exchange			 		 & 3.16$\times$10$^{-3}$ \uMpmVs	& \cite{Koenigsberger2006} \\
-$c_{Na/Cai}$   	& Half-point for activation of Na$^{+}$/Ca$^{2+}$ exchange by Ca$^{2+}$		 & 0.5 \uM			& \cite{Koenigsberger2006} \\
-$v_{Na/Cai}$   	& Reversal potential for the Na$^{+}$/Ca$^{2+}$ exchanger					 & -30.0 \mV		& \cite{Koenigsberger2006} \\
+$G_{\text{Na/Ca},i}$   	& Whole-cell conductance for Na$^{+}$/Ca$^{2+}$ exchange			 		 & 3.16$\times$10$^{-3}$ \uMpmVs	& \cite{Koenigsberger2006} \\
+$c_{\text{Na/Ca},i}$   	& Half-point for activation of Na$^{+}$/Ca$^{2+}$ exchange by Ca$^{2+}$		 & 0.5 \uM			& \cite{Koenigsberger2006} \\
+$v_{\text{Na/Ca},i}$   	& Reversal potential for the Na$^{+}$/Ca$^{2+}$ exchanger					 & -30.0 \mV		& \cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JNaCai}
@@ -490,7 +495,7 @@ $v_{Na/Cai}$   	& Reversal potential for the Na$^{+}$/Ca$^{2+}$ exchanger					 &
 Calcium flux through the stretch-activated channels in the SMC (in \uMs): 
 \begin{equation} \label{eq:Jstretchi}
 \begin{split}
-J_{stretch_{i}}= \frac{G_{stretch}}{1+ exp\left(-\alpha_{stretch}  \left(  \frac{\Delta pR}{h} -\sigma_{0}   \right) \right)}  \left(  v_{i}-E_{SAC}   \right) 
+J_{\text{stretch},i}= \frac{G_{\text{stretch}}}{1+ \exp\left(-\alpha_{\text{stretch}}  \left(  \frac{\Delta pR}{h} -\sigma_{0}   \right) \right)}  \left(  v_{i}-E_{\text{SAC}}   \right) 
 \end{split}
 \end{equation}
 %
@@ -498,11 +503,11 @@ J_{stretch_{i}}= \frac{G_{stretch}}{1+ exp\left(-\alpha_{stretch}  \left(  \frac
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$G_{stretch}$      		& Whole cell conductance for SACs						& 6.1$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
-$\alpha_{stretch}$      & Slope of stress dependence of the SAC activation sigmoidal	& 7.4$\times$10$^{-3}$ \pmmHg	&\cite{Koenigsberger2006} \\
+$G_{\text{stretch}}$      		& Whole cell conductance for SACs						& 6.1$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
+$\alpha_{\text{stretch}}$      & Slope of stress dependence of the SAC activation sigmoidal	& 7.4$\times$10$^{-3}$ \pmmHg	&\cite{Koenigsberger2006} \\
 $ \Delta p $			& Pressure difference										& 30 \mmHg			& ME \\
 $\sigma_{0}$      		& Half-point of the SAC activation sigmoidal				& 500 \mmHg			&\cite{Koenigsberger2006} \\
-$E_{SAC}$      			& Reversal potential for SACs							& -18 \mV			&\cite{Koenigsberger2006} \\
+$E_{\text{SAC}}$      			& Reversal potential for SACs							& -18 \mV			&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:Jstretchi}
@@ -511,14 +516,14 @@ $E_{SAC}$      			& Reversal potential for SACs							& -18 \mV			&\cite{Koenigs
 %
 Flux through the sodium potassium pump (in \uMs): 
 \begin{equation} \label{eq:J_NaK_i}
-J_{Na/K_{i}}= F_{Na/K_i}
+J_{\text{Na/K},i}= F_{\text{Na/K},i}
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$F_{Na/K_i}$      			& Rate of the potassium influx by the sodium potassium pump 		& 4.32$\times$10$^{-2}$ \uMps 	&\cite{Koenigsberger2006} \\
+$F_{\text{Na/K},i}$      			& Rate of the potassium influx by the sodium potassium pump 		& 4.32$\times$10$^{-2}$ \uMps 	&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JCli}
@@ -526,15 +531,15 @@ $F_{Na/K_i}$      			& Rate of the potassium influx by the sodium potassium pump
 \\
 Chloride flux through the chloride channel (in \uMs):
 \begin{equation} \label{eq:JCli}
-J_{Cl_{i}} = G_{Cli} \left(  v_{i} - v_{Cli}  \right) 
+J_{\text{Cl},i} = G_{\text{Cl},i} \left(  v_{i} - v_{\text{Cl},i}  \right) 
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$G_{Cli}$      			& Whole-cell conductance for Cl$^{-}$ current		& 1.34$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
-$v_{Cli}$      			& Reversal potential for Cl$^{-}$ channels.			& -25.0 \mV			&\cite{Koenigsberger2006} \\
+$G_{\text{Cl},i}$      			& Whole-cell conductance for Cl$^{-}$ current		& 1.34$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
+$v_{\text{Cl},i}$      			& Reversal potential for Cl$^{-}$ channels.			& -25.0 \mV			&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JCli}
@@ -543,14 +548,14 @@ $v_{Cli}$      			& Reversal potential for Cl$^{-}$ channels.			& -25.0 \mV			&\
 %
 Potassium flux through potassium channel (in \uMs):
 \begin{equation} \label{eq:JKi}
-J_{K_{i}}= G_{Ki} w_{i} \left(  v_{i} - v_{K_i}  \right) 
+J_{\text{K},i}= G_{\text{K},i} w_{i} \left(  v_{i} - v_{K_i}  \right) 
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$G_{Ki}$      			& Whole-cell conductance for K$^{+}$ efflux.			& 4.46$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
+$G_{\text{K},i}$      			& Whole-cell conductance for K$^{+}$ efflux.			& 4.46$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
 $v_{K_i}$      			& Nernst potential										& -94 \mV	&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
@@ -559,13 +564,13 @@ $v_{K_i}$      			& Nernst potential										& -94 \mV	&\cite{Koenigsberger2006
 \\
 Flux through KIR channels in the SMC (in \uMs): 
 \begin{equation} \label{eq:JKIRi}
-J_{KIR_{i}} =  \frac{F_{KIR_{i}} g_{KIR_{i}}}{\gamma_{i}}( v_{i} - v_{KIR_{i}})
+J_{\text{KIR},i} =  \frac{F_{\text{KIR},i} g_{\text{KIR},i}}{\gamma_{i}}( v_{i} - v_{\text{KIR},i})
 \end{equation}
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$ F_{KIR_{i}} $ & Scaling factor of potassium efflux through the KIR channel & 750 mV~\textmu M$^{-1}$ & \cite{GonzalezFernandez1994} \\
+$ F_{\text{KIR},i} $ & Scaling factor of potassium efflux through the KIR channel & 750 mV~\textmu M$^{-1}$ & \cite{GonzalezFernandez1994} \\
 \hline
 \end{tabular}
 \label{tab:JCli}
@@ -573,13 +578,13 @@ $ F_{KIR_{i}} $ & Scaling factor of potassium efflux through the KIR channel & 7
 \\
 IP$_{3}$ degradation (in \uMs): 
 \begin{equation} \label{eq:Jdegradi}
-J_{degrad_{i}}= k_{di}I_{i}
+J_{\text{degr},i}= k_{\text{d},i}\IP_i
 \end{equation}
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$k_{di}$      			& Rate constant of IP$_{3}$ degradation	& 0.1 \pers	&\cite{Koenigsberger2006} \\
+$k_{\text{d},i}$      			& Rate constant of IP$_{3}$ degradation	& 0.1 \pers	&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:Jdegradi}
@@ -589,7 +594,7 @@ $k_{di}$      			& Rate constant of IP$_{3}$ degradation	& 0.1 \pers	&\cite{Koen
 %
 Release of calcium from IP$_{3}$-sensitive stores in the EC (in \uMps):
 \begin{equation} \label{eq:JIP3j}
-J_{IP_{3j}} = F_{j}\frac{\IP_{j}^{2}}{K_{rj}^{2}+\IP_{j}^{2}}
+J_{\text{IP}_3,j} = F_{j}\frac{\IP_{j}^{2}}{K_{rj}^{2}+\IP_{j}^{2}}
 \end{equation}
 \begin{table}[h!]
 \centering
@@ -605,7 +610,7 @@ $K_{rj}$				& Half-saturation constant for agonist-dependent calcium entry	& 1 \
 %
 Uptake of calcium into the endoplasmic reticulum (in \uMs):
 \begin{equation} \label{eq:JERuptakej}
-J_{ER_{uptake_{j}}} = B_{j}\frac{\CaConec^{2}}{c_{bj}^{2}+\CaConec^{2}}
+J_{\text{upt},j} = B_{j}\frac{\CaConec^{2}}{c_{bj}^{2}+\CaConec^{2}}
 \end{equation}
 %
 \begin{table}[h!]
@@ -639,7 +644,7 @@ $c_{cj}$				& Half-point of the CICR activation sigmoidal			& 0.9 \uM		& \cite{K
 \\
 Calcium extrusion by Ca$^{2+}$-ATPase pumps (in \uMs):
 \begin{equation} \label{eq:Jextrusionj}
-J_{extrusion_{j}} = D_{j}\CaConec 
+J_{\text{extr},j} = D_{j}\CaConec 
 \end{equation}
 %
 %
@@ -655,28 +660,29 @@ $D_{j}$      			& Rate constant for Ca$^{2+}$ extrusion by the ATPase pump		 & 0
 \\ 
 Calcium flux through the stretch-activated channels in the EC (in \uMs): 
 \begin{equation} \label{eq:Jstretchj}
-J_{stretch_{j}}= \frac{G_{stretch}}{1+ e^{-\alpha_{stretch}  \left(  \sigma -\sigma_{0}   \right) }}  \left(  v_{j}-E_{SAC}   \right) \\
-= \frac{G_{stretch}}{1+ e^{-\alpha_{stretch}  \left(  \frac{\Delta pR}{h} -\sigma_{0}   \right) }}  \left(  v_{j}-E_{SAC}   \right) 
+J_{\text{stretch},j}= \frac{G_{\text{stretch}}}{1+ e^{-\alpha_{\text{stretch}}  \left(  \sigma -\sigma_{0}   \right) }}  \left(  v_{j}-E_{\text{SAC}}   \right) \\
+= \frac{G_{\text{stretch}}}{1+ e^{-\alpha_{\text{stretch}}  \left(  \frac{\Delta pR}{h} -\sigma_{0}   \right) }}  \left(  v_{j}-E_{\text{SAC}}   \right) 
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$G_{stretch}$      		& The whole cell conductance for SACs						& 6.1$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
-$\alpha_{stretch}$      & Slope of stress dependence of the SAC activation sigmoidal	& 7.4$\times$10$^{-3}$ \pmmHg	&\cite{Koenigsberger2006} \\
+$G_{\text{stretch}}$      		& The whole cell conductance for SACs						& 6.1$\times$10$^{-3}$ \uMpmVs	&\cite{Koenigsberger2006} \\
+$\alpha_{\text{stretch}}$      & Slope of stress dependence of the SAC activation sigmoidal	& 7.4$\times$10$^{-3}$ \pmmHg	&\cite{Koenigsberger2006} \\
 $ \Delta p $			& Pressure difference										& 30 \mmHg			& ME \\
 $\sigma_{0}$      		& Half-point of the SAC activation sigmoidal				& 500 \mmHg			&\cite{Koenigsberger2006} \\
-$E_{SAC}$      			& The reversal potential for SACs							& -18 \mV			&\cite{Koenigsberger2006} \\
+$E_{\text{SAC}}$      			& The reversal potential for SACs							& -18 \mV			&\cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:Jstretchj}
 \end{table}
+\todo{table ist doppelt?!}
 \\
 %
 Leak current from the ER (in \uMs):
 \begin{equation} \label{eq:JERleakj}
-J_{ER_{leak_{j}}} = L_{j}\CaConee
+J_{\text{leak},j} = L_{j}\CaConee
 \end{equation}
 %
 \begin{table}[h!]
@@ -692,7 +698,7 @@ $L_{j}$      			& Rate constant for Ca$^{2+}$ leak from the ER 		 & 0.025	\pers	
 %
 Calcium influx through nonselective cation channels (in \uMs):
 \begin{equation} \label{eq:Jcationj}
-J_{cation_{j}} = G_{cat_{j}} (E_{Ca_{j}} - v_{j}) \frac{1}{2} \left(   1+ \mathrm{tanh}  \left(  \frac{\mathrm{log}_{10} \CaConec - m_{3_{cat_{j}}} }    {m_{4_{cat_{j}}}}   \right)      \right) 
+J_{cation_{j}} = G_{cat_{j}} (E_{Ca_{j}} - v_{j}) \frac{1}{2} \left(   1+ \tanh \left(  \frac{\mathrm{log}_{10} \CaConec - m_{3_{cat_{j}}} }    {m_{4_{cat_{j}}}}   \right)      \right) 
 \end{equation}
 %
 %
@@ -731,12 +737,12 @@ $v_{Kj}$      			& K$^{+}$ equilibrium potential					 			 		& -80.0 \mV		& \cite
 %
 Potassium efflux through the $J_{BK_{Caj}}$ channel (in \uMs):
 \begin{equation} \label{eq:JBKCAj}
-J_{BK_{Caj}} = 0.2 \left(   1+ \mathrm{tanh}   \left(   \frac{   (\mathrm{log}_{10} \CaConec - c) (v_{j}-b_{j}) - a_{1j}  }   { m_{3bj} ( v_{j} + a_{2j} (\mathrm{log}_{10} \CaConec -c )-b_{j} )^{2} + m_{4bj} }  \right)     \right)  
+J_{BK_{Caj}} = 0.2 \left(   1+ \tanh \left(   \frac{   (\mathrm{log}_{10} \CaConec - c) (v_{j}-b_{j}) - a_{1j}  }   { m_{3bj} ( v_{j} + a_{2j} (\mathrm{log}_{10} \CaConec -c )-b_{j} )^{2} + m_{4bj} }  \right)     \right)  
 \end{equation}
 %
 Potassium efflux through the $J_{SK_{Caj}}$ channel (in \uMs):
 \begin{equation} \label{eq:JSKCaj}
-J_{SK_{Caj}} = 0.3\left( 1+ \mathrm{tanh}  \left(  \frac{   \mathrm{log}_{10} \CaConec -m_{3sj}  } {m_{4sj}}  \right)      \right) 
+J_{SK_{Caj}} = 0.3\left( 1+ \tanh \left(  \frac{   \mathrm{log}_{10} \CaConec -m_{3sj}  } {m_{4sj}}  \right)      \right) 
 \end{equation}
 %
 \begin{table}[h!]
@@ -759,7 +765,7 @@ $m_{4sj}$      			& Model constant, further explanation see reference					& 0.38
 %
 Residual current regrouping chloride and sodium current flux (in \uMs):
 \begin{equation} \label{eq:JRj}
-J_{R_{j}} = G_{R_{j}} ( v_{j} - v_{rest j}  )
+J_{R_{j}} = G_{R_{j}} ( v_{j} - v_{\text{rest},j}  )
 \end{equation}
 %
 \begin{table}[h!]
@@ -767,7 +773,7 @@ J_{R_{j}} = G_{R_{j}} ( v_{j} - v_{rest j}  )
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
 $G_{R_{j}}$      		& Residual current conductivity										& 955 \pS			& \cite{Koenigsberger2006} \\
-$v_{rest j}$      		& Membrane resting potential						 				& -31.1 \mV		& \cite{Koenigsberger2006} \\
+$v_{\text{rest},j}$      		& Membrane resting potential						 				& -31.1 \mV		& \cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:JRj}
@@ -776,14 +782,14 @@ $v_{rest j}$      		& Membrane resting potential						 				& -31.1 \mV		& \cite{
 %
 IP$_{3}$ degradation (in \uMs):  
 \begin{equation} \label{eq:Jdegradj}
-J_{degrad_{j}}= k_{dj} \IP_{j}
+J_{\text{degr},j}= k_{\text{d},j} \IP_{j}
 \end{equation}
 %
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$k_{dj}$      			& Rate constant of IP$_{3}$ degradation						 		& 0.1 \pers		& \cite{Koenigsberger2006} \\
+$k_{\text{d},j}$      			& Rate constant of IP$_{3}$ degradation						 		& 0.1 \pers		& \cite{Koenigsberger2006} \\
 \hline
 \end{tabular}
 \label{tab:Jdegradj}
@@ -824,17 +830,17 @@ $P_{Ca^{2+}}$      		& Heterocellular $P_{Ca^{2+}}$ coupling coefficient	& 0.05 
 %
 Equilibrium distribution of open channel states for the voltage and calcium activated potassium channels (dimensionless):
 \begin{equation} \label{eq:Kacti}
-K_{act_{i}}= \frac{  \left( \CaConsc + c_{wi}\right)^{2}}    {\left( \CaConsc + c_{wi} \right)^{2}    + \beta_{i} exp( -\left(   \left[ v_{i}-v_{Ca_{3i}}\right] /R_{Ki}   \right) )      }
+K_{act_{i}}= \frac{  \left( \CaConsc + c_{wi}\right)^{2}}    {\left( \CaConsc + c_{wi} \right)^{2}    + \beta_{i} \exp( -\left(   \left[ v_{i}-v_{Ca_{3i}}\right] /R_{Ki}   \right) )      }
 \end{equation}
 %
 Nernst potential of the KIR channel in the SMC (in mV):
 \begin{equation}\label{eq:vKIR}
-v_{KIR_i} = z_1 K_p-z_2
+v_{\text{KIR},i} = z_1 [\K]_p-z_2
 \end{equation}
 %
 Conductance of KIR channel (in  \textmu M mV$^{-1}$ s$^{-1}$):
 \begin{equation}\label{eq:gKIR}
-g_{KIR_i} = exp(z_5v_i +z_3 K_p - z_4)
+g_{\text{KIR},i} = \exp(z_5v_i +z_3 [\K]_p - z_4)
 \end{equation}
 %
 %
