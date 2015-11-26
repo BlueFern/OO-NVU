@@ -94,9 +94,9 @@ classdef SMCEC < handle
             J_IP3_coup_i = -p.P_IP3 * (I_i - I_j);
             J_Ca_coup_i = -p.P_Ca * (Ca_i - Ca_j);
             
-%           c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
-%           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.beta_i * cGMP_i)); % NO included - new
-            c_w_i = 0; % NO excluded
+            c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
+%           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.gam_i * cGMP_i)); % NO included - new
+%           c_w_i = 0; % NO excluded
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
@@ -111,7 +111,6 @@ classdef SMCEC < handle
             d_NO_i = (NO_k - NO_i) ./ tau_ki + (NO_j - NO_i) ./ tau_ij;
             
             k4 = p.C_4 * cGMP_i.^2;
-%           R_cGMP2 = cGMP_i.^2 ./ (cGMP_i.^2 + p.K_m_mlcp^2);
             E_5c = 1 - E_b - E_6c;
 
             V_max_pde = p.k_pde * cGMP_i;
@@ -424,7 +423,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('C_4', 0.011); % [s^{-1} microM^{-2}] ;
     parser.addParameter('K_m_pde', 2); % [uM] ;
     parser.addParameter('gam_eNOS', 0.1); % [-] ;
-    parser.addParameter('mu2_j', 0.0167); % [] ;
+    parser.addParameter('mu2_j', 0.0167); % [s^-1] ;
     parser.addParameter('K_dis', 9e-2); % [uM s^-1] ;
     parser.addParameter('K_eNOS', 4.5e-1); % [uM] ;    
     parser.addParameter('g_max', 0.06); % [uM s^-1] ;    

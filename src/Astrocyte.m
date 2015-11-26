@@ -310,7 +310,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('R_tot', 8.79e-8); % m
 
     % Input signal
-    parser.addParameter('startpulse', 400); % s
+    parser.addParameter('startpulse', 200); % s
     parser.addParameter('lengthpulse', 200); % s
     parser.addParameter('lengtht1', 10); % s
 %     parser.addParameter('F_input', 2.5); % s

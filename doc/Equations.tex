@@ -9,7 +9,7 @@ Neuronal \gls{K} input signal (dim.less):
 \begin{equation}
 f_{\text{K/Na}}(t) = 
 	\begin{cases} 
-		F_{\text{input}} \dfrac{(\alpha + \beta-1)!}{(\alpha-1)!(\beta-1)!} \left( \dfrac{1-(t-t_{0})}{\Delta t_2}\right) ^{\beta -1} \left( \dfrac{t-t_{0}}{\Delta t_2}\right) ^{\alpha -1}, & \text{for}\: t_{0} \leq t < t_{1} \\
+		F_{\text{input}} \dfrac{(\alpha_n + \beta_n-1)!}{(\alpha_n-1)!(\beta_n-1)!} \left( \dfrac{1-(t-t_{0})}{\Delta t_2}\right) ^{\beta_n -1} \left( \dfrac{t-t_{0}}{\Delta t_2}\right) ^{\alpha_n -1}, & \text{for}\: t_{0} \leq t < t_{1} \\
 		-F_{\text{input}}, & \text{for}\: t_{2} \leq t \leq t_{3} \\	
 		0, & \text{otherwise}\\	
 	\end{cases} 
@@ -36,8 +36,8 @@ End of back buffering (s):
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
 $F_{\text{input}}$ 		& amplitude scaling factor 		& 2.5 		& ME\footnotemark[1]  \\ % on the basis of Filosa2008
-$\alpha$ 				& beta distribution constant	& 2 		& ME  \\ % on the basis of Ostby2009
-$\beta$ 				& beta distribution constant	& 5 		& ME  \\ % on the basis of Ostby2009
+$\alpha_n$ 				& beta distribution constant	& 2 		& ME  \\ % on the basis of Ostby2009
+$\beta_n$ 				& beta distribution constant	& 5 		& ME  \\ % on the basis of Ostby2009
 $t_{0}$ 				& start of neuronal activation	& 400 s 	& ME  \\
 $\Delta t_1$ 			& length of neuronal activation & 200 s 	& ME  \\
 $\Delta t_2$ 			& time-scaling factor			& 10 s		& \citep{Ostby2009}   \\
@@ -177,7 +177,7 @@ J_{\text{NKCC1},k}=C_{input}\frac{g_{\text{NKCC1},k}}{F}\frac{R_{\text{gas}}T}{F
 %
 Flux through the sodium potassium pump   (times the \gls{AC} volume-area ratio $R_k$; in \uMmps): 
 \begin{equation} \label{eq:J_NaK_s}
-J_{\text{NaK},k}=J_{\text{NaK,max}}\frac{{Na_k}^{1.5}}{{Na_k}^{1.5}+{K_{\text{Na},k}}^{1.5}}\frac{[\K]_s}{[\K]_s+K_{K_s}}
+J_{\text{NaK},k}=J_{\text{NaK,max}}\frac{{Na_k}^{1.5}}{{Na_k}^{1.5}+{K_{\text{Na},k}}^{1.5}}\frac{[\K]_s}{[\K]_s+K_{\text{K},s}}
 \end{equation}
 %
 \gls{K} flux through the BK channel  (times the \gls{AC} volume-area ratio $R_k$; in \uMmps): 
@@ -200,16 +200,21 @@ $g_{\text{NBC},k}$ 	& Specific ion conductance of the NBC cotransporter						& 7
 $g_{\text{KCC1},k}$ 	& Specific ion conductance of the KCC1 cotransporter					& 10 \perOhmm 	& \cite{Ostby2009}  \\
 $g_{\text{NKCC1},k}$ 	& Specific ion conductance of the NKCC1 cotransporter	 				& 55.4 \perOhmm 	& \cite{Ostby2009}  \\
 $J_{\text{NaK,max}}$ & Maximum flux through the NaKATPase pump						     	& 1.42$\times$10$^{-3}$ \uMms 	& \cite{Ostby2009}  \\
-$G_{\text{BK},k}$ 		& Specific ion conductance of the BK channel							& 4.3$\times$10$^3$   pS & \cite{GonzalezFernandez1994}  \\
-$A_{ef,k}$		& Membrane area														    & 3.7 $\times$ 10$^{-9}$ & \cite{GonzalezFernandez1994} \\
-$g_{\text{BK},k}$ 		& Specific ion conductance of the BK channel							&  $G_{\text{BK},k}$ $\times$10$^{-12}$/A$_{ef,k}$ = 1.16$\times$10$^3$ \perOhmm & \cite{GonzalezFernandez1994}  \\
+$G_{\text{BK},k}$ 		& Potassium conductance of the BK channel							& 4.3$\times$10$^3$   pS & \cite{GonzalezFernandez1994}  \\
+%$A_{ef,k}$		& Membrane area														    & 3.7 $\times$ 10$^{-9}$ & \cite{GonzalezFernandez1994} \\
 $C_{input}$  & Block function to switch the channel on and off &  0 ; 1 [-] 			&  \\
 $K_{\text{Na},k}$  & Michaelis-Menten constant   &  10$^4$ \uM &   \\
-$K_{K_s}$  & Michaelis-Menten constant   &  1.5 $ \times $ 10$^3$ \uM &   \\
+$K_{\text{K},s}$  & Michaelis-Menten constant   &  1.5 $ \times $ 10$^3$ \uM &   \\
 $C_{\text{unit}}$ & Unit converting factor   & 10$^{3}$ & M.E. \\
 \hline
 \end{tabular}
 \end{table}
+
+
+Specific ion conductance of the BK channel (\perOhmm):%  \cite{GonzalezFernandez1994}  
+\begin{equation}
+	g_{\text{BK},k} = \frac{G_{\text{BK},k} \times 10^{-12}}{A_{k}} = 1.16 \times 10^3 \text{ \perOhmm}
+\end{equation}
 
 \subsubsection*{Additional Equations}
 \paragraph{Synaptic Cleft}~\\
@@ -269,8 +274,8 @@ $z_K$			& Valence of a potassium ion										& 1   & \\
 $z_{\text{Na}}$			& Valence of a sodium ion											& 1   & \\ 
 $z_{\text{Cl}}$			& Valence of a chloride ion											& -1  & \\ 
 $z_{NBC}$ 		& Effective valence of the NBC cotransporter complex 				& -1 & \\
-$v_{6}$			& Voltage associated with the opening of half the population		& 22 mV  & \cite{GonzalezFernandez1994}  \\
-$v_{4}$			& A measure of the spread of the distribution of the open probability of the BK channel	& 14.5 mV   &  \cite{GonzalezFernandez1994}  
+$v_{6}$			& Voltage associated with the opening of half the population		& 22 mV or V???  & \cite{GonzalezFernandez1994}  \\
+$v_{4}$			& A measure of the spread of the distribution of the open probability of the BK channel	& 14.5 mV or V???  &  \cite{GonzalezFernandez1994}  
 \\
 $ \psi_{w}$    	& A characteristic time for the open probability of the BK channel		& 2.664 \pers & \cite{GonzalezFernandez1994} \\
 \hline
@@ -943,7 +948,7 @@ E(F_r)= E_{pas} + F_r \left(E_{act} - E_{pas} \right)
 \end{equation}
 %
 \begin{equation}
-R_0(F_r)=R_{0_{pas}} + F_r (\alpha -1) R_{0_{pas}}
+R_0(F_r)=R_{0_{pas}} + F_r (\alpha_r -1) R_{0_{pas}}
 \end{equation}
 %
 \newpage
@@ -956,7 +961,7 @@ $R_{0_{pas}}$			& Radius of the vessel when passive and no stress is applied		& 
 $P_T$					& Transmural pressure												& 4$\times$10$^3$ \Pa		& ME \\
 ${E}_{pas}$				& Young's modulus for the passive vessel								& 66$\times$10$^3$ \Pa 		&  \cite{Gore1985}\\
 ${E}_{act}$				& Young's modulus for the active vessel								& 233$\times$10$^3$ \Pa 	& \cite{Gore1985}\\
-$\alpha$				& Scaling factor initial radius										& 0.6    		& \cite{Gore1985}\\
+$\alpha_r$				& Scaling factor initial radius										& 0.6    		& \cite{Gore1985}\\
 \hline
 \end{tabular}
 %\caption{This table shows some data}

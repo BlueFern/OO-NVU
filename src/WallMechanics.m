@@ -35,8 +35,8 @@ classdef WallMechanics < handle
             K_1 = p.gamma_cross * Ca_i.^p.n_cross;
             K_6 = K_1;
             
-            K_2 = 0.5; % NO excluded
-%            K_2 = 58.1395 * p.k_mlcp_b + 58.1395 * p.k_mlcp_c * R_cGMP2;  % 17.64 / 16.75 errechnet sich aus dem Shift, um K2_c = 0.5 bei der baseline zu bekommen, NO included - muss vllt noch geaendert werden! 
+%             K_2 = 0.5; % NO excluded
+            K_2 = 58.1395 * p.k_mlcp_b + 58.1395 * p.k_mlcp_c * R_cGMP2;  % 17.64 / 16.75 errechnet sich aus dem Shift, um K2_c = 0.5 bei der baseline zu bekommen, NO included - muss vllt noch geaendert werden! 
             K_5 = K_2;
             
             M = 1 - AM - AMp - Mp;

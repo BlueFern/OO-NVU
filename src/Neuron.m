@@ -148,7 +148,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('T', 300); % K; Temperature
     
     % input 
-    parser.addParameter('startpulse', 400);     %Used for f(t)
+    parser.addParameter('startpulse', 200);     %Used for f(t)
     parser.addParameter('lengthpulse', 200);
     parser.addParameter('lengtht1', 10);
     parser.addParameter('F_input', 2.5);        %s  
