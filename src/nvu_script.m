@@ -1,5 +1,9 @@
 %% Demonstration script for new NVU model
 
+%% Version control
+% This is the latest version of the NVU model. It includes:
+% - basic K+ / Ca2+ 
+
 %% Construct NVU
 % The NVU consists of a number of submodules, implemented as MATLAB
 % classes, presently an astrocyte, a lumped SMC/EC model, and a model of
@@ -90,7 +94,7 @@ nv.simulate()
 % documentation pages.
 nv.smcec.params.J_PLC = 0.18;
 nv.astrocyte.u0(nv.astrocyte.index.K_p) = 3e3;
-nv.T = linspace(0, 500, 1000);
+nv.T = linspace(0, 700, 1400);
 nv.simulate();
 
 subplot(3, 2, 1)
