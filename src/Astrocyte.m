@@ -21,11 +21,13 @@ classdef Astrocyte < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, J_KIR_i)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, J_NaK_i, J_K_i)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
             idx = self.index;
+            
+            K_e = u(idx.K_e, :);
             
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
@@ -108,6 +110,7 @@ classdef Astrocyte < handle
             phi_w = p.psi_w * cosh((v_k + p.v_6) / (2*p.v_4));
             
             %% Conservation Equations
+            
             % Differential Equations in the Astrocyte
             du(idx.N_K_k, :) = -J_K_k + 2*J_NaK_k + J_NKCC1_k + ...
                 J_KCC1_k - J_BK_k;
@@ -118,15 +121,19 @@ classdef Astrocyte < handle
                 du(idx.N_HCO3_k, :);
            
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
+            
             % Differential Equations in the Perivascular space
-            du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
-                p.VR_ps - p.R_decay*(K_p - p.K_p_min);
+            du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay*(K_p - p.K_p_min) + (1 / p.tau) * (K_e - K_p);
+            
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = p.k_C * self.input_f(t) - ...
-                du(idx.N_K_k, :) - J_BK_k;
-            du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - ...
-                du(idx.N_Na_k, :);
+            du(idx.N_K_s, :) = p.k_C * self.input_f(t) - du(idx.N_K_k, :) - J_BK_k + (R_s / p.tau2) .* (K_e - K_s);
+            
+            du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+            
+            % Differential Equation for the ECS
+            du(idx.K_e, :) =  - J_NaK_i + J_K_i - (1 / p.tau2) * (K_e - K_s) - (p.VR_pe / p.tau) * (K_e - K_p);
+            
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));
@@ -182,6 +189,7 @@ idx.N_Na_s = 7;
 idx.N_K_s = 8;
 idx.N_HCO3_s = 9;
 idx.w_k = 10;
+idx.K_e = 11;
 end
 function [idx, n] = output_indices()
 % Index of all other output parameters
@@ -197,6 +205,13 @@ n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)
 parser = inputParser();
+
+% ECS constants
+parser.addParameter('VR_se', 1);
+parser.addParameter('VR_pe', 0.001);
+parser.addParameter('tau', 0.7);
+parser.addParameter('tau2', 2.8);
+
 % Scaling Constants
 parser.addParameter('L_p', 2.1e-9); % m uM^-1 s^-1
 parser.addParameter('X_k', 12.41e-3); % uM m
@@ -267,6 +282,7 @@ params.gab = factorial(params.alpha + params.beta - 1);
 params.ga = factorial(params.alpha - 1);
 params.gb = factorial(params.beta - 1);
 end
+
 function u0 = initial_conditions(idx)
 % Inital estimations of parameters from experimental data
 u0 = zeros(length(fieldnames(idx)), 1);
@@ -281,4 +297,5 @@ u0(idx.N_K_s) = 0.0807e-3;
 u0(idx.N_HCO3_s) = 0.432552e-3;
 u0(idx.K_p) = 3e3;
 u0(idx.w_k) = 0.1815e-3;
+u0(idx.K_e) = 3e3;
 end

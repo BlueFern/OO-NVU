@@ -12,11 +12,13 @@
 % Options for the ODE solver (currently |ode15s|) are provided by
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
+clear;
+
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
-nv = NVU(Astrocyte(), ...
+nv = NVU(Astrocyte('startpulse', 200), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.2), ...
+    SMCEC('J_PLC', 0.4), ...
     'odeopts', odeopts);
 %%
 % Other parameters you can set are 
@@ -35,6 +37,7 @@ nv = NVU(Astrocyte(), ...
 %% Run a basic simulation
 % To run a simulation, just call the |simulate| method.
 % Run simulation
+
 nv.simulate()
 
 %%
@@ -50,6 +53,28 @@ figure(10);
 plot(nv.T, nv.out('Ca_i'))
 xlabel('time (s)')
 ylabel('[Ca^{2+}] (\muM)')
+
+% figure(11);
+% plot(nv.T, nv.out('K_e'))
+% xlabel('time (s)')
+% ylabel('K_e (\muM)')
+% 
+% figure(12);
+% plot(nv.T, nv.out('K_s'))
+% xlabel('time (s)')
+% ylabel('K_s (\muM)')
+
+figure(12);
+plot(nv.T, nv.out('K_e'), nv.T, nv.out('K_s'))
+xlabel('time (s)')
+%ylabel('K_s (\muM)')
+legend('K_e', 'K_s');
+
+% figure(13);
+% plot(nv.T, nv.out('K_p'))
+% xlabel('time (s)')
+% ylabel('K_p (\muM)')
+
 
 % % Changing parameters, initial conditions, simulation time
 % Changing parameters and inintial conditions involves adjusting properties
