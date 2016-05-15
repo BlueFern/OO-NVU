@@ -17,14 +17,17 @@
 clear; clc; close all
 %% Options 
 % First the options need to be set for the ODE solver (currently |ode15s|) 
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-05, 'AbsTol', 1e-05, 'MaxStep', 0.2, 'Vectorized', 1);
 
 nv = NVU(Astrocyte(), ...
     WallMechanics(), ...
-    SMCEC('J_PLC',0.52), ...
+    SMCEC('J_PLC',0.5), ...
     'odeopts', odeopts);
-%% Run a basic simulation
+% Run a basic simulation
 nv.simulate()
+
+figure(1);
+plot(nv.T, nv.out('Ca_i'));
 
 %% Plots
 % Lists of quantities that can be retrieved from the NVU model after
