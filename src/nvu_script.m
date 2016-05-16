@@ -18,7 +18,7 @@ odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1
 
 nv = NVU(Astrocyte('startpulse', 200), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.4), ...
+    SMCEC(), ...
     'odeopts', odeopts);
 %%
 % Other parameters you can set are 
@@ -50,9 +50,9 @@ nv.simulate()
 
 % Plot, e.g. Ca_i
 figure(10);
-plot(nv.T, nv.out('Ca_i'))
+plot(nv.T, nv.out('R'))
 xlabel('time (s)')
-ylabel('[Ca^{2+}] (\muM)')
+%ylabel('[Ca^{2+}] (\muM)')
 
 % figure(11);
 % plot(nv.T, nv.out('K_e'))
@@ -70,10 +70,10 @@ xlabel('time (s)')
 %ylabel('K_s (\muM)')
 legend('K_e', 'K_s');
 
-% figure(13);
-% plot(nv.T, nv.out('K_p'))
-% xlabel('time (s)')
-% ylabel('K_p (\muM)')
+figure(13);
+plot(nv.T, nv.out('K_p'))
+xlabel('time (s)')
+ylabel('K_p (\muM)')
 
 
 % % Changing parameters, initial conditions, simulation time

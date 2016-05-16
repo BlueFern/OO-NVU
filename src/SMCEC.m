@@ -111,7 +111,7 @@ classdef SMCEC < handle
                 J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
-            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;
+            du(idx.I_j, :) = self.input_plc(t) - J_degrad_j - J_IP3_coup_i; % p.J_PLC
             
             du = bsxfun(@times, self.enabled, du);
             
@@ -165,6 +165,12 @@ classdef SMCEC < handle
             J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
             J_NaK_i = p.F_NaK_i;
             J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
+        end
+        function jplc = input_plc(self, t)
+            % The PLC input (stable to oscillatory)
+            PLC_min = 0.18; PLC_max = 0.4; t_up = 200; t_down = 400;
+            jplc = PLC_min + (PLC_max-PLC_min) * (0.5 * tanh((t - t_up) / 0.05) - 0.5 * tanh((t - t_down) / 0.05));
+            jplc = jplc(:).';
         end
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
