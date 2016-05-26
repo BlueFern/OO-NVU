@@ -144,12 +144,14 @@ classdef Astrocyte < handle
                Uout(self.idx_out.J_BK_k, :) = J_BK_k;
                Uout(self.idx_out.w_inf, :) = w_inf;
                Uout(self.idx_out.phi_w, :) = phi_w;
+               Uout(self.idx_out.E_K_k, :) = E_K_k;
               
                varargout = {Uout};
             end
         end        
-        function K_p = shared(self, ~, u)
+        function [K_p, K_e] = shared(self, ~, u)
             K_p = u(self.index.K_p, :);
+            K_e = u(self.index.K_e, :);
         end
         function f = input_f(self, t)
             % The neuronal K+ input signal
@@ -200,7 +202,8 @@ idx.K_s = 4;
 idx.K_p = 5;
 idx.w_inf = 6;
 idx.phi_w = 7;
-                    
+idx.E_K_k = 8;
+ 
 n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)

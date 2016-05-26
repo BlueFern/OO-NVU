@@ -18,9 +18,9 @@ odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1
 
 nv = NVU(Astrocyte('startpulse', 200), ...
     WallMechanics(), ...
-    SMCEC(), ...
+    SMCEC('J_PLC', 0.4), ...
     'odeopts', odeopts);
-%%
+%
 % Other parameters you can set are 
 %
 %    T: A vector of time values to evaluate the model at
@@ -34,13 +34,13 @@ nv = NVU(Astrocyte('startpulse', 200), ...
 % The different modules are |nv.smcec|, |nv.astrocyte|, |nv.wall|. For more
 % information about these see the documentation pages for these models.
 
-%% Run a basic simulation
+% Run a basic simulation
 % To run a simulation, just call the |simulate| method.
 % Run simulation
 
 nv.simulate()
 
-%%
+%
 % Lists of quantities that can be retrieved from the NVU model after
 % simulation are given in the documentation pages of the individual model
 % components.
@@ -48,11 +48,42 @@ nv.simulate()
 % Model components are retrieved using the |out| method as follows, where
 % we do a simple plot of intracellular calcium from the SMC:
 
+% figure(100);
+% plot(nv.T, nv.out('v_K_i'))
+% xlabel('time (s)')
+% ylabel('E_{K_i} (mV)')
+% %title('Nernst potential of SMC K+ channel')
+% 
+% figure(101);
+% plot(nv.T, nv.out('E_K_k'))
+% xlabel('time (s)')
+% title('Nernst potential of AC K+ channel')
+% 
+% figure(102);
+% plot(nv.T, nv.out('v_i'))
+% xlabel('time (s)')
+% title('v_i')
+% 
+% figure(103);
+% plot(nv.T, nv.out('v_k'))
+% xlabel('time (s)')
+% title('v_k')
+% 
+% figure(104);
+% plot(nv.T, nv.out('w_i'))
+% xlabel('time (s)')
+% title('w_i')
+
 % Plot, e.g. Ca_i
 figure(10);
 plot(nv.T, nv.out('R'))
 xlabel('time (s)')
+ylabel('R')
+ylim([1.5e-5, 2.5e-5])
+%title('R')
 %ylabel('[Ca^{2+}] (\muM)')
+
+%%
 
 % figure(11);
 % plot(nv.T, nv.out('K_e'))

@@ -19,7 +19,7 @@ classdef SMCEC < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R, h, K_p)
+        function [du, varargout] = rhs(self, t, u, R, h, K_p, K_e)
             % Initalise inputs and parameters
             p = self.params;
             idx = self.index;
@@ -54,7 +54,7 @@ classdef SMCEC < handle
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
             %J_K_i = p.G_K_i * w_i .* (v_i - p.v_K_i);
             
-            [J_KIR_i, J_NaK_i, J_K_i] = self.shared(t, u, K_p);
+            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, v_K_i] = self.shared(t, u, K_p, K_e);
             
             J_degrad_i = p.k_d_i * I_i;
             
@@ -111,7 +111,8 @@ classdef SMCEC < handle
                 J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
-            du(idx.I_j, :) = self.input_plc(t) - J_degrad_j - J_IP3_coup_i; % p.J_PLC
+            %du(idx.I_j, :) = self.input_plc(t) - J_degrad_j - J_IP3_coup_i; % p.J_PLC
+            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;
             
             du = bsxfun(@times, self.enabled, du);
             
@@ -151,20 +152,26 @@ classdef SMCEC < handle
                 Uout(self.idx_out.J_K_j, :) = J_K_j;
                 Uout(self.idx_out.J_R_j, :) = J_R_j;
                 Uout(self.idx_out.J_degrad_j, :) = J_degrad_j;
+                
+                Uout(self.idx_out.v_K_i, :) = v_K_i;
+                
                 varargout{1} = Uout; 
             end
         end
-        function [J_KIR_i, J_NaK_i, J_K_i, Ca_i] = shared(self, ~, u, K_p)
+        function [J_KIR_i, J_NaK_i, J_K_i, Ca_i, v_K_i] = shared(self, ~, u, K_p, K_e)
             p = self.params;
             idx = self.index;
             v_i = u(idx.v_i, :);
             Ca_i = u(idx.Ca_i, :);
             w_i = u(idx.w_i, :);
+            K_i = u(idx.K_i, :);
             v_KIR_i = p.z_1 * K_p - p.z_2;
             g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
             J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
             J_NaK_i = p.F_NaK_i;
-            J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
+            v_K_i = -94.0;  %mV
+            %v_K_i   = (p.R_g * p.T / (p.z_K * p.F)) * log(K_e ./ K_i)*1000;
+            J_K_i   = p.G_K_i * w_i .* (v_i - v_K_i);
         end
         function jplc = input_plc(self, t)
             % The PLC input (stable to oscillatory)
@@ -230,12 +237,21 @@ idx.J_SK_Ca_j = 30;
 idx.J_K_j = 31;
 idx.J_R_j = 32;
 idx.J_degrad_j = 33;
+idx.v_K_i = 34;
+
 
 n = numel(fieldnames(idx));
 end
 
 function params = parse_inputs(varargin)
 parser = inputParser();
+
+% SMC K+ Nernst potential constants
+parser.addParameter('F', 9.65e4); %C mol^-1
+parser.addParameter('R_g', 8.315); %J mol^-1 K^-1
+parser.addParameter('T', 300); % K
+parser.addParameter('z_K', 1);% [-]
+
 % Smooth Muscle Cell ODE Constants
 parser.addParameter('gamma_i', 1970); %mV uM^-1
 parser.addParameter('lambda_i', 45); % s^-1
