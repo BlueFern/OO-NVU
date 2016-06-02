@@ -26,7 +26,9 @@ classdef WallMechanics < handle
             % Make the output function compute these so as to avoid
             % duplicating equations
             [R, h] = self.shared(t, u);
+
             [pR] = self.inflate(t);
+
             Mp = u(idx.Mp, :);
             AMp = u(idx.AMp, :);
             AM = u(idx.AM, :);
@@ -36,7 +38,7 @@ classdef WallMechanics < handle
             K_6 = K_1;
             
 %             K_2 = 0.5; % NO excluded
-            K_2 = 58.1395 * p.k_mlcp_b + 58.1395 * p.k_mlcp_c * R_cGMP2;  % 17.64 / 16.75 errechnet sich aus dem Shift, um K2_c = 0.5 bei der baseline zu bekommen, NO included - muss vllt noch geaendert werden! 
+            K_2 = 58.1395 * p.k_mlcp_b + 58.1395 * p.k_mlcp_c * R_cGMP2;
             K_5 = K_2;
             
             M = 1 - AM - AMp - Mp;
@@ -63,21 +65,23 @@ classdef WallMechanics < handle
                varargout{1} = Uout;
             end
         end
+
 %         function R_input = input_R(~, t)
 %             % Input signal; the smooth pulse function rho
-%             R_input = 7.74e-6* (0.5* tanh((t-110)/0.8)-0.5* tanh((t-115)/1.9))+19.37e-6; (Joerik)
+%             R_input = 7.74e-6* (0.5* tanh((t-110)/0.8)-0.5* tanh((t-115)/1.9))+19.37e-6;
 %         end
+
         function [pR] = inflate(self, t)
 %             t_scalar = t(end,:);
-            pR = 1; %5*(0.5 .* tanh((t-75)./0.8)-0.5.* tanh((t-76) ./1.9)); %u(self.index.R, :); (Joerik)
-            
+            pR = 1; %5*(0.5 .* tanh((t-75)./0.8)-0.5.* tanh((t-76) ./1.9)); %u(self.index.R, :);
         end   
+
         function [R, h] = shared(self, ~,u)
            
             R = u(self.index.R, :);
-            h = 0.1 * R;
-            
+            h = 0.1 * R; 
         end  
+
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end

@@ -97,6 +97,7 @@ classdef Neuron < handle
             
         end
         
+	% This is basically a scaled version of input_rho(t) in Astrocyte
         function Glu = input_Glu(self, t) 
             p = self.params;
             Glu = (p.Glu_max - p.Glu_min) * ( ...
@@ -148,7 +149,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('T', 300); % K; Temperature
     
     % input 
-    parser.addParameter('startpulse', 200);     %Used for f(t)
+    parser.addParameter('startpulse', 200);    
     parser.addParameter('lengthpulse', 200);
     parser.addParameter('lengtht1', 10);
     parser.addParameter('F_input', 2.5);        %s  
@@ -217,8 +218,6 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
-    %ICs for neuron? Set so that initial Na is 0 and K goes to 0. Need
-    %physiological values - Allanah
     u0(idx.N_Na_n) = 0;
     u0(idx.N_K_n) = 1.8372353094e-3;
     
