@@ -18,7 +18,7 @@
 % tolerances.
 clear all
 clc
-%odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
 nv = NVU(Neuron(), ...
     Astrocyte(), ...
@@ -27,26 +27,7 @@ nv = NVU(Neuron(), ...
     %'odeopts', odeopts);
 
 nv.simulate()
-%%
-% Other parameters you can set are 
-%
-%    T: A vector of time values to evaluate the model at
-%    u0: initial conditions, see section below for example of how to do
-%    this
-%    
-% The other properties of the model are for internal use. They are not
-% implemented as private properties, since for simplicity I've made
-% everything public, but this is a potential change
-%
-% The different modules are |nv.smcec|, |nv.astrocyte|, |nv.wall|. For more
-% information about these see the documentation pages for these models.
 
-%% Run a basic simulation
-% To run a simulation, just call the |simulate| method.
-% Run simulation
-nv.simulate()
-
-%%
 % Lists of quantities that can be retrieved from the NVU model after
 % simulation are given in the documentation pages of the individual model
 % components.

@@ -27,7 +27,7 @@ classdef Astrocyte < handle
             p = self.params;
             idx = self.index;
 
-            K_e = u(idx.K_e, :);
+            %K_e = u(idx.K_e, :);
 
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
@@ -137,11 +137,12 @@ classdef Astrocyte < handle
 %           phi_w = p.psi_w * cosh((v_k - v_3) / (2 * p.v_4)); % Ca included
             
             %% TRPV Channel open probabilty equations
-            H_Ca_k = Ca_k ./ p.gam_cai_k + Ca_p ./ p.gam_cae_k;
-            eta = (R - p.R_0_passive_k) ./ (p.R_0_passive_k);
-            minf_k = (1 ./ (1 + exp(-(eta - p.epshalf_k) ./ p.kappa_k))) .* ((1 ./ (1 + H_Ca_k)) .* (H_Ca_k + tanh(((v_k) - p.v1_TRPV_k) ./ p.v2_TRPV_k))); % Define epsilon
-            t_Ca_k = p.t_TRPV_k ./ Ca_p;
-            J_VOCC_k = J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
+            H_Ca_k = Ca_k./p.gam_cai_k+Ca_p./p.gam_cae_k;
+            eta=(R-p.R_0_passive_k)./(p.R_0_passive_k);
+            minf_k=(1./(1+exp(-(eta-p.epshalf_k)./p.kappa_k))).*((1./(1+H_Ca_k)).*(H_Ca_k+tanh(((v_k)-p.v1_TRPV_k)./p.v2_TRPV_k))); %Define epsilon
+            t_Ca_k= p.t_TRPV_k./Ca_p;
+            J_VOCC_k=J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
+            
             
             % NO pathway
             tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);
@@ -171,10 +172,10 @@ classdef Astrocyte < handle
             
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
-                p.VR_ps - p.R_decay * (K_p - p.K_p_min) + p.diff * (1 / p.tau) * (K_e - K_p);
+                p.VR_ps - p.R_decay * (K_p - p.K_p_min); % + (1 / p.tau) * (K_e - K_p);
             du(idx.Ca_p, :) =(-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + p.diff * (R_s / p.tau2) .* (K_e - K_s);
+            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k; % + (R_s / p.tau2) .* (K_e - K_s);
             du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
@@ -182,7 +183,7 @@ classdef Astrocyte < handle
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
             
             % Differential Equation for the ECS
-            du(idx.K_e, :) = p.diff * ( - J_NaK_i + J_K_i - (1 / p.tau2) * (K_e - K_s) - (p.VR_pe / p.tau) * (K_e - K_p) );
+            %du(idx.K_e, :) = p.diff * ( - J_NaK_i + J_K_i - (1 / p.tau2) * (K_e - K_s) - (p.VR_pe / p.tau) * (K_e - K_p) );
             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
@@ -272,7 +273,7 @@ function idx = indices(self)
     idx.Ca_p = 17;
     %idx.v_k = 18;
     idx.NO_k = 18;
-    idx.K_e = 19;
+    %idx.K_e = 19;
 
 end
 
@@ -313,7 +314,6 @@ function params = parse_inputs(varargin)
     parser = inputParser();
 
     % ECS constants
-    parser.addParameter('diff', 1); % to turn ECS component on and off
     parser.addParameter('VR_se', 1);
     parser.addParameter('VR_pe', 0.001);
     parser.addParameter('tau', 0.7);
@@ -470,5 +470,5 @@ function u0 = initial_conditions(idx,self)
     u0(idx.Ca_p) = 2000; %5.1
     %u0(idx.v_k) = -0.086;
     u0(idx.NO_k) = 0.1;
-    u0(idx.K_e) = 3e3;
+    %u0(idx.K_e) = 3e3;
 end

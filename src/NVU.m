@@ -59,7 +59,7 @@ classdef NVU < handle
 
             [J_NaK_n, NO_n] = self.neuron.shared(t, un);
             [K_p, NO_k] = self.astrocyte.shared(t, ua);
-            [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2, J_NaK_i, J_K_i] = self.smcec.shared(t, us, K_p); 
+            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(t, us, K_p); 
             [R, h] = self.wall.shared(t, uw);
 
             du = zeros(size(u));
@@ -88,7 +88,7 @@ classdef NVU < handle
 
             [J_NaK_n, NO_n] = self.neuron.shared(self.T, un);
             [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
-            [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2, J_NaK_i, J_K_i] = self.smcec.shared(self.T, us, K_p);
+            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      
             [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k);
