@@ -27,7 +27,7 @@ classdef Astrocyte < handle
             p = self.params;
             idx = self.index;
 
-            %K_e = u(idx.K_e, :);
+            K_e = u(idx.K_e, :);
 
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
@@ -172,10 +172,10 @@ classdef Astrocyte < handle
             
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
-                p.VR_ps - p.R_decay * (K_p - p.K_p_min); % + (1 / p.tau) * (K_e - K_p);
+                p.VR_ps - p.R_decay * (K_p - p.K_p_min) + (1 / p.tau) * (K_e - K_p);
             du(idx.Ca_p, :) =(-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k; % + (R_s / p.tau2) .* (K_e - K_s);
+            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + (R_s / p.tau2) .* (K_e - K_s);
             du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
@@ -183,7 +183,7 @@ classdef Astrocyte < handle
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
             
             % Differential Equation for the ECS
-            %du(idx.K_e, :) = p.diff * ( - J_NaK_i + J_K_i - (1 / p.tau2) * (K_e - K_s) - (p.VR_pe / p.tau) * (K_e - K_p) );
+            du(idx.K_e, :) = - J_NaK_i + J_K_i - (1 / p.tau2) * (K_e - K_s) - (p.VR_pe / p.tau) * (K_e - K_p);
             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
@@ -273,7 +273,7 @@ function idx = indices(self)
     idx.Ca_p = 17;
     %idx.v_k = 18;
     idx.NO_k = 18;
-    %idx.K_e = 19;
+    idx.K_e = 19;
 
 end
 
@@ -470,5 +470,5 @@ function u0 = initial_conditions(idx,self)
     u0(idx.Ca_p) = 2000; %5.1
     %u0(idx.v_k) = -0.086;
     u0(idx.NO_k) = 0.1;
-    %u0(idx.K_e) = 3e3;
+    u0(idx.K_e) = 3e3;
 end

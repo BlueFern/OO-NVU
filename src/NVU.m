@@ -125,7 +125,7 @@ end
 function params = parse_inputs(varargin)
 parser = inputParser();
 parser.addParameter('odeopts', odeset());
-parser.addParameter('T', linspace(0, 1000, 1000));
+parser.addParameter('T', linspace(0, 1200, 1000));
 parser.parse(varargin{:});
 params = parser.Results;
 end

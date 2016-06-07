@@ -20,12 +20,14 @@ clear all
 clc
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
-nv = NVU(Neuron(), ...
-    Astrocyte(), ...
+nv = NVU(Neuron('startpulse', 300, 'lengthpulse', 500), ...
+    Astrocyte('startpulse', 300, 'lengthpulse', 500), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.18));
-    %'odeopts', odeopts);
+    SMCEC('J_PLC', 0.4));
+    'odeopts', odeopts);
 
+nv.T = linspace(0, 1400, 2000);    
+    
 nv.simulate()
 
 % Lists of quantities that can be retrieved from the NVU model after
@@ -36,13 +38,16 @@ nv.simulate()
 % we do a simple plot of intracellular calcium from the SMC:
 
 % Plot, e.g. Ca_i
-plot(nv.T, nv.out('Ca_i'))
-xlabel('time (s)')
-ylabel('[Ca^{2+}] (\muM)')
+% plot(nv.T, nv.out('Ca_i'))
+% xlabel('time (s)')
+% ylabel('[Ca^{2+}] (\muM)')
 
+figure(2);
+hold on
 plot(nv.T, nv.out('R'))
 xlabel('time (s)')
 ylabel('R (m)')
+hold off
 %% Changing parameters, initial conditions, simulation time
 % Changing parameters and inintial conditions involves adjusting properties
 % of the model components of the |NVU| object.
