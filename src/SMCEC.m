@@ -114,10 +114,10 @@ classdef SMCEC < handle
 
             p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
-            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
-%             d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((10e6*R).^2); % R0 = 10e-6 
+%            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
+             d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); % 1e6 to convert radius from m to um
 
-            W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)) ; 
+            W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)); 
             F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss (!)
 
             Act_eNOS_Ca = p.K_dis * Ca_j / (p.K_eNOS + Ca_j); 
@@ -143,7 +143,7 @@ classdef SMCEC < handle
                 J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
-            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;           % p.JPLC or self.input_plc(t)
+            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;           % p.J_PLC or self.input_plc(t)
             
             
             % NO pathway
@@ -227,8 +227,8 @@ classdef SMCEC < handle
         function jplc = input_plc(self, t)
             % The PLC input (stable to oscillatory)
             PLC_min = 0.18; PLC_max = 0.4; 
-            t_up = 200; 
-            t_down = 400;
+            t_up = 300; 
+            t_down = 800;
             jplc = PLC_min + (PLC_max - PLC_min) * (0.5 * tanh((t - t_up) / 0.05) - 0.5 * tanh((t - t_down) / 0.05));
             jplc = jplc(:).';
         end

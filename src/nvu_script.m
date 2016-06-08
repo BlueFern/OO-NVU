@@ -21,12 +21,11 @@ clc
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
 nv = NVU(Neuron('startpulse', 300, 'lengthpulse', 500), ...
-    Astrocyte('startpulse', 300, 'lengthpulse', 500), ...
+    AstrocyteNoECS('startpulse', 300, 'lengthpulse', 500), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.4));
-    'odeopts', odeopts);
+    SMCEC('J_PLC', 0.18), 'odeopts', odeopts);
 
-nv.T = linspace(0, 1400, 2000);    
+nv.T = linspace(0, 1400, 1000);    
     
 nv.simulate()
 
@@ -48,6 +47,14 @@ plot(nv.T, nv.out('R'))
 xlabel('time (s)')
 ylabel('R (m)')
 hold off
+
+figure(3);
+hold on
+plot(nv.T, nv.out('K_s'))
+xlabel('time (s)')
+ylabel('K_s')
+hold off
+
 %% Changing parameters, initial conditions, simulation time
 % Changing parameters and inintial conditions involves adjusting properties
 % of the model components of the |NVU| object.
