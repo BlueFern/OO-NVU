@@ -127,14 +127,14 @@ classdef AstrocyteNoECS < handle
             v_3 = -p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4) + p.v_7; % Ca included
             
             %% Parent Calcium equations
-            v_6 = 22e-3; % Ca excluded
-%           v_6 = p.eet_shift * eet_k - v_3; % Ca included
+%            v_6 = 22e-3; % Ca excluded
+           v_6 = p.eet_shift * eet_k - v_3; % Ca included
             
-            w_inf = 0.5 * (1 + tanh((v_k + v_6) / p.v_4)); % Ca excluded
-%           w_inf = 0.5 * (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4)); % Ca included
+%            w_inf = 0.5 * (1 + tanh((v_k + v_6) / p.v_4)); % Ca excluded
+           w_inf = 0.5 * (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4)); % Ca included
             
-            phi_w = p.psi_w * cosh((v_k + v_6) / (2 * p.v_4)); % Ca excluded
-%           phi_w = p.psi_w * cosh((v_k - v_3) / (2 * p.v_4)); % Ca included
+%            phi_w = p.psi_w * cosh((v_k + v_6) / (2 * p.v_4)); % Ca excluded
+           phi_w = p.psi_w * cosh((v_k - v_3) / (2 * p.v_4)); % Ca included
             
             %% TRPV Channel open probabilty equations
             H_Ca_k = Ca_k./p.gam_cai_k+Ca_p./p.gam_cae_k;
@@ -351,17 +351,17 @@ function params = parse_inputs(varargin)
     parser.addParameter('V_eet', 72); % uM
     parser.addParameter('k_eet', 7.2); % uM
     parser.addParameter('Ca_k_min', 0.1); % uM
-%     parser.addParameter('v_7', -13.57e-3); %V % TRPV4 on
-    parser.addParameter('v_7', -15e-3); %V % TRPV4 off
+     parser.addParameter('v_7', -13.57e-3); %V % TRPV4 on
+%    parser.addParameter('v_7', -15e-3); %V % TRPV4 off
     parser.addParameter('Ca_3', 0.4);
-%     parser.addParameter('Ca_4', 0.35); % uM % TRPV4 on
-    parser.addParameter('Ca_4', 0.15); % uM % TRPV4 off
+     parser.addParameter('Ca_4', 0.35); % uM % TRPV4 on
+%    parser.addParameter('Ca_4', 0.15); % uM % TRPV4 off
     parser.addParameter('eet_shift', 2e-3);
     parser.addParameter('K_I', 0.03); % uM
-%     parser.addParameter('reverseBK', -0.08135); %V % TRPV4 on
-    parser.addParameter('reverseBK', 0); %V % TRPV4 off
-%     parser.addParameter('switchBK', 0); % TRPV4 on
-    parser.addParameter('switchBK', 1); % TRPV4 off
+     parser.addParameter('reverseBK', -0.08135); %V % TRPV4 on
+%    parser.addParameter('reverseBK', 0); %V % TRPV4 off
+     parser.addParameter('switchBK', 0); % TRPV4 on
+%    parser.addParameter('switchBK', 1); % TRPV4 off
     
     %TRPV4
     parser.addParameter('Capmin_k', 2000); %uM
@@ -369,15 +369,15 @@ function params = parse_inputs(varargin)
     parser.addParameter('gamma_k',834.3);%mV/uM
     parser.addParameter('gam_cae_k', 200); %uM
     parser.addParameter('gam_cai_k', 0.01); %uM
-%     parser.addParameter('epshalf_k', 0.1); % TRPV4 on
-    parser.addParameter('epshalf_k', 0.16); % TRPV4 off
+     parser.addParameter('epshalf_k', 0.1); % TRPV4 on
+%    parser.addParameter('epshalf_k', 0.16); % TRPV4 off
     parser.addParameter('kappa_k', 0.1);
     parser.addParameter('v1_TRPV_k', 0.120); %mV
     parser.addParameter('v2_TRPV_k', 0.013); %mV
     parser.addParameter('t_TRPV_k', 0.9); %mV
     parser.addParameter('R_0_passive_k', 20e-6); 
-%     parser.addParameter('trpv_switch', 1); % TRPV4 on
-    parser.addParameter('trpv_switch', 0); % TRPV4 off
+     parser.addParameter('trpv_switch', 1); % TRPV4 on
+%    parser.addParameter('trpv_switch', 0); % TRPV4 off
     parser.addParameter('Ca_decay_k', 0.5);
     parser.addParameter('G_TRPV_k', 50); %pS
     
@@ -400,8 +400,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('J_NaK_max', 1.42e-3); % uM m s^-1
     parser.addParameter('K_Na_k', 10000); % uM
     parser.addParameter('K_K_s', 1500); % uM
-%   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % TRPV4 on
-    parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2) % TRPV4 off
+   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % TRPV4 on
+%    parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2) % TRPV4 off
     parser.addParameter('A_ef_k', 3.7e-9); % m2
     parser.addParameter('C_correction', 1e3); % [-]
     parser.addParameter('J_max', 2880); %uM s^-1
