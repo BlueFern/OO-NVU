@@ -21,7 +21,7 @@ close all
 % First the options need to be set for the ODE solver (currently |ode15s|) 
 odeopts = odeset('RelTol', 1e-6, 'AbsTol', 1e-6, 'MaxStep', 1, 'Vectorized', 1);
 
-nv = NVU(Astrocyte(), ...
+nv = NVU(Neuron(), Astrocyte(), ...
     WallMechanics(), ...
     SMCEC(), ...
     'odeopts', odeopts);
@@ -220,8 +220,8 @@ nv = NVU(Astrocyte(), ...
                 title('[Ca^{2+}] in astrocytic ER: s_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
                 subplot(1,2,2)
                 hold all;
-                plot(nv.T, nv.out('c_k'))
-                title('[Ca^{2+}] in astrocytic Cytosole: c_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
+                plot(nv.T, nv.out('Ca_k'))
+                title('[Ca^{2+}] in astrocytic Cytosole: Ca_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
                 legend('NVU', 'TRPV4 set 1', 'TRPV4 set 2', 'constant E_{BK}')
                 
                 figure(8) % Plot variables from the Astrocyte
@@ -265,8 +265,8 @@ nv = NVU(Astrocyte(), ...
                 positionVector5=[ 0.05, 0.30-0.02,0.35,0.17];
                 subplot('Position',positionVector5)
                 hold all;
-                plot(nv.T, nv.out('c_k'),'LineWidth',1)
-                title('(E) [Ca^{2+}] in astrocytic Cytosole (c_k)','FontSize', 12);
+                plot(nv.T, nv.out('Ca_k'),'LineWidth',1)
+                title('(E) [Ca^{2+}] in astrocytic Cytosole (Ca_k)','FontSize', 12);
                 ylabel('[Ca^{2+}] (\muM)','FontSize', 12); grid on
                 set(gca,'fontsize',12,'xticklabel',[])
                  xlim([50 450])
@@ -544,8 +544,8 @@ nv = NVU(Astrocyte(), ...
                 title('[Ca^{2+}] in astrocytic ER: s_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
                 subplot(1,2,2)
                 hold all;
-                plot(nv.T, nv.out('c_k'))
-                title('[Ca^{2+}] in astrocytic Cytosole: c_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
+                plot(nv.T, nv.out('Ca_k'))
+                title('[Ca^{2+}] in astrocytic Cytosole: Ca_k'); xlabel('Time [s]'); ylabel('[Ca^{2+}] [\muM]'); grid on
                 legend('NVU', 'TRPV4 set 1', 'TRPV4 set 2', 'constant E_{BK}')
                 
                 figure(8) % Plot variables from the Astrocyte
@@ -589,8 +589,8 @@ nv = NVU(Astrocyte(), ...
                 positionVector5=[ 0.05, 0.30-0.02,0.35,0.17];
                 subplot('Position',positionVector5)
                 hold all;
-                plot(nv.T, nv.out('c_k'),'LineWidth',1)
-                title('(E) [Ca^{2+}] in astrocytic Cytosole (c_k)','FontSize', 12);
+                plot(nv.T, nv.out('Ca_k'),'LineWidth',1)
+                title('(E) [Ca^{2+}] in astrocytic Cytosole (Ca_k)','FontSize', 12);
                 ylabel('[Ca^{2+}] (\muM)','FontSize', 12); grid on
                 set(gca,'fontsize',12,'xticklabel',[])
                  xlim([50 450])

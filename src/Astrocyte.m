@@ -211,6 +211,7 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.phi_w, :) = phi_w;
                 Uout(self.idx_out.J_BK_p, :) = J_BK_p;
                 Uout(self.idx_out.J_BK_k, :) = J_BK_k;
+                Uout(self.idx_out.E_TRPV_k, :) = E_TRPV_k;
 
                 varargout = {Uout};
             end
@@ -298,6 +299,7 @@ function [idx, n] = output_indices(self)
     idx.J_Na_k  = 25;
     idx.J_BK_p = 26;
     idx.J_BK_k = 27;
+    idx.E_TRPV_k = 27;
     
     n = numel(fieldnames(idx));
 end
