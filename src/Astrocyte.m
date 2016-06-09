@@ -135,13 +135,13 @@ classdef Astrocyte < handle
             
 %            phi_w = p.psi_w * cosh((v_k + v_6) / (2 * p.v_4)); % Ca excluded
            phi_w = p.psi_w * cosh((v_k - v_3) / (2 * p.v_4)); % Ca included
-            
+		   
             %% TRPV Channel open probabilty equations
-            H_Ca_k = Ca_k./p.gam_cai_k+Ca_p./p.gam_cae_k;
-            eta=(R-p.R_0_passive_k)./(p.R_0_passive_k);
-            minf_k=(1./(1+exp(-(eta-p.epshalf_k)./p.kappa_k))).*((1./(1+H_Ca_k)).*(H_Ca_k+tanh(((v_k)-p.v1_TRPV_k)./p.v2_TRPV_k))); %Define epsilon
-            t_Ca_k= p.t_TRPV_k./Ca_p;
-            J_VOCC_k=J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
+            H_Ca_k = Ca_k ./ p.gam_cai_k + Ca_p ./ p.gam_cae_k;
+            eta = (R - p.R_0_passive_k) ./ (p.R_0_passive_k);
+            minf_k = (1 ./ (1 + exp(-(eta - p.epshalf_k) ./ p.kappa_k))) .* ((1 ./ (1 + H_Ca_k)) .* (H_Ca_k + tanh(((v_k) - p.v1_TRPV_k) ./ p.v2_TRPV_k))); %Define epsilon
+            t_Ca_k = p.t_TRPV_k ./ Ca_p;
+            J_VOCC_k = J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
             
             
             % NO pathway
