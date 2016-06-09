@@ -62,7 +62,6 @@ classdef SMCEC < handle
             
             J_KIR_i = self.shared(t, u, K_p);
             
-            
             J_degrad_i = p.k_d_i * I_i;
             
             %% EC fluxes
@@ -95,14 +94,13 @@ classdef SMCEC < handle
             J_Ca_coup_i = -p.P_Ca * (Ca_i - Ca_j);
             
             c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
-%           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.gam_i * cGMP_i)); % NO included - new
+%           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.gam_i * cGMP_i)); % NO included - new (but no epsilon_i, alpha_i, gam_i defined here)
 %           c_w_i = 0; % NO excluded
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
-            tau_wss = R * 5.7177e5 / (2*pi); %!!!!!!!!!!!!!!
-%             tau_wss = R * 9.1e4; %!!!!!!!!!!!!!! (same)
-
+            tau_wss = R * 5.7177e5 / (2*pi); %!
+			
             % NO pathway 
             tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
             tau_ij = p.x_ij ^ 2 ./  (2 * p.D_cNO);
@@ -117,11 +115,11 @@ classdef SMCEC < handle
 
             p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
-            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
-%             d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
+%            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
+            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
 
             W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)) ; 
-            F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss (!)
+            F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss
 
             Act_eNOS_Ca = p.K_dis * Ca_j / (p.K_eNOS + Ca_j); 
             Act_eNOS_wss = p.g_max * F_wss;  

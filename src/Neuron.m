@@ -217,8 +217,7 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
-    %ICs for neuron? Set so that initial Na is 0 and K goes to 0. Need
-    %physiological values - Allanah
+    %ICs for neuron, set so that initial Na is 0 and K goes to 0.
     u0(idx.N_Na_n) = 0;
     u0(idx.N_K_n) = 1.8372353094e-3;
     

@@ -41,7 +41,7 @@ classdef Astrocyte < handle
             Ca_k = u(idx.Ca_k, :);
             h_k = u(idx.h_k, :);
             s_k = u(idx.s_k, :);
-            m_k = u(idx.m_k, :); % open probability TRPV
+            m_k = u(idx.m_k, :); % open probability TRPV4 channel
             eet_k = u(idx.eet_k, :);
             NO_k = u(idx.NO_k, :);
             du = zeros(size(u));
@@ -73,8 +73,8 @@ classdef Astrocyte < handle
             E_Cl_k = p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
             E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * ...
                 log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
-            E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
-            E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV
+            E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % Nerst potential BK channel, either constant or as a function of K_k and K_p (using reverseBK, switchBK)
+            E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV4 channel
             
             % Flux through the Sodium Potassium pump
             J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ ...
@@ -88,7 +88,7 @@ classdef Astrocyte < handle
                 p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + ...
                 g_BK_k * w_k .* E_BK_k - ...
                 J_NaK_k * p.F / p.C_correction) ./ ...
-                (p.g_Na_k +p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + ... %TRPV
+                (p.g_Na_k +p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + ... %TRPV4
                 g_BK_k * w_k);
             
             % Fluxes
@@ -134,15 +134,15 @@ classdef Astrocyte < handle
            phi_w = p.psi_w * cosh((v_k - v_3) / (2 * p.v_4)); % Ca included
             
             %% TRPV Channel open probabilty equations
-            H_Ca_k = Ca_k./p.gam_cai_k+Ca_p./p.gam_cae_k;
-            eta=(R-p.R_0_passive_k)./(p.R_0_passive_k);
-            minf_k=(1./(1+exp(-(eta-p.epshalf_k)./p.kappa_k))).*((1./(1+H_Ca_k)).*(H_Ca_k+tanh(((v_k)-p.v1_TRPV_k)./p.v2_TRPV_k))); %Define epsilon
-            t_Ca_k= p.t_TRPV_k./Ca_p;
-            J_VOCC_k=J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
+            H_Ca_k = Ca_k ./ p.gam_cai_k + Ca_p ./ p.gam_cae_k;
+            eta = (R - p.R_0_passive_k) ./ (p.R_0_passive_k);
+            minf_k = (1 ./ (1 + exp(-(eta - p.epshalf_k) ./ p.kappa_k))) .* ((1 ./ (1 + H_Ca_k)) .* (H_Ca_k + tanh(((v_k) - p.v1_TRPV_k) ./ p.v2_TRPV_k))); %Define epsilon
+            t_Ca_k = p.t_TRPV_k ./ Ca_p;
+            J_VOCC_k = J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
             
             % NO pathway
-            tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);
-            tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
+            tau_nk = p.x_nk ^ 2 ./ (2 * p.D_cNO);
+            tau_ki = p.x_ki ^ 2 ./ (2 * p.D_cNO);
             p_NO_k = 0;
             c_NO_k = p.k_O2_k * NO_k.^2 * p.O2_k; % [uM/s]
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
@@ -299,7 +299,7 @@ function [idx, n] = output_indices(self)
     idx.J_Na_k  = 25;
     idx.J_BK_p = 26;
     idx.J_BK_k = 27;
-    idx.E_TRPV_k = 27;
+    idx.E_TRPV_k = 28;
     
     n = numel(fieldnames(idx));
 end
