@@ -20,12 +20,12 @@ clear all
 clc
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
-nv = NVU(Neuron('startpulse', 300, 'lengthpulse', 500), ...
-    Astrocyte('startpulse', 300, 'lengthpulse', 500), ...
+nv = NVU(Neuron('startpulse', 400, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch', 1), ...
+    Astrocyte('startpulse', 400, 'lengthpulse', 200, 'rhoSwitch', 1, 'blockSwitch', 1), ...
     WallMechanics(), ...
     SMCEC('J_PLC', 0.18), 'odeopts', odeopts);
 
-nv.T = linspace(0, 1400, 1000);    
+nv.T = linspace(0, 1000, 1000);    
     
 nv.simulate()
 
@@ -45,7 +45,7 @@ figure(2);
 hold on
 plot(nv.T, nv.out('R'))
 xlabel('time (s)')
-ylabel('R (m)')
+ylabel('R')
 hold off
 
 figure(3);

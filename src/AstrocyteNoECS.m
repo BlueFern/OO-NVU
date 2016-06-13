@@ -228,19 +228,19 @@ classdef AstrocyteNoECS < handle
 
         end
 
-	% This is basically a scaled version of input_Glu(t) in Neuron
+        % This is basically a scaled version of input_Glu(t) in Neuron
         function rho = input_rho(self, t)
             % Input signal of glutamate; the smooth pulse function rho
             p = self.params;
-            rho = (p.Amp - p.base) * ( ...
+            rho = p.rhoSwitch * (p.Amp - p.base) * ( ...
                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
                 0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
         end
         
+        % C_input Block function to switch channel on and off
         function out = flux_ft(self, t)
-            % C_input Block function to switch channel on and off
             p = self.params;
-            out = (...
+            out = p.blockSwitch * (...
                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
                 0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
             out = out(:).';
@@ -312,6 +312,9 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+    
+    parser.addParameter('rhoSwitch', 1); 
+    parser.addParameter('blockSwitch', 1); 
 
     % ECS constants
     parser.addParameter('VR_se', 1);
