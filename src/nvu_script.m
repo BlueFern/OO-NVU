@@ -16,29 +16,28 @@ clear;
 
 odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
 
-nv = NVU(Astrocyte('startpulse', 200), ...
+nv = NVU(Astrocyte('startpulse', 200, 'lengthpulse', 200), ...
     WallMechanics(), ...
-    SMCEC(), ...
+    SMCEC('J_PLC', 0.18), ...
     'odeopts', odeopts);
-%%
-% Other parameters you can set are 
-%
-%    T: A vector of time values to evaluate the model at
-%    u0: initial conditions, see section below for example of how to do
-%    this
-%    
-% The other properties of the model are for internal use. They are not
-% implemented as private properties, since for simplicity I've made
-% everything public, but this is a potential change
-%
-% The different modules are |nv.smcec|, |nv.astrocyte|, |nv.wall|. For more
-% information about these see the documentation pages for these models.
 
-%% Run a basic simulation
-% To run a simulation, just call the |simulate| method.
-% Run simulation
+nv.T = linspace(0, 800, 1000);    
 
 nv.simulate()
+
+figure(4);
+hold on
+plot(nv.T, nv.out('R'))
+xlabel('time (s)')
+ylabel('R')
+hold off
+
+figure(3);
+hold on
+plot(nv.T, nv.out('K_s'))
+xlabel('time (s)')
+ylabel('K_s')
+hold off
 
 %%
 % Lists of quantities that can be retrieved from the NVU model after

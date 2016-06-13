@@ -111,7 +111,7 @@ classdef SMCEC < handle
                 J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
-            du(idx.I_j, :) = self.input_plc(t) - J_degrad_j - J_IP3_coup_i; % p.J_PLC
+            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i; % p.J_PLC or input_plc(t)
             
             du = bsxfun(@times, self.enabled, du);
             
