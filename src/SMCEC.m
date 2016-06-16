@@ -115,8 +115,8 @@ classdef SMCEC < handle
 
             p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
-%            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
-            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
+            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); 
+%            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); % Radius is set at constant 25 to create reasonable BC at the lumen
 
             W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)) ; 
             F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss
