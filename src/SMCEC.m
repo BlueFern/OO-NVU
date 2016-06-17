@@ -98,7 +98,7 @@ classdef SMCEC < handle
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
-            tau_wss = R * 5.7177e5 / (2*pi); %!
+            tau_wss = R * 9.1e4; % from Dormanns 2016
             
             % NO pathway 
             tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
@@ -114,8 +114,10 @@ classdef SMCEC < handle
 
             p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
-%            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); % CAREFUL: This should be radius instead of 25
-             d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); % 1e6 to convert radius from m to um
+            
+            %J_lumen = - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
+            J_lumen = - NO_j * 4 * p.D_cNO ./ (25.^2); 
+            d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 
 
             W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)); 
             F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss (!)
@@ -150,7 +152,6 @@ classdef SMCEC < handle
             du(idx.NO_i, :) = p_NO_i - c_NO_i + d_NO_i;
             du(idx.E_b, :)  = -p.k1 * E_b .* NO_i + p.k_1 * E_6c + k4 .* E_5c;     
             du(idx.E_6c, :) = p.k1 * E_b .* NO_i - (p.k_1 + p.k2) * E_6c - p.k3 * E_6c .* NO_i;
-%             du(idx.E_5c, :) = p.k3 * E_6c .* NO_i + p.k2 * E_6c - k4 .* E_5c;
             du(idx.cGMP_i, :) = p.V_max_sGC * E_5c - V_max_pde .* cGMP_i ./ (p.K_m_pde + cGMP_i); 
 
             du(idx.eNOS_act_j, :) = (p.gam_eNOS * Act_eNOS_Ca  + (1 - p.gam_eNOS) * Act_eNOS_wss - p.mu2_j * eNOS_act_j); 
@@ -199,7 +200,10 @@ classdef SMCEC < handle
                 Uout(self.idx_out.c_w_i, :) = c_w_i;
                 Uout(self.idx_out.tau_wss, :) = tau_wss;
                 Uout(self.idx_out.E_5c, :) = E_5c;
-
+                Uout(self.idx_out.d_NO_j, :) = d_NO_j;
+                Uout(self.idx_out.J_lumen, :) = J_lumen;
+                Uout(self.idx_out.p_NO_j, :) = p_NO_j;
+                Uout(self.idx_out.c_NO_j, :) = -c_NO_j;
                 varargout{1} = Uout; 
             end
         end
@@ -302,8 +306,11 @@ function [idx, n] = output_indices()
     idx.c_w_i = 34;
     idx.tau_wss = 35;
     idx.E_5c = 36;
+    idx.d_NO_j = 37;
+    idx.J_lumen = 38;
+    idx.p_NO_j = 39;
+    idx.c_NO_j = 40;
     
-
     n = numel(fieldnames(idx));
 end
 

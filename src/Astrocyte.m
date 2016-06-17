@@ -173,7 +173,7 @@ classdef Astrocyte < handle
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
                 p.VR_ps - p.R_decay * (K_p - p.K_p_min) + (1 / p.tau) * (K_e - K_p);
-            du(idx.Ca_p, :) =(-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
+            du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
             % Differential Equations in the Synaptic Cleft
             du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + (R_s / p.tau2) .* (K_e - K_s);
             du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);

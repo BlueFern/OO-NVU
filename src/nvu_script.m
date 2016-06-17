@@ -18,14 +18,14 @@
 % tolerances.
 clear all
 clc
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-nv = NVU(Neuron('startpulse', 400, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch', 1), ...
-    Astrocyte('startpulse', 400, 'lengthpulse', 200, 'rhoSwitch', 1, 'blockSwitch', 1), ...
+nv = NVU(Neuron('startpulse', 200, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch', 1), ...
+    AstrocyteNoECS('startpulse', 200, 'lengthpulse', 200, 'rhoSwitch', 1, 'blockSwitch', 1), ...
     WallMechanics(), ...
     SMCEC('J_PLC', 0.18), 'odeopts', odeopts);
 
-nv.T = linspace(0, 1000, 1000);    
+nv.T = linspace(0, 10, 5000);    
     
 nv.simulate()
 
@@ -54,6 +54,55 @@ plot(nv.T, nv.out('K_s'))
 xlabel('time (s)')
 ylabel('K_s')
 hold off
+
+figure(4);
+hold on
+plot(nv.T, nv.out('K_p'))
+xlabel('time (s)')
+ylabel('K_p')
+hold off
+% 
+% figure(5);
+% hold on
+% plot(nv.T, nv.out('K_e'))
+% xlabel('time (s)')
+% ylabel('K_e')
+% hold off
+
+% figure(6);
+% hold on
+% plot(nv.T, nv.out('J_lumen'))
+% xlabel('time (s)')
+% ylabel('J_{lumen}')
+% hold off
+% 
+% figure(7);
+% hold on
+% plot(nv.T, nv.out('NO_j'))
+% xlabel('time (s)')
+% ylabel('NO_j')
+% hold off
+% 
+% figure(8);
+% hold on
+% plot(nv.T, nv.out('p_NO_j'))
+% xlabel('time (s)')
+% ylabel('p_{NO_j}')
+% hold off
+% 
+% figure(9);
+% hold on
+% plot(nv.T, nv.out('c_NO_j'))
+% xlabel('time (s)')
+% ylabel('c_{NO_j}')
+% hold off
+% 
+% figure(10);
+% hold on
+% plot(nv.T, nv.out('p_NO_j') + nv.out('d_NO_j'))
+% xlabel('time (s)')
+% ylabel('test')
+% hold off
 
 %% Changing parameters, initial conditions, simulation time
 % Changing parameters and inintial conditions involves adjusting properties
