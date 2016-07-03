@@ -44,7 +44,7 @@ classdef Astrocyte < handle
             Ca_k = u(idx.Ca_k, :);
             h_k = u(idx.h_k, :);
             s_k = u(idx.s_k, :);
-            m_k = u(idx.m_k, :); % open probability TRPV
+            m_k = u(idx.m_k, :); 
             eet_k = u(idx.eet_k, :);
             NO_k = u(idx.NO_k, :);
             du = zeros(size(u));
@@ -117,7 +117,7 @@ classdef Astrocyte < handle
             J_ER_leak = p.P_L * (1 - Ca_k ./ s_k);
             J_pump = p.V_max * Ca_k.^2 ./ (Ca_k.^2 + p.k_pump^2);
             I_TRPV_k = p.G_TRPV_k * m_k .* (v_k-E_TRPV_k) * p.C_correction; %current TRPV
-            J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); %flux TRPV, not scaled according Ostby! - Joerik
+            J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); 
             
             % Other equations
             B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
@@ -243,6 +243,7 @@ classdef Astrocyte < handle
             out = p.blockSwitch * (...
                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
                 0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
+%             out = 1;
             out = out(:).';
         end
 
@@ -372,8 +373,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('gamma_k',834.3);%mV/uM
     parser.addParameter('gam_cae_k', 200); %uM
     parser.addParameter('gam_cai_k', 0.01); %uM
-     parser.addParameter('epshalf_k', 0.1); % TRPV4 on
-%    parser.addParameter('epshalf_k', 0.16); % TRPV4 off
+     parser.addParameter('epshalf_k', 0.1); % 
     parser.addParameter('kappa_k', 0.1);
     parser.addParameter('v1_TRPV_k', 0.120); %mV
     parser.addParameter('v2_TRPV_k', 0.013); %mV

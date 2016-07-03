@@ -43,8 +43,8 @@ classdef SMCEC < handle
             
             
             %% SMC fluxes
-            J_IP3_i = p.F_i * I_i.^2 ./ (p.K_r_i^2 + I_i.^2);
-            J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);
+            J_IP3_i = p.F_i * I_i.^2 ./ (p.K_r_i^2 + I_i.^2);           % IP3/RYR channel?
+            J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);   % SERCA pump
             J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* ...
                 Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
             J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
@@ -65,7 +65,7 @@ classdef SMCEC < handle
             
             %% EC fluxes
             J_IP3_j = p.F_j * I_j.^2 ./ (p.K_r_j^2 + I_j.^2);
-            J_ER_uptake_j = p.B_j * Ca_j.^2 ./ (p.c_b_j^2 + Ca_j.^2);
+            J_ER_uptake_j = p.B_j * Ca_j.^2 ./ (p.c_b_j^2 + Ca_j.^2);  
             J_CICR_j = p.C_j * s_j.^2 ./ (p.s_c_j^2 + s_j.^2) .* ...
                 Ca_j.^4 ./ (p.c_c_j^4 + Ca_j.^4);
             J_extrusion_j = p.D_j * Ca_j;
@@ -326,10 +326,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('J_0_j', 0.029); %constant Ca influx (EC)uMs^-1
 
     % Smooth Muscle Cell Flux Constants
-    parser.addParameter('F_i', 0.23); %uM s^-1
+    parser.addParameter('F_i', 0.23); %uM s^-1      % IP3/RYR channel strength
     parser.addParameter('K_r_i', 1); %uM
 
-    parser.addParameter('B_i', 2.025); %uM s^-1
+    parser.addParameter('B_i', 2.025); %uM s^-1     % SERCA pump strength     
     parser.addParameter('c_b_i', 1.0); %uM
 
     parser.addParameter('C_i', 55); % uM s^-1

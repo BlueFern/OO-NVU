@@ -25,7 +25,7 @@ nv = NVU(Neuron('startpulse', 200, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch'
     WallMechanics(), ...
     SMCEC('J_PLC', 0.18), 'odeopts', odeopts);
 
-nv.T = linspace(0, 10, 5000);    
+nv.T = linspace(0, 800, 5000);    
     
 nv.simulate()
 
