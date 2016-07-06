@@ -1,7 +1,6 @@
 classdef Astrocyte < handle
     % The 'Astrocyte' code contains the following sections of the model:
-    % The Neuron, Synaptic cleft, the Astrocyte and the Perivascular Space
-    % Currently there is no content under the Neuron sub-section
+    % The Synaptic cleft, the Astrocyte and the Perivascular Space
     % Please refer to the relevient sections in the documentation for
     % full information on the equations and variable names.
     properties
@@ -21,13 +20,11 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i, J_NaK_i, J_K_i)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
             idx = self.index;
-
-            K_e = u(idx.K_e, :);
 
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
@@ -172,19 +169,16 @@ classdef Astrocyte < handle
             
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
-                p.VR_ps - p.R_decay * (K_p - p.K_p_min) + (1 / p.tau) * (K_e - K_p);
+                p.VR_ps - p.R_decay * (K_p - p.K_p_min);
             du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + (R_s / p.tau2) .* (K_e - K_s);
+            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k;
             du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
             % NO pathway:
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
-            
-            % Differential Equation for the ECS
-            du(idx.K_e, :) = - J_NaK_i + J_K_i - (1 / p.tau2) * (K_e - K_s) - (p.VR_pe / p.tau) * (K_e - K_p);
-            
+
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
 
@@ -220,11 +214,12 @@ classdef Astrocyte < handle
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k] = shared(self, ~, u)
+        function [K_p, NO_k, R_s] = shared(self, ~, u)
             p = self.params;
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
+            R_s = p.R_tot - u(idx.R_k, :);
 
         end
 
@@ -240,10 +235,10 @@ classdef Astrocyte < handle
         % C_input Block function to switch channel on and off
         function out = flux_ft(self, t)
             p = self.params;
-            out = p.blockSwitch * (...
-                0.5 * tanh((t - p.t_0) / 0.0005) - ...
-                0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
-%             out = 1;
+%             out = p.blockSwitch * (...
+%                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
+%                 0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
+            out = 1;
             out = out(:).';
         end
 
@@ -316,12 +311,6 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('rhoSwitch', 1); 
     parser.addParameter('blockSwitch', 1); 
-    
-    % ECS constants
-    parser.addParameter('VR_se', 1);
-    parser.addParameter('VR_pe', 0.001);
-    parser.addParameter('tau', 0.7);
-    parser.addParameter('tau2', 2.8);
 
     % Scaling Constants
     parser.addParameter('L_p', 2.1e-9); % m uM^-1 s^-1
@@ -464,14 +453,12 @@ function u0 = initial_conditions(idx,self)
     u0(idx.N_HCO3_s) = 0.432552e-3;
     u0(idx.K_p) = 3e3;
     u0(idx.w_k) = 0.1815e-3;
-    u0(idx.Ca_k) = 0.1; % Michelle: 0.05e-3 !!! (Bennet 2008)
+    u0(idx.Ca_k) = 0.1; 
     u0(idx.s_k) = 400;
     u0(idx.h_k) = 0.1e-3;
     u0(idx.I_k) = 0.01e-3;
     u0(idx.eet_k) = 0.1e-3;
     u0(idx.m_k) = 0;
     u0(idx.Ca_p) = 2000; %5.1
-    %u0(idx.v_k) = -0.086;
     u0(idx.NO_k) = 0.1;
-    u0(idx.K_e) = 3e3;
 end
