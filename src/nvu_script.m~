@@ -20,12 +20,12 @@ clear all
 clc
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-nv = NVU(Neuron_test('startpulse', 100, 'lengthpulse', 100, 'GluSwitch', 0), ...
-    Astrocyte('startpulse', 100, 'lengthpulse', 100, 'rhoSwitch', 1, 'blockSwitch', 1), ...
+nv = NVU(Neuron('startpulse', 50, 'lengthpulse', 20, 'GluSwitch', 0), ...
+    Astrocyte('startpulse', 50, 'lengthpulse', 20, 'rhoSwitch', 1, 'blockSwitch', 1), ...
     WallMechanics(), ...
     SMCEC('J_PLC', 0.18), 'odeopts', odeopts);
 
-nv.T = linspace(0, 300, 1000);    
+nv.T = linspace(0, 100, 1000);    
     
 nv.simulate()
 
@@ -42,30 +42,30 @@ nv.simulate()
 % ylabel('[Ca^{2+}] (\muM)')
 
 figure(1);
-subplot(3,2,1)
+subplot(4,2,1)
 hold all;
 plot(nv.T, nv.out('R'))
 xlabel('Time [s]'); ylabel('R')
 
-subplot(3,2,2)
+subplot(4,2,2)
 hold all;
 plot(nv.T, nv.out('K_s')/1e3)
 xlabel('Time [s]'); ylabel('K_s')
 
-subplot(3,2,3)
+subplot(4,2,3)
 hold all;
-plot(nv.T, nv.out('v_sa'));
+[ax,p1,p2] = plotyy(nv.T, nv.out('v_sa'));
 xlabel('Time [s]'); ylabel('v_{sa}')
 
-subplot(3,2,4)
+subplot(4,2,4)
 hold all;
 plot(nv.T, nv.out('K_e'))
 xlabel('Time [s]'); ylabel('K_e')
 
-subplot(3,2,5)
+subplot(4,2,5)
 hold all;
-plot(nv.T, nv.out('current'))
-xlabel('Time [s]'); ylabel('current')
+plot(nv.T, nv.out('c'))
+xlabel('Time [s]'); ylabel('K_e')
 
 % figure(2);
 % hold on

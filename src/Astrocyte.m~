@@ -20,13 +20,12 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
             idx = self.index;
 
-        %% State variables
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
@@ -47,7 +46,6 @@ classdef Astrocyte < handle
             NO_k = u(idx.NO_k, :);
             du = zeros(size(u));
             
-        %% Algebraic expressions
             %% Synaptic Cleft:
             % Electroneutrality condition
             N_Cl_s = N_Na_s + N_K_s - N_HCO3_s;
@@ -127,7 +125,7 @@ classdef Astrocyte < handle
             
             %% Parent Calcium equations
 %            v_6 = 22e-3; % Ca excluded
-%            v_6 = p.eet_shift * eet_k - v_3; % Ca included
+           v_6 = p.eet_shift * eet_k - v_3; % Ca included
             
 %            w_inf = 0.5 * (1 + tanh((v_k + v_6) / p.v_4)); % Ca excluded
            w_inf = 0.5 * (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4)); % Ca included
@@ -150,7 +148,7 @@ classdef Astrocyte < handle
             c_NO_k = p.k_O2_k * NO_k.^2 * p.O2_k; % [uM/s]
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
 
-        %% Conservation Equations
+            %% Conservation Equations
             % Differential Equations in the Astrocyte
             du(idx.N_K_k, :) = -J_K_k + 2*J_NaK_k + J_NKCC1_k + ...
                 J_KCC1_k - J_N_BK_k;
@@ -173,12 +171,9 @@ classdef Astrocyte < handle
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
                 p.VR_ps - p.R_decay * (K_p - p.K_p_min);
             du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
-            
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC .* R_s;
-            du(idx.N_Na_s, :) = - du(idx.N_Na_k, :) + J_Na_NEtoSC .* R_s;
-%             du(idx.N_K_s, :) = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + p.k_C * self.input_K(t);
-%             du(idx.N_Na_s, :) = - du(idx.N_Na_k, :) - p.k_C * self.input_K(t);
+            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k;
+            du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
             % NO pathway:
@@ -188,7 +183,6 @@ classdef Astrocyte < handle
             if nargout == 2
 
                 Uout = zeros(self.n_out, size(u, 2));
-                %Uout(self.idx_out.ft, :) = self.input_K(t);
                 Uout(self.idx_out.v_k, :) = v_k;
                 Uout(self.idx_out.K_s, :) = K_s;
                 Uout(self.idx_out.K_p, :) = K_p;
@@ -220,28 +214,15 @@ classdef Astrocyte < handle
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k, K_s] = shared(self, ~, u)
+        function [K_p, NO_k, R_s] = shared(self, ~, u)
             p = self.params;
             idx = self.index;
-            K_p = u(idx.K_p, :);
+            K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
-            
-            R_s = p.R_tot - u(idx.R_k, :);
-            K_s = R_s .* u(idx.N_K_s, :);
+            R_s = p.R
+
         end
 
-        function f = input_K(self, t)      
-            p = self.params;                
-            f = zeros(size(t));
-            ii = p.t_0 <= t & t < p.t_1;
-            f(ii) = ...
-                p.F_input * p.gab / ...
-                (p.ga * p.gb) * ...
-                (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
-                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
-            f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
-        end
-        
         % This is basically a scaled version of input_Glu(t) in Neuron
         function rho = input_rho(self, t)
             % Input signal of glutamate; the smooth pulse function rho
@@ -340,10 +321,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('startpulse', 200); % s
     parser.addParameter('lengthpulse', 200); % s
     parser.addParameter('lengtht1', 10); % s
-     parser.addParameter('F_input', 2.5); % s
+%     parser.addParameter('F_input', 2.5); % s
     parser.addParameter('alpha', 2);% [-]
     parser.addParameter('beta', 5);% [-]
-    parser.addParameter('delta_t', 10); % s
+%     parser.addParameter('delta_t', 10); % s
     
     % Synpatic cleft
     parser.addParameter('k_C', 7.35e-5); %uM m s^-1

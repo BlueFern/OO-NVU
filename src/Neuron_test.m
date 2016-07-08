@@ -1,4 +1,4 @@
-classdef Neuron < handle
+classdef Neuron_test < handle
     %Contains neuron (soma/axon and dendrite) and extracellular space
 
     properties
@@ -10,7 +10,7 @@ classdef Neuron < handle
         enabled
     end
     methods
-        function self = Neuron(varargin)
+        function self = Neuron_test(varargin)
             self.params = parse_inputs(varargin{:});
             self.index = indices();
             self.u0 = initial_conditions(self.index);
@@ -328,8 +328,8 @@ classdef Neuron < handle
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
             
             %Fluxes from neuron to SC
-            J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As * J_K_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_K_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
-            J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As * J_Na_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_Na_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
+            J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As * J_K_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_K_tot_d) / p.Vd ) / p.VR_dn ) * 1000*100;
+            J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As * J_Na_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_Na_tot_d) / p.Vd ) / p.VR_dn ) * 1000*100;
 %               J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As* J_K_tot_sa) / p.Vs )   +  ( (p.Ad * J_K_tot_d) / p.Vd  )  ) * 1000;
 %               J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As* J_Na_tot_sa) / p.Vs  )  +  ( (p.Ad * J_Na_tot_d) / p.Vd  ) ) * 1000;            
 
@@ -354,7 +354,7 @@ classdef Neuron < handle
 %             0.5 * tanh((t - t_2)/1.3));
 %            current = 0.016*rectpuls(t-(t_0+p.lengthpulse), p.lengthpulse);
 %             current = 7.5e-4 * exp(-1/72*(t-t_0).^2) / (6*sqrt(2*pi));
-             current = 8e-3 * gaussmf(t,[6,t_0+30]);
+             current = 12e-3 * gaussmf(t,[6,t_0+30]);
         end        
         
         function names = varnames(self)
