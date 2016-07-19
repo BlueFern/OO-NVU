@@ -17,7 +17,7 @@ classdef Neuron < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, NO_k, R, K_s)
+        function [du, varargout] = rhs(self, t, u, NO_k, R, K_s, Na_s)
             t = t(:).';
             p = self.params;
             idx = self.index;
@@ -170,7 +170,7 @@ classdef Neuron < handle
             
             %% Total ion fluxes
             %Total ion fluxes in soma
-            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
+            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + p.NaTswitch *  J_NaT_sa;
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
             J_Cl_tot_sa = p.gClleak_sa * (v_sa- p.E_Cl_sa); % leak 
             
@@ -182,6 +182,13 @@ classdef Neuron < handle
             % Total ion fluxes in soma and dendrite
             J_tot_sa    = J_Na_tot_sa + J_K_tot_sa + J_Cl_tot_sa;
             J_tot_d     = J_Na_tot_d + J_K_tot_d + J_Cl_tot_d;
+            
+            % Fluxes for output
+            J_K_NEtoECS_output = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd));
+            
+            J_K_NEtoSC_output =  1 / (p.Farad * p.fe) * ( ( (p.As * J_K_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_K_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
+            J_Na_NEtoSC_output = 1 / (p.Farad * p.fe) * ( ( (p.As * J_Na_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_Na_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
+            
             
             %% Tissue oxygen 
             P_02            = ( 2 * (1 + (p.O2_0 ./ ((1 - p.alph) * O2 + p.alph * p.O2_0))).^(-1) - (2 * (1 + (p.O2_0 / (p.alph * p.O2_0))).^(-1)) ) ./ ( (2 * (1 + (p.O2_0 / ((1 - p.alph) * p.O2_0 + p.alph * p.O2_0))).^(-1)) - (2 * (1 + (p.O2_0 / (p.alph * p.O2_0))).^(-1)) );  % P(02)
@@ -219,7 +226,7 @@ classdef Neuron < handle
             
             % change in concentration of Na,K,Cl in the extracellular space 
             du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff);
+            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd));% - du(idx.Buff);
             du(idx.Cl_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Cl_tot_sa) / p.Vs) + ((p.Ad * J_Cl_tot_d) / p.Vd));
             
             % change in tissue oxygen
@@ -261,12 +268,14 @@ classdef Neuron < handle
             	Uout(self.idx_out.p_NO_n, :) = p_NO_n;
             	Uout(self.idx_out.c_NO_n, :) = c_NO_n;
             	Uout(self.idx_out.d_NO_n, :) = d_NO_n;
-           
+                Uout(self.idx_out.J_K_NEtoSC_output, :) = J_K_NEtoSC_output;
+                Uout(self.idx_out.J_Na_NEtoSC_output, :) = J_Na_NEtoSC_output;
+                Uout(self.idx_out.J_K_NEtoECS_output, :) = J_K_NEtoECS_output;
             	varargout = {Uout};
             end
         end
         
-       function [J_K_NEtoSC, J_Na_NEtoSC, NO_n] = shared(self, t, u, K_s)    %shared variable
+       function [J_K_NEtoSC, J_Na_NEtoSC, NO_n] = shared(self, t, u, K_s, Na_s)    %shared variable
             p = self.params;
             idx = self.index;
             
@@ -324,14 +333,14 @@ classdef Neuron < handle
             J_Kpump_d   = -2 * J_pump_d;             
             J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_d;
             J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_d;
-            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
+            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + p.NaTswitch * J_NaT_sa;
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
             
             %Fluxes from neuron to SC
-            J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As * J_K_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_K_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
-            J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As * J_Na_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_Na_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
-%               J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As* J_K_tot_sa) / p.Vs )   +  ( (p.Ad * J_K_tot_d) / p.Vd  )  ) * 1000;
-%               J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As* J_Na_tot_sa) / p.Vs  )  +  ( (p.Ad * J_Na_tot_d) / p.Vd  ) ) * 1000;            
+%             J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As * J_K_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_K_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
+%             J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As * J_Na_tot_sa) / p.Vs ) / p.VR_sn  +  ( (p.Ad * J_Na_tot_d) / p.Vd ) / p.VR_dn ) * 1000;
+              J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As* J_K_tot_sa) / p.Vs )   +  ( (p.Ad * J_K_tot_d) / p.Vd  )  ) * 1000 * 10;
+              J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As* J_Na_tot_sa) / p.Vs  )  +  ( (p.Ad * J_Na_tot_d) / p.Vd  ) ) * 1000 * 10;            
 
             NO_n = u(idx.NO_n, :);
             
@@ -350,11 +359,10 @@ classdef Neuron < handle
             p = self.params;
             t_0 = p.t_0;
             t_2 = p.t_2;
-%             current = 0.012 * (0.5 * tanh((t - t_0)/1.3) - ...
-%             0.5 * tanh((t - t_2)/1.3));
+            current = 0.022 * (0.5 * tanh((t - t_0)/1.3) - ...
+            0.5 * tanh((t - t_2)/1.3));
 %            current = 0.016*rectpuls(t-(t_0+p.lengthpulse), p.lengthpulse);
-%             current = 7.5e-4 * exp(-1/72*(t-t_0).^2) / (6*sqrt(2*pi));
-             current = 8e-3 * gaussmf(t,[6,t_0+30]);
+%              current = 8e-3 * gaussmf(t,[6,t_0+30]);
         end        
         
         function names = varnames(self)
@@ -414,7 +422,9 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.c_NO_n = 14; 
     idx.d_NO_n = 15;    
     idx.current = 16;
-    
+    idx.J_K_NEtoSC_output = 18;
+    idx.J_Na_NEtoSC_output = 19;
+    idx.J_K_NEtoECS_output = 20;
     n = numel(fieldnames(idx));
 end
         
@@ -422,6 +432,7 @@ function params = parse_inputs(varargin)
     parser = inputParser();
     
     parser.addParameter('GluSwitch', 1); 
+    parser.addParameter('NaTswitch', 0); 
     
     % global constants
     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant

@@ -191,6 +191,7 @@ classdef Astrocyte < handle
                 %Uout(self.idx_out.ft, :) = self.input_K(t);
                 Uout(self.idx_out.v_k, :) = v_k;
                 Uout(self.idx_out.K_s, :) = K_s;
+                Uout(self.idx_out.Na_s, :) = Na_s;
                 Uout(self.idx_out.K_p, :) = K_p;
                 Uout(self.idx_out.J_N_BK_k, :) = J_N_BK_k;
                 Uout(self.idx_out.rho, :) = self.input_rho(t);
@@ -216,11 +217,12 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.phi_w, :) = phi_w;
                 Uout(self.idx_out.J_BK_p, :) = J_BK_p;
                 Uout(self.idx_out.J_BK_k, :) = J_BK_k;
+                Uout(self.idx_out.R_s, :) = R_s;
 
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k, K_s] = shared(self, ~, u)
+        function [K_p, NO_k, K_s, Na_s] = shared(self, ~, u)
             p = self.params;
             idx = self.index;
             K_p = u(idx.K_p, :);
@@ -228,6 +230,7 @@ classdef Astrocyte < handle
             
             R_s = p.R_tot - u(idx.R_k, :);
             K_s = R_s .* u(idx.N_K_s, :);
+            Na_s = R_s .* u(idx.N_Na_s, :);
         end
 
         function f = input_K(self, t)      
@@ -321,6 +324,8 @@ function [idx, n] = output_indices(self)
     idx.J_Na_k  = 25;
     idx.J_BK_p = 26;
     idx.J_BK_k = 27;
+    idx.R_s = 28;
+    idx.Na_s = 29;
     
     n = numel(fieldnames(idx));
 end
