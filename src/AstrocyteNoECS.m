@@ -27,6 +27,8 @@ classdef AstrocyteNoECS < handle
             p = self.params;
             idx = self.index;
             
+            K_e = u(idx.K_e, :);
+            
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
             
@@ -129,6 +131,9 @@ classdef AstrocyteNoECS < handle
             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
+            % Differential Equation for the ECS
+            du(idx.K_e, :) = 0;
+            
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));
@@ -184,6 +189,7 @@ idx.N_Na_s = 7;
 idx.N_K_s = 8;
 idx.N_HCO3_s = 9;
 idx.w_k = 10;
+idx.K_e = 11;
 end
 function [idx, n] = output_indices()
 % Index of all other output parameters
@@ -199,6 +205,9 @@ n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)
 parser = inputParser();
+
+parser.addParameter('PVStoECS', 1); 
+parser.addParameter('SCtoECS', 1); 
 
 % ECS constants
 parser.addParameter('VR_se', 1);
@@ -291,4 +300,5 @@ u0(idx.N_K_s) = 0.0807e-3;
 u0(idx.N_HCO3_s) = 0.432552e-3;
 u0(idx.K_p) = 3e3;
 u0(idx.w_k) = 0.1815e-3;
+u0(idx.K_e) = 3e3;
 end
