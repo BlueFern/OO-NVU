@@ -315,7 +315,9 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('rhoSwitch', 1); 
     parser.addParameter('blockSwitch', 1); 
-
+    parser.addParameter('PVStoECS', 1); 
+    parser.addParameter('SCtoECS', 1); 
+    
     % ECS constants
     parser.addParameter('VR_se', 1);
     parser.addParameter('VR_pe', 0.001);
