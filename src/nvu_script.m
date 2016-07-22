@@ -20,10 +20,20 @@ clear all
 clc
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-nv = NVU(Neuron('startpulse', 200, 'lengthpulse', 40, 'GluSwitch', 1, 'NaTswitch', 1, 'buffSwitch', 1, 'NOswitch', 1, 'currentType', 2), ...
-    Astrocyte('startpulse', 200, 'lengthpulse', 40, 'rhoSwitch', 1, 'blockSwitch', 1), ...
+% Handy parameters to modify
+START_PULSE  = 200;      % Time of neuronal stimulation
+LENGTH_PULSE = 40;       % Length of stimulation (used if CURREN_TYPE = 2)
+GLU_SWITCH   = 1;        % Turn on glutamate input to SC
+NAT_SWITCH   = 1;        % Turn on NaT channel in dendrite
+BUFF_SWITCH  = 1;        % Turn on K+ buffering of ECS by AC
+NO_SWITCH    = 1;        % Turn on Nitric Oxide production 
+CURRENT_TYPE = 1;        % 1 for Gaussian, 2 for tanh function
+J_PLC        = 0.18;     % Jplc value in EC: 0.18 for steady state, 0.4 for oscillations
+
+nv = NVU(Neuron('startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'GluSwitch', GLU_SWITCH, 'NaTswitch', NAT_SWITCH, 'buffSwitch', BUFF_SWITCH, 'NOswitch', NO_SWITCH, 'currentType',CURRENT_TYPE), ...
+    Astrocyte('startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'rhoSwitch', GLU_SWITCH), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.18, 'NOswitch', 1), 'odeopts', odeopts);
+    SMCEC('J_PLC', J_PLC, 'NOswitch', NO_SWITCH), 'odeopts', odeopts);
 
 nv.T = linspace(0, 400, 10000);    
     
@@ -80,19 +90,21 @@ plot(nv.T, nv.out('current'))
 xlabel('Time [s]'); ylabel('current')
 xlim([100 400])
 
-% 
-% figure(10);
-% hold all;
-% plot(nv.T, nv.out('K_p'))
-% xlabel('Time [s]'); ylabel('K_p')
+figure(7);
+subplot(2,2,1)
+hold all;
+plot(nv.T, nv.out('J_KIR_i'))
+xlabel('Time [s]'); ylabel('KIR flux')
+xlim([100 400])
 
-% % Fix later to plot glutamate and rho
-% subplot(4,2,6)
-% hold all;
-% plot(nv.T, nv.out('Glu'))
-% xlabel('Time [s]'); ylabel('glutamate')
-% 
-% subplot(4,2,7)
-% hold all;
-% plot(nv.T, nv.out('rho'))
-% xlabel('Time [s]'); ylabel('rho')
+subplot(2,2,2)
+hold all;
+plot(nv.T, nv.out('J_BK_k'))
+xlabel('Time [s]'); ylabel('BK flux')
+xlim([100 400])
+
+subplot(2,2,3)
+hold all;
+plot(nv.T, nv.out('Ca_i'))
+xlabel('Time [s]'); ylabel('Ca_i')
+xlim([100 400])
