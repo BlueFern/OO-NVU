@@ -114,7 +114,7 @@ classdef SMCEC < handle
 
             V_max_pde = p.k_pde * cGMP_i;
 
-            p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
+            p_NO_j = p.NOswitch * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
             
             %J_lumen = - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
@@ -316,6 +316,9 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+    
+    parser.addParameter('NOswitch', 1);
+    
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
     parser.addParameter('lambda_i', 45); % s^-1

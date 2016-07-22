@@ -20,7 +20,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, v_sa)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -121,8 +121,8 @@ classdef Astrocyte < handle
             % Other equations
             B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
                 (p.K_ex + Ca_k).^2);
-            G = (self.input_rho(t) + p.delta) ./ ...
-                (p.K_G + self.input_rho(t) + p.delta);
+            G = (self.input_rho(t, v_sa) + p.delta) ./ ...
+                (p.K_G + self.input_rho(t, v_sa) + p.delta);
             v_3 = -p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4) + p.v_7; % Ca included
             
             %% Parent Calcium equations
@@ -194,7 +194,7 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.Na_s, :) = Na_s;
                 Uout(self.idx_out.K_p, :) = K_p;
                 Uout(self.idx_out.J_N_BK_k, :) = J_N_BK_k;
-                Uout(self.idx_out.rho, :) = self.input_rho(t);
+                Uout(self.idx_out.rho, :) = self.input_rho(t, v_sa);
                 Uout(self.idx_out.B_cyt, :) = B_cyt;
                 Uout(self.idx_out.G, :) = G;
                 Uout(self.idx_out.v_3, :) = v_3;
@@ -246,12 +246,20 @@ classdef Astrocyte < handle
         end
         
         % This is basically a scaled version of input_Glu(t) in Neuron
-        function rho = input_rho(self, t)
+        function rho = input_rho(self, t, v_sa)
             % Input signal of glutamate; the smooth pulse function rho
             p = self.params;
-            rho = p.rhoSwitch * (p.Amp - p.base) * ( ...
-                0.5 * tanh((t - p.t_0) / p.theta_L) - ...
-                0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
+%             rho = p.rhoSwitch * (p.Amp - p.base) * ( ...
+%                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
+%                 0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
+            vsaMin = -70; vsaMax = -20;
+            if (v_sa > vsaMax)
+                rho = 0.7;
+            elseif (v_sa < vsaMin)
+                rho = 0.1;
+            else
+                rho = ( 0.7/(vsaMax - vsaMin) ) * (v_sa - vsaMin) + 0.1;
+            end       
         end
         
         % C_input Block function to switch channel on and off
