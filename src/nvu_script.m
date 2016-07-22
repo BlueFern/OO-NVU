@@ -20,10 +20,10 @@ clear all
 clc
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-nv = NVU(Neuron('startpulse', 200, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch', 1), ...
-    Astrocyte('startpulse', 200, 'lengthpulse', 200, 'rhoSwitch', 1, 'blockSwitch', 1, 'PVStoECS', 0, 'SCtoECS', 1), ...
+nv = NVU(Neuron('startpulse', 200, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch', 0, 'NOswitch', 0), ...
+    AstrocyteNoECS('startpulse', 200, 'lengthpulse', 200, 'rhoSwitch', 1, 'blockSwitch', 1, 'PVStoECS', 0, 'SCtoECS', 1), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.18), 'odeopts', odeopts);
+    SMCEC('J_PLC', 0.18, 'NOswitch', 0), 'odeopts', odeopts);
 
 nv.T = linspace(0, 600, 5000);    
     
@@ -41,7 +41,7 @@ nv.simulate()
 % xlabel('time (s)')
 % ylabel('[Ca^{2+}] (\muM)')
 
-figure(7);
+figure(8);
 subplot(2,2,1)
 hold all;
 plot(nv.T, nv.out('R'))
@@ -49,8 +49,8 @@ xlabel('Time [s]'); ylabel('R')
 
 subplot(2,2,2)
 hold all;
-plot(nv.T, nv.out('K_s')/1e3)
-xlabel('Time [s]'); ylabel('K_s')
+plot(nv.T, nv.out('w_i'))
+xlabel('Time [s]'); ylabel('w_i [-]')
 
 subplot(2,2,3)
 hold all;
@@ -61,58 +61,45 @@ subplot(2,2,4)
 hold all;
 plot(nv.T, nv.out('K_p')/1e3)
 xlabel('Time [s]'); ylabel('K_p')
-
-% subplot(3,2,5)
-% hold all;
-% plot(nv.T, nv.out('K_e')/1e3)
-% xlabel('Time [s]'); ylabel('K_e')
-
-% subplot(3,2,5)
-% hold all;
-% plot(nv.T, nv.out('O2'))
-% xlabel('Time [s]'); ylabel('O2')
-
-% 
-% figure(5);
-% hold on
-% plot(nv.T, nv.out('K_e'))
-% xlabel('time (s)')
-% ylabel('K_e')
-% hold off
-
-% figure(6);
-% hold on
-% plot(nv.T, nv.out('J_lumen'))
-% xlabel('time (s)')
-% ylabel('J_{lumen}')
-% hold off
-% 
-% figure(7);
-% hold on
-% plot(nv.T, nv.out('NO_j'))
-% xlabel('time (s)')
-% ylabel('NO_j')
-% hold off
-% 
-% figure(8);
-% hold on
-% plot(nv.T, nv.out('p_NO_j'))
-% xlabel('time (s)')
-% ylabel('p_{NO_j}')
-% hold off
 % 
 % figure(9);
-% hold on
-% plot(nv.T, nv.out('c_NO_j'))
-% xlabel('time (s)')
-% ylabel('c_{NO_j}')
-% hold off
+% hold all;
+% plot(nv.T, nv.out('Ca_k'))
+% xlabel('Time [s]'); ylabel('Ca_k [\muM]')
+
+%% Switch TRPV4 channel off:
+nv.astrocyte.params.switchBK = 1;
+nv.astrocyte.params.reverseBK = 0; % V
+nv.astrocyte.params.G_BK_k = 4.3e3; % pS (later converted to mho m^-2)
+nv.astrocyte.params.trpv_switch = 0;
+nv.astrocyte.params.Ca_4 = 0.15; % uM
+nv.astrocyte.params.v_7 = -15e-3; % V
+
+% Re-run simulation:
+nv.simulate()
+
+figure(8);
+subplot(2,2,1)
+hold all;
+plot(nv.T, nv.out('R'))
+xlabel('Time [s]'); ylabel('R')
+
+subplot(2,2,2)
+hold all;
+plot(nv.T, nv.out('w_i'))
+xlabel('Time [s]'); ylabel('w_i [-]')
+
+subplot(2,2,3)
+hold all;
+plot(nv.T, nv.out('Ca_k'));
+xlabel('Time [s]'); ylabel('Ca_k')
+
+subplot(2,2,4)
+hold all;
+plot(nv.T, nv.out('K_p')/1e3)
+xlabel('Time [s]'); ylabel('K_p')
 % 
-% figure(10);
-% hold on
-% plot(nv.T, nv.out('p_NO_j') + nv.out('d_NO_j'))
-% xlabel('time (s)')
-% ylabel('test')
-% hold off
-
-
+% figure(9);
+% hold all;
+% plot(nv.T, nv.out('w_k'))
+% xlabel('Time [s]'); ylabel('w_k')

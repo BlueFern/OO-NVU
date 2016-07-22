@@ -76,7 +76,9 @@ classdef Astrocyte < handle
             E_Cl_k = p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
             E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * ...
                 log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
+%             E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
             E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
+
             E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV
             
             % Flux through the Sodium Potassium pump

@@ -39,7 +39,7 @@ classdef Neuron < handle
             m_c = (Ca_n ./ phi_N) .* dphi_N; %[-]
             CaM = Ca_n ./ m_c; %[uM]
             tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);
-            p_NO_n = nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n); %[uM/s]
+            p_NO_n = p.NOswitch * ( nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) ); %[uM/s]
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
             
@@ -141,6 +141,7 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('GluSwitch', 1); 
     parser.addParameter('KSwitch', 1); 
+    parser.addParameter('NOswitch', 1); 
     
     % global constants
     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
