@@ -25,7 +25,7 @@ nv = NVU(Neuron('startpulse', 200, 'lengthpulse', 200, 'KSwitch', 1, 'GluSwitch'
     WallMechanics(), ...
     SMCEC('J_PLC', 0.18, 'NOswitch', 0), 'odeopts', odeopts);
 
-nv.T = linspace(0, 600, 5000);    
+nv.T = linspace(0, 800, 5000);    
     
 nv.simulate()
 
@@ -41,33 +41,43 @@ nv.simulate()
 % xlabel('time (s)')
 % ylabel('[Ca^{2+}] (\muM)')
 
-figure(18);
-subplot(2,2,1)
+figure(109);
+subplot(3,2,1)
+hold all;
+plot(nv.T, nv.out('J_TRPV_k'))
+xlabel('Time [s]'); title('TRPV Ca2+ flux [\mu M/s]')
+
+subplot(3,2,2)
+hold all;
+plot(nv.T, nv.out('Ca_k'))
+xlabel('Time [s]'); title('Ca2+ in Astrocyte [\mu M]')
+
+subplot(3,2,3)
+hold all;
+plot(nv.T, nv.out('v_k'));
+xlabel('Time [s]'); title('Membrane potential in Astrocyte [mV]')
+
+subplot(3,2,4)
+hold all;
+plot(nv.T, nv.out('w_k'))
+xlabel('Time [s]'); title('BK Open Probability')
+
+subplot(3,2,5)
+hold all;
+plot(nv.T, nv.out('K_p'));
+xlabel('Time [s]'); title('K+ in PVS [\mu M]')
+
+subplot(3,2,6)
 hold all;
 plot(nv.T, nv.out('R'))
-xlabel('Time [s]'); ylabel('R')
+xlabel('Time [s]'); title('Radius [\mu m]')
 
-subplot(2,2,2)
-hold all;
-plot(nv.T, nv.out('J_BK_k'))
-xlabel('Time [s]'); ylabel('BK flux')
-
-subplot(2,2,3)
-hold all;
-plot(nv.T, nv.out('Ca_k'));
-xlabel('Time [s]'); ylabel('Ca_k')
-
-subplot(2,2,4)
-hold all;
-plot(nv.T, nv.out('K_p')/1e3)
-xlabel('Time [s]'); ylabel('K_p')
-% 
 % figure(9);
 % hold all;
 % plot(nv.T, nv.out('Ca_k'))
 % xlabel('Time [s]'); ylabel('Ca_k [\muM]')
 
-%% Switch TRPV4 channel on with old BK parameters:
+%% Switch TRPV4 channel off:
 nv.astrocyte.params.switchBK = 1;
 nv.astrocyte.params.reverseBK = 0; % V
 nv.astrocyte.params.G_BK_k = 4.3e3; % pS (later converted to mho m^-2)
@@ -78,26 +88,37 @@ nv.astrocyte.params.v_7 = -15e-3; % V
 % Re-run simulation:
 nv.simulate()
 
-figure(18);
-subplot(2,2,1)
+figure(109);
+subplot(3,2,1)
+hold all;
+plot(nv.T, nv.out('J_TRPV_k'))
+xlabel('Time [s]'); title('TRPV Ca2+ flux [\mu M/s]')
+
+subplot(3,2,2)
+hold all;
+plot(nv.T, nv.out('Ca_k'))
+xlabel('Time [s]'); title('Ca2+ in Astrocyte [\mu M]')
+
+subplot(3,2,3)
+hold all;
+plot(nv.T, nv.out('v_k'));
+xlabel('Time [s]'); title('Membrane potential in Astrocyte [mV]')
+
+subplot(3,2,4)
+hold all;
+plot(nv.T, nv.out('w_k'))
+xlabel('Time [s]'); title('BK Open Probability')
+
+subplot(3,2,5)
+hold all;
+plot(nv.T, nv.out('K_p'));
+xlabel('Time [s]'); title('K+ in PVS [\mu M]')
+
+subplot(3,2,6)
 hold all;
 plot(nv.T, nv.out('R'))
-xlabel('Time [s]'); ylabel('R')
+xlabel('Time [s]'); title('Radius [\mu m]')
 
-subplot(2,2,2)
-hold all;
-plot(nv.T, nv.out('J_BK_k'))
-xlabel('Time [s]'); ylabel('BK flux')
-
-subplot(2,2,3)
-hold all;
-plot(nv.T, nv.out('Ca_k'));
-xlabel('Time [s]'); ylabel('Ca_k')
-
-subplot(2,2,4)
-hold all;
-plot(nv.T, nv.out('K_p')/1e3)
-xlabel('Time [s]'); ylabel('K_p')
 % 
 % figure(9);
 % hold all;
@@ -115,28 +136,38 @@ nv.astrocyte.params.v_7 = -15e-3; % V
 % Re-run simulation:
 nv.simulate()
 
-figure(18);
-subplot(2,2,1)
+figure(109);
+subplot(3,2,1)
+hold all;
+plot(nv.T, nv.out('J_TRPV_k'))
+xlabel('Time [s]'); title('TRPV Ca2+ flux [\muM/s]')
+
+subplot(3,2,2)
+hold all;
+plot(nv.T, nv.out('Ca_k'))
+xlabel('Time [s]'); title('Ca2+ in Astrocyte [\muM]')
+
+subplot(3,2,3)
+hold all;
+plot(nv.T, nv.out('v_k'));
+xlabel('Time [s]'); title('Membrane potential in Astrocyte [mV]')
+
+subplot(3,2,4)
+hold all;
+plot(nv.T, nv.out('w_k'))
+xlabel('Time [s]'); title('BK Open Probability')
+
+subplot(3,2,5)
+hold all;
+plot(nv.T, nv.out('K_p'));
+xlabel('Time [s]'); title('K+ in PVS [\muM]')
+
+subplot(3,2,6)
 hold all;
 plot(nv.T, nv.out('R'))
-xlabel('Time [s]'); ylabel('R')
-
-subplot(2,2,2)
-hold all;
-plot(nv.T, nv.out('J_BK_k'))
-xlabel('Time [s]'); ylabel('BK flux')
-
-subplot(2,2,3)
-hold all;
-plot(nv.T, nv.out('Ca_k'));
-xlabel('Time [s]'); ylabel('Ca_k')
-
-subplot(2,2,4)
-hold all;
-plot(nv.T, nv.out('K_p')/1e3)
-xlabel('Time [s]'); ylabel('K_p')
+xlabel('Time [s]'); title('Radius [\mum]')
 
 
 %%
 legend('TRPV4 on, BK new','TRPV4 on, BK old','TRPV4 off, BK old')
-title('NVU 1.1')
+%title('NVU 1.1')

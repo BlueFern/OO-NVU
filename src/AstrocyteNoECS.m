@@ -95,8 +95,7 @@ classdef AstrocyteNoECS < handle
                 g_BK_k * w_k);
             
             % Fluxes
-            J_N_BK_k = g_BK_k / p.F * w_k .* ...
-                (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
+            J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
             J_BK_p = J_N_BK_k ./ (R_k * p.VR_pa); % K+ influx into the PVS (uM/s)
             J_BK_k = J_N_BK_k ./ R_k; % K+ efflux from the AC (uM/s)
             J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
@@ -161,7 +160,9 @@ classdef AstrocyteNoECS < handle
                 du(idx.N_HCO3_k, :);
             
             % Differential Calcium Equations in Astrocyte
-            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k); % TRPV flux is buffered.
+            %du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k); % TRPV flux is buffered.
+            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak) + J_TRPV_k; % TRPV flux is NOT buffered.
+            
             du(idx.s_k, :) = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak)) ./ (p.VR_ER_cyt); % rewritten in fluxes
             du(idx.h_k, :) = p.k_on * (p.K_inh - (Ca_k + p.K_inh) .* h_k);
             du(idx.I_k, :) = p.r_h * G - p.k_deg * I_k;
