@@ -163,7 +163,9 @@ classdef Astrocyte < handle
                 du(idx.N_HCO3_k, :);
             
             % Differential Calcium Equations in Astrocyte
-            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k); % TRPV flux is buffered.
+            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k/p.r_buff); % TRPV flux is buffered (at lower rate).
+            %du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak) + J_TRPV_k; % TRPV flux is NOT buffered.
+            
             du(idx.s_k, :) = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak)) ./ (p.VR_ER_cyt); % rewritten in fluxes
             du(idx.h_k, :) = p.k_on * (p.K_inh - (Ca_k + p.K_inh) .* h_k);
             du(idx.I_k, :) = p.r_h * G - p.k_deg * I_k;
@@ -174,10 +176,10 @@ classdef Astrocyte < handle
             
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
-                p.VR_ps - p.R_decay * (K_p - p.K_p_min) + p.PVStoECS * (1 / p.tau) * (K_e - K_p);
+                p.VR_ps - p.R_decay * (K_p - p.K_p_min) + p.ECSswitch * p.PVStoECS * (1 / p.tau) * (K_e - K_p);
             du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
+            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + p.ECSswitch * p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
             du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
@@ -185,7 +187,7 @@ classdef Astrocyte < handle
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
             
             % Differential Equation for the ECS
-            du(idx.K_e, :) = - J_NaK_i + J_K_i - p.SCtoECS * (p.VR_se / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p);
+            du(idx.K_e, :) = p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (p.VR_se / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
@@ -320,6 +322,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('blockSwitch', 1); 
     parser.addParameter('PVStoECS', 1); 
     parser.addParameter('SCtoECS', 1); 
+    parser.addParameter('ECSswitch', 1); 
+    
     
     % ECS constants
     parser.addParameter('VR_se', 1);
@@ -387,7 +391,8 @@ function params = parse_inputs(varargin)
 %    parser.addParameter('trpv_switch', 0); % TRPV4 off
     parser.addParameter('Ca_decay_k', 0.5);
     parser.addParameter('G_TRPV_k', 50); %pS
-    
+    parser.addParameter('r_buff', 0.05); % Rate at which Ca2+ from the TRPV4 channel at the endfoot is buffered compared to rest of channels on the astrocyte body [-]
+
     
     % Perivascular space
     parser.addParameter('VR_pa', 0.001);% [-]
