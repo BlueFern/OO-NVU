@@ -1,5 +1,9 @@
 %% Demonstration script for new NVU model
 
+%% Version control
+% This is the latest version of the NVU model. It includes:
+% - basic K+ / Ca2+ 
+
 %% Construct NVU
 % The NVU consists of a number of submodules, implemented as MATLAB
 % classes, presently an astrocyte, a lumped SMC/EC model, and a model of
@@ -12,32 +16,38 @@
 % Options for the ODE solver (currently |ode15s|) are provided by
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
-clear;
+clear all
+clc
+odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-odeopts = odeset('RelTol', 1e-03, 'AbsTol', 1e-03, 'MaxStep', 1, 'Vectorized', 1);
+XLIM1 = 100; XLIM2 = 600;
+FIG_NUM = 18;
 
-nv = NVU(Astrocyte('startpulse', 200, 'lengthpulse', 20, 'PVStoECS', 0, 'SCtoECS', 1), ...
+ECS          = 1;        % Include ECS compartment or not
+START_PULSE  = 200;      % Time of neuronal stimulation
+LENGTH_PULSE = 20;       % Length of stimulation 
+J_PLC        = 0.18;     % Jplc value in EC: 0.18 for steady state, 0.4 for oscillations
+
+nv = NVU(...
+    Astrocyte('F_input', 2.67, 'startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'ECSswitch', ECS, 'PVStoECS', 0, 'SCtoECS', 1), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', 0.18), ...
-    'odeopts', odeopts);
+    SMCEC('J_PLC', J_PLC), 'odeopts', odeopts);
 
-nv.T = linspace(0, 800, 1000);    
+nv.T = linspace(0, XLIM2, 5000);    
 
 nv.simulate()
 
 
-figure(9);
-subplot(2,2,1)
-hold all;
-plot(nv.T, nv.out('R'))
-xlabel('Time [s]'); ylabel('R')
+figure(FIG_NUM);
 
-subplot(2,2,2)
+subplot(1,2,1)
 hold all;
-plot(nv.T, nv.out('K_s')/1e3)
-xlabel('Time [s]'); ylabel('K_s')
+plot(nv.T, nv.out('K_p')/1e3);
+xlabel('Time [s]'); title('K+ in PVS [mM]')
+xlim([XLIM1 XLIM2])
 
-subplot(2,2,3)
+subplot(1,2,2)
 hold all;
-plot(nv.T, nv.out('K_p')/1e3)
-xlabel('Time [s]'); ylabel('K_p')
+plot(nv.T, nv.out('R')*1e6)
+xlabel('Time [s]'); title('Radius [\mum]')
+xlim([XLIM1 XLIM2])

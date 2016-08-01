@@ -123,16 +123,16 @@ classdef Astrocyte < handle
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
             
             % Differential Equations in the Perivascular space
-            du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay*(K_p - p.K_p_min) + p.PVStoECS * (1 / p.tau) * (K_e - K_p);
+            du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay*(K_p - p.K_p_min) + p.ECSswitch * p.PVStoECS * (1 / p.tau) * (K_e - K_p);
             
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = p.k_C * self.input_f(t) - du(idx.N_K_k, :) - J_BK_k + p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
+            du(idx.N_K_s, :) = p.k_C * self.input_f(t) - du(idx.N_K_k, :) - J_BK_k + p.ECSswitch * p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
             
             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - du(idx.N_Na_k, :);
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
             % Differential Equation for the ECS
-            du(idx.K_e, :) =  - J_NaK_i + J_K_i - p.SCtoECS * (1 / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p);
+            du(idx.K_e, :) =  p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (1 / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
@@ -208,6 +208,7 @@ parser = inputParser();
 
 parser.addParameter('PVStoECS', 1); 
 parser.addParameter('SCtoECS', 1); 
+parser.addParameter('ECSswitch', 1); 
 
 % ECS constants
 parser.addParameter('VR_se', 1);
