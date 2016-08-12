@@ -252,7 +252,7 @@ classdef Astrocyte < handle
 %             rho = p.rhoSwitch * (p.Amp - p.base) * ( ...
 %                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
 %                 0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
-            vsaMin = -70; vsaMax = -20;
+            vsaMin = -68; vsaMax = -20;
             if (v_sa > vsaMax)
                 rho = 0.7;
             elseif (v_sa < vsaMin)
