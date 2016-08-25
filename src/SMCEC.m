@@ -47,7 +47,7 @@ classdef SMCEC < handle
                 (1 + exp(-(v_i - p.v_Ca2_i) / p.R_Ca_i));
             J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* ...
                 (v_i - p.v_NaCa_i);
-            J_stretch_i = p.G_stretch ./ ...
+            J_stretch_i = 0.1* p.G_stretch ./ ...
                 (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
                 (v_i - p.E_SAC);
             %J_NaK_i = p.F_NaK_i;
@@ -94,14 +94,19 @@ classdef SMCEC < handle
             
             %% Differential Equations
             % Smooth muscle cell
+%             du(idx.Ca_i, :) = J_IP3_i - J_SR_uptake_i/p.VR_sr - J_extrusion_i + ...
+%                 J_SR_leak_i/p.VR_sr - J_VOCC_i + J_CICR_i/p.VR_sr + J_NaCa_i + ...
+%                 J_stretch_i + J_Ca_coup_i;
+%             du(idx.s_i, :) = (J_SR_uptake_i - J_CICR_i - J_SR_leak_i);
+            
             du(idx.Ca_i, :) = J_IP3_i - J_SR_uptake_i - J_extrusion_i + ...
                 J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i + ...
-                0.1*J_stretch_i + J_Ca_coup_i;
-            
-            du(idx.s_i, :) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
+                J_stretch_i + J_Ca_coup_i;
+            du(idx.s_i, :) = p.VR_sr * (J_SR_uptake_i - J_CICR_i - J_SR_leak_i);           
+
             du(idx.v_i, :) = p.gamma_i * (...
                 -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i ...
-                -J_stretch_i - J_KIR_i) + V_coup_i;
+                -10*J_stretch_i - J_KIR_i) + V_coup_i;
             du(idx.w_i, :) = p.lambda_i * (K_act_i - w_i);
             du(idx.I_i, :) = J_IP3_coup_i - J_degrad_i;
             du(idx.K_i, :) = J_NaK_i - J_KIR_i - J_K_i;
@@ -109,9 +114,9 @@ classdef SMCEC < handle
             du(idx.Ca_j, :) = J_IP3_j - J_ER_uptake_j + J_CICR_j - ...
                 J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j + ...
                 J_stretch_j - J_Ca_coup_i;
-            du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
+            du(idx.s_j, :) = 1 * (J_ER_uptake_j - J_CICR_j - J_ER_leak_j);
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
-            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i; % p.J_PLC or input_plc(t)
+            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;
             
             du = bsxfun(@times, self.enabled, du);
             
@@ -236,6 +241,9 @@ end
 
 function params = parse_inputs(varargin)
 parser = inputParser();
+
+parser.addParameter('VR_sr', 1); % Volume ratio of SMC cytosol to SR
+
 % Smooth Muscle Cell ODE Constants
 parser.addParameter('gamma_i', 1970); %mV uM^-1
 parser.addParameter('lambda_i', 45); % s^-1

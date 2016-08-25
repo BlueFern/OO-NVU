@@ -95,10 +95,10 @@ classdef Astrocyte < handle
             
             J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k) * p.C_correction;
             J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
-            J_KCC1_k = self.flux_ft(t) .* p.g_KCC1_k / p.F * p.R_g * ...
+            J_KCC1_k = 1 .* p.g_KCC1_k / p.F * p.R_g * ...
                 p.T / p.F .* ...
                 log((K_s .* Cl_s) ./ (K_k .* Cl_k)) * p.C_correction;
-            J_NKCC1_k = self.flux_ft(t) * p.g_NKCC1_k / p.F * p.R_g * ...
+            J_NKCC1_k = 1 * p.g_NKCC1_k / p.F * p.R_g * ...
                 p.T / p.F .* log((Na_s .* K_s .* Cl_s.^2) ./ ...
                 (Na_k .* K_k .* Cl_k.^2)) * p.C_correction;
             
@@ -123,16 +123,16 @@ classdef Astrocyte < handle
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
             
             % Differential Equations in the Perivascular space
-            du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay*(K_p - p.K_p_min) + p.ECSswitch * p.PVStoECS * (1 / p.tau) * (K_e - K_p);
+            du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay * (K_p - p.K_p_min) + p.ECSswitch * p.PVStoECS * (1 / p.tau) * (K_e - K_p);
             
             % Differential Equations in the Synaptic Cleft
             du(idx.N_K_s, :) = p.k_C * self.input_f(t) - du(idx.N_K_k, :) - J_BK_k + p.ECSswitch * p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
-            
             du(idx.N_Na_s, :) = -p.k_C * self.input_f(t) - du(idx.N_Na_k, :);
+                        
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
             % Differential Equation for the ECS
-            du(idx.K_e, :) =  p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (1 / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
+             du(idx.K_e, :) =  self.input_ECS(t) + p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (1 / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
@@ -141,36 +141,64 @@ classdef Astrocyte < handle
                Uout(self.idx_out.v_k, :) = v_k;
                Uout(self.idx_out.K_s, :) = K_s;
                Uout(self.idx_out.K_p, :) = K_p;
+               
                Uout(self.idx_out.J_BK_k, :) = J_BK_k;
+               Uout(self.idx_out.J_NaK_k, :) = J_NaK_k;
+               Uout(self.idx_out.J_K_k, :) = J_K_k;
+               Uout(self.idx_out.J_Na_k, :) = J_Na_k;
+               Uout(self.idx_out.J_NBC_k, :) = J_NBC_k;
+               Uout(self.idx_out.J_KCC1_k, :) = J_KCC1_k;
+               Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
+               
                Uout(self.idx_out.w_inf, :) = w_inf;
                Uout(self.idx_out.phi_w, :) = phi_w;
               
                varargout = {Uout};
             end
-        end        
+        end    
+        
         function K_p = shared(self, ~, u)
             K_p = u(self.index.K_p, :);
         end
+        
         function f = input_f(self, t)
             % The neuronal K+ input signal
             p = self.params;
             f = zeros(size(t));
-            ii = p.t_0 <= t & t < p.t_1;
-            f(ii) = ...
-                p.F_input * p.gab / ...
-                (p.ga * p.gb) * ...
-                (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
-                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
-            f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
+%             ii = p.t_0 <= t & t < p.t_1;
+%             f(ii) = ...
+%                 p.F_input * p.gab / ...
+%                 (p.ga * p.gb) * ...
+%                 (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
+%                 ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
+%             f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
+            diff = p.input_spacing;
+            for i = 0:1:p.num_inputs-1
+                f((p.t_0+diff*i) <= t & t < (p.t_1+diff*i) ) = p.F_input;
+                f((p.t_2+diff*i)  <= t & t <= (p.t_3+diff*i) ) = -p.F_input;
+            end
         end
+        
+        function f = input_ECS(self, t)
+            % Input of K+ into the ECS, if you want to use set t0 and tend
+            % here and turn off other inputs
+            p = self.params;
+            f = zeros(size(t));
+            t0 = 10000; lengtht = 20; tend = 30000;
+                    f(t0 <= t & t < t0+lengtht ) = p.F_input*1e3;
+                    f(tend  <= t & t <= tend+lengtht ) = -p.F_input*1e3;
+        end
+        
         function out = flux_ft(self, t)
-            % C_input Block function to switch channel on and off
+            % C_input Block function to switch channel on and off - not
+            % really necessary...
             p = self.params;
             out = ( ...
                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
                 0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
             out = out(:).';
         end
+        
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
@@ -200,11 +228,20 @@ idx.K_s = 4;
 idx.K_p = 5;
 idx.w_inf = 6;
 idx.phi_w = 7;
-                    
+idx.J_NaK_k = 8;
+idx.J_K_k = 9;
+idx.J_Na_k = 10;
+idx.J_NBC_k = 11;
+idx.J_KCC1_k = 12; 
+idx.J_NKCC1_k = 13; 
+
 n = numel(fieldnames(idx));
 end
 function params = parse_inputs(varargin)
 parser = inputParser();
+
+parser.addParameter('input_spacing', 4); 
+parser.addParameter('num_inputs', 1); 
 
 parser.addParameter('PVStoECS', 1); 
 parser.addParameter('SCtoECS', 1); 

@@ -35,9 +35,9 @@ classdef WallMechanics < handle
             K_1 = p.gamma_cross * Ca_i.^3;
             K_6 = K_1;
             M = 1 - AM - AMp - Mp;
-            du(idx.Mp, :) = p.K_4 * AMp + K_1 .* M - (p.K_2 + p.K_3) * Mp;
-            du(idx.AMp, :) = p.K_3 * Mp + K_6 .* AM - (p.K_4 + p.K_5) * AMp;
-            du(idx.AM, :) = p.K_5 * AMp - (p.K_7 + K_6) .* AM;
+            du(idx.Mp, :) = p.wall_scaling * ( p.K_4 * AMp + K_1 .* M - (p.K_2 + p.K_3) * Mp );
+            du(idx.AMp, :) = p.wall_scaling * ( p.K_3 * Mp + K_6 .* AM - (p.K_4 + p.K_5) * AMp );
+            du(idx.AM, :) = p.wall_scaling * ( p.K_5 * AMp - (p.K_7 + K_6) .* AM );
             
             % Mechanical Equations
             F_r = AMp + AM;
@@ -83,6 +83,7 @@ end
 function params = parse_inputs(varargin)
 parser = inputParser();
 % Contraction Equation Constants
+parser.addParameter('wall_scaling', 1);
 parser.addParameter('K_2', 0.5); % s^-1
 parser.addParameter('K_3', 0.4); % s^-1
 parser.addParameter('K_4', 0.1); % s^-1
