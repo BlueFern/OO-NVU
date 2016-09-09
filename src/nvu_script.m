@@ -37,34 +37,16 @@ nv = NVU(Neuron('F_input', 2.67, 'startpulse', START_PULSE, 'lengthpulse', LENGT
 
 nv.T = linspace(0, XLIM2, 5000);    
 
-% BK conductance new, TRPV on
-nv.astrocyte.params.r_buff = 0.05;
-nv.astrocyte.params.G_BK_k = 225; % pS (later converted to mho m^-2)
-nv.astrocyte.params.reverseBK = -0.08135; % Nernst potential of BK channel
-nv.astrocyte.params.Ca_4 = 0.35; % uM
-nv.astrocyte.params.v_7 = -13.57e-3; % V
-nv.astrocyte.params.trpv_switch = 1;
+% BK conductance new
+% nv.astrocyte.params.r_buff = 0.05;
+% nv.astrocyte.params.G_BK_k = 225; % pS (later converted to mho m^-2)
+% nv.astrocyte.params.reverseBK = -0.08135; % Nernst potential of BK channel
+% nv.astrocyte.params.Ca_4 = 0.35; % uM
+% nv.astrocyte.params.v_7 = -13.57e-3; % V
+
 nv.simulate()
 
 figure(FIG_NUM);
-
-% subplot(2,2,1)
-% hold all;
-% plot(nv.T, nv.out('w_i'))
-% xlabel('Time [s]'); title('Open probability of SMC K+ channel [-]')
-% xlim([XLIM1 XLIM2])
-% 
-% subplot(2,2,2)
-% hold all;
-% plot(nv.T, nv.out('v_i'));
-% xlabel('Time [s]'); title('SMC membrane potential [mV]')
-% xlim([XLIM1 XLIM2])
-
-% subplot(2,2,1)
-% hold all;
-% plot(nv.T, nv.out('K_s')/1e3)
-% xlabel('Time [s]'); title('K+ in SC [mM]')
-% xlim([XLIM1 XLIM2])
 
 subplot(1,2,1)
 hold all;

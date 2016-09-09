@@ -76,7 +76,6 @@ classdef Astrocyte < handle
             E_Cl_k = p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
             E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * ...
                 log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
-%             E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
             E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
 
             E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV
@@ -323,8 +322,22 @@ function params = parse_inputs(varargin)
     parser.addParameter('PVStoECS', 1); 
     parser.addParameter('SCtoECS', 1); 
     parser.addParameter('ECSswitch', 1); 
+    parser.addParameter('trpv_switch', 1); 
     
-    
+        % Joerik suggested changes
+        %   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % Joerik BK channel
+        %   parser.addParameter('v_7', -13.57e-3);          % Joerik BK channel
+        %   parser.addParameter('reverseBK', -0.08135);     % Joerik BK channel
+        %   parser.addParameter('switchBK', 0);             % Joerik BK channel
+        %   parser.addParameter('Ca_4', 0.35); % uM         % Joerik BK channel
+
+        % Normal parameters
+        parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
+        parser.addParameter('v_7', -15e-3); %V 
+        parser.addParameter('reverseBK', 0);
+        parser.addParameter('switchBK', 1);
+        parser.addParameter('Ca_4', 0.15); % uM
+
     % ECS constants
     parser.addParameter('VR_se', 1);
     parser.addParameter('VR_pe', 0.001);
@@ -340,10 +353,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('startpulse', 200); % s
     parser.addParameter('lengthpulse', 200); % s
     parser.addParameter('lengtht1', 10); % s
-%     parser.addParameter('F_input', 2.5); % s
     parser.addParameter('alpha', 2);% [-]
     parser.addParameter('beta', 5);% [-]
-%     parser.addParameter('delta_t', 10); % s
     
     % Synpatic cleft
     parser.addParameter('k_C', 7.35e-5); %uM m s^-1
@@ -363,18 +374,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('V_eet', 72); % uM
     parser.addParameter('k_eet', 7.2); % uM
     parser.addParameter('Ca_k_min', 0.1); % uM
-     parser.addParameter('v_7', -13.57e-3); %V % TRPV4 on
-%    parser.addParameter('v_7', -15e-3); %V % TRPV4 off
     parser.addParameter('Ca_3', 0.4);
-     parser.addParameter('Ca_4', 0.35); % uM % TRPV4 on
-%    parser.addParameter('Ca_4', 0.15); % uM % TRPV4 off
     parser.addParameter('eet_shift', 2e-3);
     parser.addParameter('K_I', 0.03); % uM
-     parser.addParameter('reverseBK', -0.08135); %V % TRPV4 on
-%    parser.addParameter('reverseBK', 0); %V % TRPV4 off
-     parser.addParameter('switchBK', 0); % TRPV4 on
-%    parser.addParameter('switchBK', 1); % TRPV4 off
-    
+
     %TRPV4
     parser.addParameter('Capmin_k', 2000); %uM
     parser.addParameter('C_astr_k', 40);%pF
@@ -387,8 +390,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('v2_TRPV_k', 0.013); %mV
     parser.addParameter('t_TRPV_k', 0.9); %mV
     parser.addParameter('R_0_passive_k', 20e-6); 
-     parser.addParameter('trpv_switch', 1); % TRPV4 on
-%    parser.addParameter('trpv_switch', 0); % TRPV4 off
     parser.addParameter('Ca_decay_k', 0.5);
     parser.addParameter('G_TRPV_k', 50); %pS
     parser.addParameter('r_buff', 0.05); % Rate at which Ca2+ from the TRPV4 channel at the endfoot is buffered compared to rest of channels on the astrocyte body [-]
@@ -412,8 +413,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('J_NaK_max', 1.42e-3); % uM m s^-1
     parser.addParameter('K_Na_k', 10000); % uM
     parser.addParameter('K_K_s', 1500); % uM
-    parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % TRPV4 on
-%   parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2) % TRPV4 off
+
     parser.addParameter('A_ef_k', 3.7e-9); % m2
     parser.addParameter('C_correction', 1e3); % [-]
     parser.addParameter('J_max', 2880); %uM s^-1
@@ -480,7 +480,6 @@ function u0 = initial_conditions(idx,self)
     u0(idx.eet_k) = 0.1e-3;
     u0(idx.m_k) = 0;
     u0(idx.Ca_p) = 2000; %5.1
-    %u0(idx.v_k) = -0.086;
     u0(idx.NO_k) = 0.1;
     u0(idx.K_e) = 3e3;
 end
