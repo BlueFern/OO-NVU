@@ -1,19 +1,217 @@
 \section{Release notes}
 
 \subsection{Changes to the previous version}
-This is where changes should be listed.
 
+	\subsubsection{Astrocytic Calcium}
+	
+	\citet{Farr2011} implemented an NVU model based on a simple glutamate efflux into the SC simulating neuronal activity. This model included AC $Ca^{2+}$ variations induced by glutamate production into the SC and the subsequent efflux of $K^+$ into the PVS from a $Ca^{2+}$ mediated BK channel. In NVU 1.1 this BK channel was not \ca mediated and instead approximated by assuming a constant astrocytic \ca concentration.
+			
+	Although the model provided a qualitative description of neurovascular coupling the rate of change of $K_p$ was slow and the dilation of the associated arteriole took too long to reach even small dilations. The $K_p$ at which $v_i$ was maximally hyperpolarised was too high. 
+	Therefore NVU version 1.1 did not contain any astrocytic $Ca^{2+}$ or glutamate input as the results were not satisfactory. 
+	However various changes were implemented into the model and can be incorporated alongside the NO pathway, producing NVU version 1.2. 
+	
+	These changes included small fixes to the equations of the model by Michelle (e.g. changing a positive to a negative sign). 
+	The additional state variables detailing the AC $Ca^{2+}$ model component are found in Table \ref{tab:NVU12ac}.
+	
+			\begin{table}[h!]
+				\small
+				\centering
+					\begin{tabular}{c c l}
+				\hline
+				Variable & Unit & Description \\
+				\hline
+				$c_k$ & $\mu M$ & AC cytosolic $Ca^{2+}$ concentration \\
+				$s_k$ & $\mu M$ & AC $Ca^{2+}$ concentration in the ER \\
+				$h_k$ & - & inactivation variable denoting the action of $IP_3R$ that have not been activated by $Ca^{2+}$ \\
+				$i_k$ & $\mu M$ & AC $IP_3$ concentration \\
+				$eet_k$ &  $\mu M$ & $Ca^{2+}$ dependent EET production \\
+				\hline
+					\end{tabular}
+					\caption{State variables related to $Ca^{2+}$ in the astrocyte}
+					\label{tab:NVU12ac}
+			\end{table}
+			
+	The ODE for astrocytic \ca is:
+	\begin{equation}
+	mklfmf
+	\end{equation}
+	
+	\subsubsection{TRPV4 channel}
+	
+	Included is a transient receptor potential cation (TRPV4) channel on the astrocytic endfeet adjacent to the PVS.
+	These channels are an important factor in astrocytic sensory and vasoregulatory functions as \cite{Dunn2013} have shown that certain TRPV4 channels can induce CICR in the endfeet of astrocytes and increase the strength of neurovascular coupling.
+	The flux of $Ca^{2+}$ through the TRPV4 channel is based on the bidirectional model of \cite{Witthoft2012}.
+	In this model vessel dilation activates the TRPV4 channels, allowing an influx of $Ca^{2+}$ from the PVS into the astrocytic cytosol. 
+	The two additional state variables to the model are
+	$m_k$: the open probability of the TRPV4 channel, and $c_p$: PVS $Ca^{2+}$ concentration (see Table \ref{tab:NVU12trpv4}).
+			
+					\begin{table}[h!]
+						\small
+						\centering
+							\begin{tabular}{c c l}
+						\hline
+						Variable & Unit & Description \\
+						\hline
+						$c_p$ &  $\mu M$ & PVS $Ca^{2+}$  concentration (not in \cite{Farr2011}) \\
+						$m_k$ & - & open probability of TRPV4 channel (not in \cite{Farr2011}) \\
+						\hline
+							\end{tabular}
+							\caption{State variables related to the TRPV4 channel.}
+							\label{tab:NVU12trpv4}
+					\end{table}
+					
+			The ODE for the PVS \ca concentration is
+				\begin{equation}
+				\frac{d c_p}{dt} = - \frac{J_{TRPV_k}}{VR_{pa}} + \frac{J_{VOCC_k}}{VR_{ps}} - Ca_{decay_k} ( c_p - Ca_{min_k} ).
+				\end{equation}
+			
+			Here $c_p$ always decays to the steady state value $Ca_{min_p}$ and $J_{VOCC_k}$ is a voltage operated calcium channel (VOCC) connecting the SMC to the PVS. When the membrane of the SMC hyperpolarises the channel closes. 
+					
+			The flux of \ca through the TRPV4 channel is:
+				\begin{equation}
+				J_{TRPV_k} = -\frac{1}{2} \frac{ G_{TRPV_k} m_k (v_k - E_{TRPV_k}) C_{correction} }{C_{astr_k} \gamma_k}
+				\end{equation}
+			
+			The factor $1/2$ is there because there are 2 positive charges for every \ca ion \citep{Witthoft2013a}. 
+			$E_{TRPV_k}$ is the Nernst potential of the TRPV4 channel:
+				\begin{equation}
+				E_{TRPV_k} = \frac{RT}{z_{Ca} F} \log \left(\frac{c_p}{c_k} \right).
+				\end{equation}
+			\\	
+					
+			The ODE for the open probability of TRPV4 channels is
+				\begin{equation}
+				\frac{d m_k}{dt} = \frac{m_{\infty_k} - m_k}{t_{TRPV_k}}.
+				\end{equation}
+						
+			The equilibrium state of the TRPV4 channel is:
+				\begin{equation}
+				m_{\infty_k} = \frac{1}{1+\exp \left( {-\frac{\eta - epshalf_k}{\kappa_k}} \right) } 
+								\frac{1}{1 + H_{Ca_k}} \left( H_{Ca_k} + \tanh \left( \frac{v_k - v_{1,TRPV}}{v_{2,TRPV}} \right) \right), 
+				\end{equation}
+			
+			where $H_{Ca_k}$ is an inhibitory term:
+				\begin{equation}
+				H_{Ca_k} = \frac{c_k}{\gamma_{Cai}} + \frac{c_p}{\gamma_{Cae}},
+				\end{equation}
+			
+			and $\eta$ is the local radial strain on the arteriole:
+				\begin{equation}
+				\eta = \frac{R - R_{passive}}{R_{passive}}.
+				\end{equation}
+			
+			The strain on the perivascular endfoot of the AC is approximately equal to local radial strain on the arteriole since the endfoot surrounds the arteriole.	
+			\\
+				
+			The flux of \ca through the TRPV4 channel is added to the AC \ca equation:
+				\begin{equation}
+				\frac{d c_k}{dt} = B_{cyt} \left( J_{IP3_k} - J_{pump} + J_{ER_{leak}} + \frac{\bm{{J_{TRPV_k}}}}{r_{buff}} \right). 
+				\end{equation}
+			
+			The membrane potential of the AC is modified to include the TRPV4 channel:
+				\begin{equation}
+				\centering
+				\scriptsize{
+				v_k = \frac{g_{Na_k} E_{Na_k} + g_{K_k} E_{K_k} + \bm{g_{TRPV_k} m_k E_{TRPV_k}} + 
+				                g_{Cl_k} E_{Cl_k} + g_{NBC_k} E_{NBC_k} + 		                g_{BK_k} w_k E_{BK_k} - 
+				                J_{NaK_k} F / C_{correction}}{ g_{Na_k} + g_{K_k} + g_{Cl_k} + g_{NBC_k} + \bm{ g_{TRPV_k} m_k } + g_{BK_k} w_k }.
+				           }
+				\end{equation}
+			
+			The conductance $g_{TRPV_k}$ is calculated using the area of the astrocytic endfeet (similar to the calculation of the conductance of the BK channel at the astrocytic endfeet):
+				\begin{equation}
+				g_{TRPV_k} = \frac{G_{TRPV_k} 10^{-12}}{A_{ef_k}},
+				\end{equation}
+			
+			where the conductance is multiplied by $10^{-12}$ to convert from $pS$ to $\Omega^{-1}$ (mho).
+			
+			The new parameters are found in Table \ref{tab:NVU12trpv4param}. 
+			
+			\begin{table}[h!]
+				\small
+				\centering
+					\begin{tabular}{c c c l}
+				\hline
+				Parameter & Value & Unit & Description \\
+				\hline
+				$Ca_{decay_k}$ & 0.5 & - & Rate of decay of \ca in PVS \\
+				$Ca_{min_k}$ & 2000 & $\mu$M & steady state value of \ca in PVS \\
+				$t_{TRPV_k}$ & 0.9 & mV & Decay rate of the open probability $m_k$ \\
+				$G_{TRPV_k}$ & 50 & pS & Conductance of TRPV4 channel \\
+				$C_{correction}$ & $10^3$ & - & Convert from V to mV \\
+				$C_{astr_k}$ & 40 & pF & AC cell capacitance \\
+				$\gamma_k$ & 834.3 & mV $\mu M^{-1}$ & scaling factor relating movement of ions to membrane potential \\
+				$epshalf_k$ & 0.1 & - & Strain required for half activation of the TRPV4 channel \\
+				$\kappa_k$ & 0.1 & - & Related to strain and TRPV4 channel \\
+				$v_{1,TRPV}$ & 0.12 & mV & Related to voltage gating of TRPV4 channel \\
+				$v_{2,TRPV}$ & 0.013 & mV & Related to voltage gating of TRPV4 channel \\
+				$\gamma_{Cai}$ & 0.01 & $\mu$M & Related to \ca concentration \\
+				$\gamma_{Cae}$ & 200 & $\mu$M & Related to \ca concentration \\
+				$r_{buff}$ & 0.05 & - & Rate of \ca buffering at the endfoot compared to the astrocyte body \\
+				\hline
+					\end{tabular}
+					\caption{Model parameters related to the TRPV4 channel.}
+					\label{tab:NVU12trpv4param}
+			\end{table}
+			
+			Note that the flux of \ca through the TRPV4 channel is buffered at a lower rate $r_{buff}$, as the channel is located at the astrocytic endfoot and buffering is described by \cite{Witthoft2013} in the astrocytic soma. Therefore it is reasonable to assuming buffering at the smaller endfoot of the astrocyte will be at a lower rate. 
+	
+	\subsubsection{Nitric Oxide}
+	
+		Nitric oxide (NO) is a neurotransmitter known to act as a potent cerebral vasodilator. It is not produced in advance or stored and due its small size it is able to diffuse widely and readily in all 3 dimensions and is not limited to local effects, setting it apart from other signalling molecules of the central nervous system. It can rapidly spread even through membranes as it is extremely diffusible in aqueous and lipid environments. However NO has a very short half life as it is an unstable gaseous free radical, limiting its activity temporally \citep{Dobutovic2011} . 
+					
+		NO is produced in a variety of different tissues. The biochemical reaction that synthesises NO is catalysed by the enzyme family of nitric oxide synthases (NOS): neuronal (nNOS), endothelial (eNOS), and inducible (iNOS), found in neurons, ECs and multiple cell types respectively \citep{Forstermann2006}. 
+		The literature suggests that the production source and quantity of NO determines its function; NO may either act neuroprotectively by controlling vascular smooth muscle tone and blood flow and hence preventing ischaemic cell injury, or neurotoxically leading to cerebral degeneration \citep{aurelia2010role}.
+				
+		The focus of the NO pathway is on NO production by nNOS and eNOS. Both enzymes' activation is mediated by intracellular $Ca^{2+}$ of the NE and EC respectively and eNOS is also activated by blood flow induced wall shear stress (WSS) in cerebral arterioles.
+		NO is able to diffuse rapidly into other compartments. When NO reaches the SMC it interacts with intracellular enzyme activation and regulates SMC relaxation. 
+		The dynamics of NO in the NE, AC, SMC and EC are described by using mass balance formulations. The NO concentration in compartment $j$ is:
+			\begin{equation}
+			\frac{d[NO]_j}{dt} = p_{NO,j} - c_{NO,j} + d_{NO,j}.
+			\end{equation}
+		$ p_{NO,j}$ is the production flux,  $c_{NO,j}$ is the consumption flux (i.e. reaction with oxygen or other molecules), and $d_{NO,j}$ is the diffusive flux. Diffusion is assumed to be linear with characteristic distance of $\Delta x = 3.75 \; \mu$m between the EC and SMC layers, and  $\Delta x = 50 \; \mu$m between the NE and SMC layers.
+		The production rate is dependent on the concentration of activated NOS. nNOS and eNOS are thought to be the most influential NO producers, hence we assume NO production in only the NE and EC compartments and no production in the other cell types.
+		
+		NO synthesis in the NE is catalysed by nNOS in response to glutamate induced calcium influx into the post synaptic neuron and depends on the available concentration of the biochemical substrate L-Arginine (L-Arg) and oxygen ($O_2$). The nNOS activation is triggered by glutamate in response to neuronal activation. 
+		NO production in the EC is catalysed by eNOS dependent on the availability of L-Arg and $O_2$ and is mediated by WSS. 
+	
+		NO, via its second messenger cGMP, influences the contraction of the SMC ($AMp$, $Mp$, $AM$, $M$) and the open probability of the SMC \pot channel $w_i$. NO activates soluble guanylyl cyclase (sGC) which catalyses the formation of cGMP. cGMP changes the rate constants $K_2$ and $K_5$ for the dephosphorylation of $Mp$ to $M$ and $AMp$ to $AM$ (these rate constant were previously set at $0.5 \; s^{-1}$ based on \citet{Koenigsberger2006}). $w_i$ is shifted to the left by cGMP via the equilibrium state $K_{act_i} (c_{w,i})$ with $c_{w,i}$ as a function of cGMP.
+		\\
+		
+		The initial NVU model version 1.1 is extended into version 1.2 by additional mathematical equations that represent production, diffusion and consumption of NO in different cell types, as well as the interaction of NO with other biochemical species and ion channel open probabilities. The model of NVU 1.2 also contains astrocytic $Ca^{2+}$ and a TRPV4 channel. 		
+		The additional NO pathway equations are found in the appendix of \cite{Dormanns2016} and corresponding additional state variables are detailed in Table \ref{tab:NVU12}. 		
+		\todo[inline]{add equations here}
 
+		\begin{table}[h!]
+			\small
+			\centering
+				\begin{tabular}{c c l}
+			\hline
+			Variable & Unit & Description \\
+			\hline
+			$NO_n$ & $\mu M$ & NE NO concentration \\
+			$NO_k$ & $\mu M$ & AC NO concentration \\
+			$NO_i$ & $\mu M$ & SMC NO concentration \\
+			$NO_j$ & $\mu M$ & EC NO concentration \\
+			$cGMP$ & $\mu M$ & SMC cGMP concentration \\
+			$eNOS$ & $\mu M$ & activated eNOS \\
+			$nNOS$ & $\mu M$ & activated nNOS \\
+			$c_n$ & $\mu M$ & NE cytosolic $Ca^{2+}$ concentration \\
+			$E_b$ & - & fraction of sGC in the basal state \\
+			$E_{6c}$ & - & fraction of sGC in the intermediate form \\
+			\hline
+				\end{tabular}
+				\caption{State variables related to the NO pathway}
+				\label{tab:NVU12}
+		\end{table}
+		
 
-\subsection{Corrections}
-A mistake was discovered in NVU1.0 for the equation used to describe the \gls{K} concentration in the synaptic cleft. The original equation subtracted the change in astrocytic \gls{K} concentration from the \gls{K} influx from the neuron. This was incorrect since not all channels lead from the astrocyte to the synaptic cleft. The BK-channel describes the flux from the astrocyte to the perivascular space, and therefore this flux was added to the equation. Fortunately, this mistake led to very small changes, and it did not significantly change the model outcomes. Figure \ref{fig:cordif} shows the old and the corrected results for the flux through the BK-channel, and it is clear that they practically overlap. 
-
-\begin{figure}[h!]
-	\centering
-	\tiny  
-	\setlength\figureheight{5 cm} 
-	\setlength\figurewidth{15 cm}
-	\includegraphics[width=15cm]{figures/diff_cor.pdf}
-	\caption{The flux through the BK-channel in \textmu M m/s for the old (blue) and corrected (red) simulation }
-	\label{fig:cordif}
-\end{figure}
+		Neuronal stimulation is simulated by an input of both glutamate and $K^+$ into the SC. The implementation of the NO pathway results in a larger steady state vessel radius, due to a constant supply of vasodilatory NO from the EC and NE. The radius profile also shows a larger and longer response to stimulation. 
+		The response of the radius to stimulation can be divided into two components: the fast component in response to the SC $K^+$ increase (modelled by NVU version 1.1) and the slow component only found with the addition of the NO pathway. 
+		
+		The slower component of the model with the NO signalling pathway is the increase of cGMP in the SMC. This leads to the shift of the open probability of the SMC $K^+$ channel $w_i$. The  efflux of $K^+$ from the PVS increases with the opening of the channel so that the PVS $K^+$ concentration drops at a faster rate. Instead of reaching steady state conditions after around 100 s, as the model would do if the NO pathway is not included (version 1.1), the SMC membrane potential $v_i$ drops further. Consequently the VOCC channel closes further and the SMC $Ca^{2+}$ concentration decreases. As an overall behaviour the vessel dilates further and returns back to the resting state more slowly. 
+		
+		Hence the SC $K^+$ release governs the fast onset of vasodilation whilst the NO-modulated mechanisms (increase of SMC cGMP leads to shift in $w_i$) and the WSS activated NO release from the EC is responsible for maintaining the dilation longer and thus providing more oxygen and glucose to adjacent brain tissue with increased cerebral blood flow. In the resting state the EC provides the major contribution towards vasorelaxation, whereas during neuronal stimulation NO produced by the NE dominates \citep{Dormanns2016}.	
+		
+		The radius $r$ in this term is set as constant 25 $\mu m$ in order to create a reasonable boundary condition at the lumen side of the NVU based on physiological results.
+		
