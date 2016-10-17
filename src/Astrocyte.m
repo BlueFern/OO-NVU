@@ -157,7 +157,7 @@ classdef Astrocyte < handle
                 du(idx.N_HCO3_k, :);
             
             % Differential Calcium Equations in Astrocyte
-            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k); % TRPV flux is buffered.
+            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + p.TRPV4switch * p.r_buff*J_TRPV_k); % TRPV flux is buffered.
             du(idx.s_k, :) = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak)) ./ (p.VR_ER_cyt); % rewritten in fluxes
             du(idx.h_k, :) = p.k_on * (p.K_inh - (Ca_k + p.K_inh) .* h_k);
             du(idx.I_k, :) = p.r_h * G - p.k_deg * I_k;
@@ -227,7 +227,7 @@ classdef Astrocyte < handle
         function rho = input_rho(self, t)
             % Input signal; the smooth pulse function rho
             p = self.params;
-            rho = (p.Amp - p.base) * ( ...
+            rho = p.rhoSwitch * (p.Amp - p.base) * ( ...
                 0.5 * tanh((t - p.t_0) / p.theta_L) - ...
                 0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
         end
@@ -306,6 +306,13 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+    
+    % Turn on or off glutamate receptor
+    parser.addParameter('rhoSwitch', 1); 
+    
+    % Turn on or off TRPV4 flux
+    parser.addParameter('TRPV4switch', 1); 
+    
     % Scaling Constants
     parser.addParameter('L_p', 2.1e-9); % m uM^-1 s^-1
     parser.addParameter('X_k', 12.41e-3); % uM m
@@ -367,6 +374,7 @@ function params = parse_inputs(varargin)
 %    parser.addParameter('trpv_switch', 0); % TRPV4 off
     parser.addParameter('Ca_decay_k', 0.5);
     parser.addParameter('G_TRPV_k', 50); %pS
+    parser.addParameter('r_buff', 0.05);
     
     
     % Perivascular space

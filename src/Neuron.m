@@ -20,17 +20,13 @@ classdef Neuron < handle
             p = self.params;
             idx = self.index;
             
-            % State variables
-            N_Na_n = u(idx.N_Na_n, :);
-            N_K_n = u(idx.N_K_n, :);
-            
             % NO pathway 
             Ca_n = u(idx.Ca_n, :);                  
             nNOS_act_n = u(idx.nNOS_act_n, :);
             NO_n = u(idx.NO_n, :);
             
             % Algebraic expressions
-            J_NaK_n = p.k_C * self.input_f(t);
+            J_NaK_n = p.k_C * self.input_K(t);
             
             % NO pathway
             w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
@@ -43,12 +39,10 @@ classdef Neuron < handle
             m_c = (Ca_n ./ phi_N) .* dphi_N; %[-]
             CaM = Ca_n ./ m_c; %[uM]
             tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);
-            p_NO_n = nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n); %[uM/s]
+            p_NO_n = p.NOswitch * ( nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) ); %[uM/s]
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
             
-            du(idx.N_Na_n, :) = J_NaK_n; 
-            du(idx.N_K_n, :) = -du(idx.N_Na_n, :);
             du(idx.Ca_n, :) = (I_Ca_tot / (2 * p.F * p.V_spine) - (p.k_ex * (Ca_n - p.Ca_rest))) / (1 + p.lambda_buf); %[uM/s]
             du(idx.nNOS_act_n, :) = p.V_maxNOS * CaM ./ (p.K_actNOS + CaM) - p.mu2_n * nNOS_act_n; %[uM/s]
             du(idx.NO_n, :) = p_NO_n - c_NO_n + d_NO_n; %[uM/s]
@@ -57,7 +51,7 @@ classdef Neuron < handle
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
             	Uout = zeros(self.n_out, size(u, 2));
-            	Uout(self.idx_out.ft, :) = self.input_f(t);
+            	Uout(self.idx_out.ft, :) = self.input_K(t);
             	Uout(self.idx_out.J_Na_n, :) = J_NaK_n;
                 Uout(self.idx_out.Glu, :) = self.input_Glu(t);
             	Uout(self.idx_out.w_NR2A, :) = w_NR2A;
@@ -76,30 +70,35 @@ classdef Neuron < handle
             	varargout = {Uout};
             end
         end
-        function f = input_f(self, t)      
-        	p = self.params;                
-            f = zeros(size(t));
-            ii = p.t_0 <= t & t < p.t_1;
-            f(ii) = ...
-            	p.F_input * p.gab / ...
-                (p.ga * p.gb) * ...
-                (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
-                ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
-            f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
-        end
         
-        function [J_Na_n, NO_n] = shared(self, t, u)    %shared variable
+       function [J_Na_n, NO_n] = shared(self, t, u)    %shared variable
             t = t(:).';
             p = self.params;
             idx = self.index;
-            J_Na_n = p.k_C * self.input_f(t);
+            J_Na_n = p.k_C * self.input_K(t);
             NO_n = u(idx.NO_n, :);
             
+       end
+        
+        % Input of K+ into SC
+        function f = input_K(self, t)      
+            p = self.params;                
+            f = zeros(size(t));
+            if p.KSwitch == 1
+                ii = p.t_0 <= t & t < p.t_1;
+                f(ii) = ...
+                    p.F_input * p.gab / ...
+                    (p.ga * p.gb) * ...
+                    (1 - (t(ii) - p.t_0) / p.delta_t).^(p.beta - 1) .* ...
+                    ((t(ii) - p.t_0) / p.delta_t).^(p.alpha - 1);
+                f(p.t_2 <= t & t <= p.t_3) = -p.F_input;
+            end
         end
         
+        % This is basically a scaled version of input_rho(t) in Astrocyte
         function Glu = input_Glu(self, t) 
             p = self.params;
-            Glu = (p.Glu_max - p.Glu_min) * ( ...
+            Glu = p.GluSwitch * (p.Glu_max - p.Glu_min) * ( ...
             0.5 * tanh((t - p.t_0_Glu) / p.theta_L_Glu) - ...
             0.5 * tanh((t - p.t_2_Glu) / p.theta_R_Glu)) + p.Glu_min;
         end
@@ -111,11 +110,9 @@ classdef Neuron < handle
 end    
         
 function idx = indices()    %for state variables
-    idx.N_Na_n = 1;
-    idx.N_K_n = 2;
-    idx.Ca_n = 3;                  
-    idx.nNOS_act_n = 4;
-    idx.NO_n = 5;
+    idx.Ca_n = 1;                  
+    idx.nNOS_act_n = 2;
+    idx.NO_n = 3;
             
 end        
 
@@ -142,13 +139,17 @@ end
 function params = parse_inputs(varargin)
     parser = inputParser();
     
+    parser.addParameter('GluSwitch', 1); 
+    parser.addParameter('KSwitch', 1); 
+    parser.addParameter('NOswitch', 1); 
+    
     % global constants
     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
     parser.addParameter('R_gas', 8.315); %J mol^-1 K^-1; Gas constant
     parser.addParameter('T', 300); % K; Temperature
     
     % input 
-    parser.addParameter('startpulse', 200);     %Used for f(t)
+    parser.addParameter('startpulse', 200);    
     parser.addParameter('lengthpulse', 200);
     parser.addParameter('lengtht1', 10);
     parser.addParameter('F_input', 2.5);        %s  
@@ -216,17 +217,9 @@ end
 
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
-
-    %ICs for neuron, set so that initial Na is 0 and K goes to 0.
-    u0(idx.N_Na_n) = 0;
-    u0(idx.N_K_n) = 1.8372353094e-3;
     
     u0(idx.Ca_n) = 0.0001;
     u0(idx.nNOS_act_n) = 0.3;
     u0(idx.NO_n) = 0.1;
 end
-
-
-
-
 
