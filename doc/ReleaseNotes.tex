@@ -1,5 +1,7 @@
 \section{Release notes}
 
+\todo[inline]{fix references}
+
 \subsection{Changes to the previous version}
 
 	\subsubsection{Astrocytic Calcium}
@@ -33,9 +35,58 @@
 			
 	The ODE for astrocytic \ca is:
 	\begin{equation}
-	mklfmf
+	\frac{d c_k}{dt} = B_{cyt} \left( J_{IP3_k} - J_{pump_k} + J_{ERleak_k} + J_{TRPV_k} \right). 
 	\end{equation}
 	
+	where the
+	
+	
+	The ODE for \ca in the astrocytic endoplasmic reticulum (internal stores) is:
+	\begin{equation}
+	\frac{d s_k}{dt} = - B_{cyt} \frac{ \left( J_{IP3_k} - J_{pump_k} + J_{ERleak_k} \right)}{VR_{ERcyt}}. 
+	\end{equation}
+	The inactivation variable denoting the action of $IP_3R$ that have not been activated by \ca is:
+	\begin{equation}
+	\frac{d h_k}{dt} = k_{on} \left( K_{inh} - (c_k + K_{inh}) h_k \right).
+	\end{equation}
+	The astrocytic \ip concentration is:
+	\begin{equation}
+	\frac{d i_k}{dt} = r_h G - k_{deg} i_k.
+	\end{equation}
+	The \ca dependent EET production is:
+	\begin{equation}
+	\frac{d eet_k}{dt} = V_{eet} \max(c_k - c_{k_{min}}, 0) - k_{eet} eet_k.
+	\end{equation}
+	
+	The additional algebraic variables and fluxes are as follows.
+	The flux of \ca through the \ip mediated channel on the ER is: 
+	\begin{equation}
+	J_{IP3_k} = J_{max} \left[  \left(\frac{i_k}{i_k + K_i}\right) \left(\frac{c_k}{c_k + K_{act}}\right) h_k \right]^3
+				\left( 1 - \frac{c_k}{s_k}  \right)  
+	\end{equation}
+	The flux of \ca through the 
+	
+	\todo[inline]{continue here}
+	
+	
+	The relevant parameters are found in Table \ref{tab:NVU12accaparam}. 
+				
+				\begin{table}[h!]
+					\small
+					\centering
+						\begin{tabular}{c c c l}
+					\hline
+					Parameter & Value & Unit & Description \\
+					\hline
+					$Ca_{decay_k}$ & 0.5 & - & Rate of decay of \ca in PVS \\
+
+					\hline
+						\end{tabular}
+						\caption{Model parameters related to the astrocytic \ca pathway.}
+						\label{tab:NVU12accaparam}
+				\end{table}
+	
+
 	\subsubsection{TRPV4 channel}
 	
 	Included is a transient receptor potential cation (TRPV4) channel on the astrocytic endfeet adjacent to the PVS.
@@ -45,116 +96,110 @@
 	The two additional state variables to the model are
 	$m_k$: the open probability of the TRPV4 channel, and $c_p$: PVS $Ca^{2+}$ concentration (see Table \ref{tab:NVU12trpv4}).
 			
-					\begin{table}[h!]
-						\small
-						\centering
-							\begin{tabular}{c c l}
-						\hline
-						Variable & Unit & Description \\
-						\hline
-						$c_p$ &  $\mu M$ & PVS $Ca^{2+}$  concentration (not in \cite{Farr2011}) \\
-						$m_k$ & - & open probability of TRPV4 channel (not in \cite{Farr2011}) \\
-						\hline
-							\end{tabular}
-							\caption{State variables related to the TRPV4 channel.}
-							\label{tab:NVU12trpv4}
-					\end{table}
-					
-			The ODE for the PVS \ca concentration is
-				\begin{equation}
-				\frac{d c_p}{dt} = - \frac{J_{TRPV_k}}{VR_{pa}} + \frac{J_{VOCC_k}}{VR_{ps}} - Ca_{decay_k} ( c_p - Ca_{min_k} ).
-				\end{equation}
-			
-			Here $c_p$ always decays to the steady state value $Ca_{min_p}$ and $J_{VOCC_k}$ is a voltage operated calcium channel (VOCC) connecting the SMC to the PVS. When the membrane of the SMC hyperpolarises the channel closes. 
-					
-			The flux of \ca through the TRPV4 channel is:
-				\begin{equation}
-				J_{TRPV_k} = -\frac{1}{2} \frac{ G_{TRPV_k} m_k (v_k - E_{TRPV_k}) C_{correction} }{C_{astr_k} \gamma_k}
-				\end{equation}
-			
-			The factor $1/2$ is there because there are 2 positive charges for every \ca ion \citep{Witthoft2013a}. 
-			$E_{TRPV_k}$ is the Nernst potential of the TRPV4 channel:
-				\begin{equation}
-				E_{TRPV_k} = \frac{RT}{z_{Ca} F} \log \left(\frac{c_p}{c_k} \right).
-				\end{equation}
-			\\	
-					
-			The ODE for the open probability of TRPV4 channels is
-				\begin{equation}
-				\frac{d m_k}{dt} = \frac{m_{\infty_k} - m_k}{t_{TRPV_k}}.
-				\end{equation}
-						
-			The equilibrium state of the TRPV4 channel is:
-				\begin{equation}
-				m_{\infty_k} = \frac{1}{1+\exp \left( {-\frac{\eta - epshalf_k}{\kappa_k}} \right) } 
-								\frac{1}{1 + H_{Ca_k}} \left( H_{Ca_k} + \tanh \left( \frac{v_k - v_{1,TRPV}}{v_{2,TRPV}} \right) \right), 
-				\end{equation}
-			
-			where $H_{Ca_k}$ is an inhibitory term:
-				\begin{equation}
-				H_{Ca_k} = \frac{c_k}{\gamma_{Cai}} + \frac{c_p}{\gamma_{Cae}},
-				\end{equation}
-			
-			and $\eta$ is the local radial strain on the arteriole:
-				\begin{equation}
-				\eta = \frac{R - R_{passive}}{R_{passive}}.
-				\end{equation}
-			
-			The strain on the perivascular endfoot of the AC is approximately equal to local radial strain on the arteriole since the endfoot surrounds the arteriole.	
-			\\
-				
-			The flux of \ca through the TRPV4 channel is added to the AC \ca equation:
-				\begin{equation}
-				\frac{d c_k}{dt} = B_{cyt} \left( J_{IP3_k} - J_{pump} + J_{ER_{leak}} + \frac{\bm{{J_{TRPV_k}}}}{r_{buff}} \right). 
-				\end{equation}
-			
-			The membrane potential of the AC is modified to include the TRPV4 channel:
-				\begin{equation}
-				\centering
-				\scriptsize{
-				v_k = \frac{g_{Na_k} E_{Na_k} + g_{K_k} E_{K_k} + \bm{g_{TRPV_k} m_k E_{TRPV_k}} + 
-				                g_{Cl_k} E_{Cl_k} + g_{NBC_k} E_{NBC_k} + 		                g_{BK_k} w_k E_{BK_k} - 
-				                J_{NaK_k} F / C_{correction}}{ g_{Na_k} + g_{K_k} + g_{Cl_k} + g_{NBC_k} + \bm{ g_{TRPV_k} m_k } + g_{BK_k} w_k }.
-				           }
-				\end{equation}
-			
-			The conductance $g_{TRPV_k}$ is calculated using the area of the astrocytic endfeet (similar to the calculation of the conductance of the BK channel at the astrocytic endfeet):
-				\begin{equation}
-				g_{TRPV_k} = \frac{G_{TRPV_k} 10^{-12}}{A_{ef_k}},
-				\end{equation}
-			
-			where the conductance is multiplied by $10^{-12}$ to convert from $pS$ to $\Omega^{-1}$ (mho).
-			
-			The new parameters are found in Table \ref{tab:NVU12trpv4param}. 
-			
 			\begin{table}[h!]
 				\small
 				\centering
-					\begin{tabular}{c c c l}
+					\begin{tabular}{c c l}
 				\hline
-				Parameter & Value & Unit & Description \\
+				Variable & Unit & Description \\
 				\hline
-				$Ca_{decay_k}$ & 0.5 & - & Rate of decay of \ca in PVS \\
-				$Ca_{min_k}$ & 2000 & $\mu$M & steady state value of \ca in PVS \\
-				$t_{TRPV_k}$ & 0.9 & mV & Decay rate of the open probability $m_k$ \\
-				$G_{TRPV_k}$ & 50 & pS & Conductance of TRPV4 channel \\
-				$C_{correction}$ & $10^3$ & - & Convert from V to mV \\
-				$C_{astr_k}$ & 40 & pF & AC cell capacitance \\
-				$\gamma_k$ & 834.3 & mV $\mu M^{-1}$ & scaling factor relating movement of ions to membrane potential \\
-				$epshalf_k$ & 0.1 & - & Strain required for half activation of the TRPV4 channel \\
-				$\kappa_k$ & 0.1 & - & Related to strain and TRPV4 channel \\
-				$v_{1,TRPV}$ & 0.12 & mV & Related to voltage gating of TRPV4 channel \\
-				$v_{2,TRPV}$ & 0.013 & mV & Related to voltage gating of TRPV4 channel \\
-				$\gamma_{Cai}$ & 0.01 & $\mu$M & Related to \ca concentration \\
-				$\gamma_{Cae}$ & 200 & $\mu$M & Related to \ca concentration \\
-				$r_{buff}$ & 0.05 & - & Rate of \ca buffering at the endfoot compared to the astrocyte body \\
+				$c_p$ &  $\mu M$ & PVS $Ca^{2+}$  concentration \\
+				$m_k$ & - & open probability of TRPV4 channel \\
 				\hline
 					\end{tabular}
-					\caption{Model parameters related to the TRPV4 channel.}
-					\label{tab:NVU12trpv4param}
+					\caption{State variables related to the TRPV4 channel.}
+					\label{tab:NVU12trpv4}
 			\end{table}
 			
-			Note that the flux of \ca through the TRPV4 channel is buffered at a lower rate $r_{buff}$, as the channel is located at the astrocytic endfoot and buffering is described by \cite{Witthoft2013} in the astrocytic soma. Therefore it is reasonable to assuming buffering at the smaller endfoot of the astrocyte will be at a lower rate. 
+	The ODE for the PVS \ca concentration is
+		\begin{equation}
+		\frac{d c_p}{dt} = - \frac{J_{TRPV_k}}{VR_{pa}} + \frac{J_{VOCC_k}}{VR_{ps}} - Ca_{decay_k} ( c_p - Ca_{min_k} ).
+		\end{equation}
+	Here $c_p$ always decays to the steady state value $Ca_{min_p}$ and $J_{VOCC_k}$ is a voltage operated calcium channel (VOCC) connecting the SMC to the PVS. When the membrane of the SMC hyperpolarises the channel closes. 
+	
+	The ODE for the open probability of TRPV4 channels is:
+		\begin{equation}
+		\frac{d m_k}{dt} = \frac{m_{\infty_k} - m_k}{t_{TRPV_k}}.
+		\end{equation}
+	
+	The additional algebraic variables and fluxes are as follows.	
+	The flux of \ca through the TRPV4 channel is:
+		\begin{equation}
+		J_{TRPV_k} = -\frac{1}{2} \frac{ G_{TRPV_k} m_k (v_k - E_{TRPV_k}) C_{correction} }{C_{astr_k} \gamma_k r_{buff}}
+		\end{equation}
+	
+	The factor $1/2$ is there because there are 2 positive charges for every \ca ion \citep{Witthoft2013a}. 
+	$E_{TRPV_k}$ is the Nernst potential of the TRPV4 channel:
+		\begin{equation}
+		E_{TRPV_k} = \frac{RT}{z_{Ca} F} \log \left(\frac{c_p}{c_k} \right).
+		\end{equation}
+				
+	The equilibrium state of the TRPV4 channel is:
+		\begin{equation}
+		m_{\infty_k} = \frac{1}{1+\exp \left( {-\frac{\eta - epshalf_k}{\kappa_k}} \right) } 
+						\frac{1}{1 + H_{Ca_k}} \left( H_{Ca_k} + \tanh \left( \frac{v_k - v_{1,TRPV}}{v_{2,TRPV}} \right) \right), 
+		\end{equation}
+	
+	where $H_{Ca_k}$ is an inhibitory term:
+		\begin{equation}
+		H_{Ca_k} = \frac{c_k}{\gamma_{Cai}} + \frac{c_p}{\gamma_{Cae}},
+		\end{equation}
+	
+	and $\eta$ is the local radial strain on the arteriole:
+		\begin{equation}
+		\eta = \frac{R - R_{passive}}{R_{passive}}.
+		\end{equation}
+	
+	The strain on the perivascular endfoot of the AC is approximately equal to local radial strain on the arteriole since the endfoot surrounds the arteriole.	
+	\\
+	
+	The membrane potential of the AC is modified to include the TRPV4 channel:
+		\begin{equation}
+		\centering
+		\scriptsize{
+		v_k = \frac{g_{Na_k} E_{Na_k} + g_{K_k} E_{K_k} + \bm{g_{TRPV_k} m_k E_{TRPV_k}} + 
+	        g_{Cl_k} E_{Cl_k} + g_{NBC_k} E_{NBC_k} + 		                g_{BK_k} w_k E_{BK_k} - 
+	        J_{NaK_k} F / C_{correction}}{ g_{Na_k} + g_{K_k} + g_{Cl_k} + g_{NBC_k} + \bm{ g_{TRPV_k} m_k } + g_{BK_k} w_k }.
+	   }
+		\end{equation}
+	
+	The conductance $g_{TRPV_k}$ is calculated using the area of the astrocytic endfeet (similar to the calculation of the conductance of the BK channel at the astrocytic endfeet):
+		\begin{equation}
+		g_{TRPV_k} = \frac{G_{TRPV_k} 10^{-12}}{A_{ef_k}},
+		\end{equation}
+	
+	where the conductance is multiplied by $10^{-12}$ to convert from $pS$ to $\Omega^{-1}$ (mho).
+	
+	The new parameters are found in Table \ref{tab:NVU12trpv4param}. 
+	
+	\begin{table}[h!]
+		\small
+		\centering
+			\begin{tabular}{c c c l}
+		\hline
+		Parameter & Value & Unit & Description \\
+		\hline
+		$Ca_{decay_k}$ & 0.5 & - & Rate of decay of \ca in PVS \\
+		$Ca_{min_k}$ & 2000 & $\mu$M & steady state value of \ca in PVS \\
+		$t_{TRPV_k}$ & 0.9 & mV & Decay rate of the open probability $m_k$ \\
+		$G_{TRPV_k}$ & 50 & pS & Conductance of TRPV4 channel \\
+		$C_{correction}$ & $10^3$ & - & Convert from V to mV \\
+		$C_{astr_k}$ & 40 & pF & AC cell capacitance \\
+		$\gamma_k$ & 834.3 & mV $\mu M^{-1}$ & scaling factor relating movement of ions to membrane potential \\
+		$epshalf_k$ & 0.1 & - & Strain required for half activation of the TRPV4 channel \\
+		$\kappa_k$ & 0.1 & - & Related to strain and TRPV4 channel \\
+		$v_{1,TRPV}$ & 0.12 & mV & Related to voltage gating of TRPV4 channel \\
+		$v_{2,TRPV}$ & 0.013 & mV & Related to voltage gating of TRPV4 channel \\
+		$\gamma_{Cai}$ & 0.01 & $\mu$M & Related to \ca concentration \\
+		$\gamma_{Cae}$ & 200 & $\mu$M & Related to \ca concentration \\
+		$r_{buff}$ & 0.05 & - & Rate of \ca buffering at the endfoot compared to the astrocyte body \\
+		\hline
+			\end{tabular}
+			\caption{Model parameters related to the TRPV4 channel.}
+			\label{tab:NVU12trpv4param}
+	\end{table}
+	
+	Note that the flux of \ca through the TRPV4 channel is buffered at a lower rate $r_{buff}$, as the channel is located at the astrocytic endfoot and buffering is described by \cite{Witthoft2013} in the astrocytic soma. Therefore it is reasonable to assuming buffering at the smaller endfoot of the astrocyte will be at a lower rate. 
 	
 	\subsubsection{Nitric Oxide}
 	
