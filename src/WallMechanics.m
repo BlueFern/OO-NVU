@@ -56,9 +56,7 @@ classdef WallMechanics < handle
             
             if nargout == 2
                Uout = zeros(self.n_out, size(u, 2));
-               Uout(self.idx_out.M, :) = M;
                Uout(self.idx_out.F_r, :) = F_r;
-               Uout(self.idx_out.R, :) = R;
                Uout(self.idx_out.K_2, :) = K_2;
                varargout{1} = Uout;
             end

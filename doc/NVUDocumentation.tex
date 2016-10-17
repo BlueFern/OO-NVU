@@ -1,7 +1,8 @@
 % preamble:
 \documentclass[12pt]{article}
+\linespread{1.2}
 
-\usepackage{amsmath,xcolor,todonotes,graphicx,marvosym,import,fullpage,textcomp,colortbl,array,pgfplots,lscape,soul,listings}
+\usepackage{amsmath,xcolor,todonotes,graphicx,marvosym,import,fullpage,textcomp,colortbl,array,pgfplots,lscape,soul,listings,xspace,bm}
 
 \definecolor{grey}{gray}{0.5}
 \definecolor{lightgrey}{gray}{0.8}
@@ -18,11 +19,20 @@
 \newcommand\e[1]{$\times$10$^{#1}$}
 \newcommand{\n}{$^{-1}$}
 
+\newcommand{\ca}{Ca$^{\text{\scriptsize 2+}}$\xspace}
+\newcommand{\ip}{IP$_{\text{\scriptsize 3}}$\xspace}
+\newcommand{\jplc}{J$_{\text{\scriptsize PLC}}$\xspace}
+\newcommand{\na}{Na$^{\text{\scriptsize +}}$\xspace}
+\newcommand{\pot}{K$^{\text{\scriptsize +}}$\xspace}
+\newcommand{\cl}{Cl$^{\text{\scriptsize -}}$\xspace}
+\newcommand{\kca}{K$_{\text{\scriptsize Ca}}$\xspace}
+\newcommand{\ox}{O$_{\text{\scriptsize 2}}$\xspace}
+
 %title infos
 \date{\today}
 \title{{\Huge Neurovascular Unit Model}\\
 \vspace{2cm}
-Documentation for Code ``OO-NVU Version 1.??''\\
+Documentation for Code ``OO-NVU Version 1.2''\\
 {\large A merged NVC model of a neuron, astrocyte, smooth muscle cell, endothelial cell and the mechanical vessel response.
 \vspace{7cm}}}
 
@@ -36,6 +46,7 @@ Michelle Louise Goodman  \and
 Eva Waldhauser \and
 Moritz Burger \and
 Kon Zakkaroff  \and
+Allanah Kenny \and
 Tim David\footnote{Corresponding author, Tim.david@canterbury.ac.nz}}
 
 
@@ -67,13 +78,12 @@ Tim David\footnote{Corresponding author, Tim.david@canterbury.ac.nz}}
 \newlength\figureheight
 \newlength\figurewidth
 
+
 \include{ReleaseNotes}
 \include{CodeStructure}
 \include{Introduction} 
 \include{ExistingModels}
-\include{Results}
 \include{Equations}
-\include{ToDo}
 
 \bibliography{library} 
 \bibliographystyle{KathisBibstyle} 
@@ -81,6 +91,4 @@ Tim David\footnote{Corresponding author, Tim.david@canterbury.ac.nz}}
 \newpage
 \printglossary[style=altlist,title=Glossary] %Print the glossary
 
-
-%\include{MatlabCode}
 \end{document}

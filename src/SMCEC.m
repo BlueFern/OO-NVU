@@ -113,11 +113,12 @@ classdef SMCEC < handle
 
             V_max_pde = p.k_pde * cGMP_i;
 
-            p_NO_j = p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j);
+            p_NO_j = p.NOswitch * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
-            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ (25^2); 
-%            d_NO_j = (NO_i - NO_j) ./ tau_ij - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); % Radius is set at constant 25 to create reasonable BC at the lumen
-
+            
+            J_lumen = - NO_j * 4 * p.D_cNO ./ (25.^2); 
+            d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 
+            
             W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)) ; 
             F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss
 
@@ -296,6 +297,10 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+    
+    % Turn on or off NO production
+    parser.addParameter('NOswitch', 1); 
+    
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
     parser.addParameter('lambda_i', 45); % s^-1
@@ -333,9 +338,9 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('G_stretch', 6.1e-3); % uM mV^-1 s^-1   (Also EC parameter)
     parser.addParameter('alpha_stretch', 7.4e-3); % mmHg^-1     (Also EC parameter)
-    parser.addParameter('delta_p', 30); % mmHg                  (Also EC parameter)
     parser.addParameter('sigma_0', 500); % mmHg                 (Also EC parameter)
     parser.addParameter('E_SAC', -18); % mV                     (Also EC parameter)
+    parser.addParameter('P_T', 4000); % Pressure in Pa
 
     parser.addParameter('F_NaK_i', 4.32e-2); %uM s^-1
 
@@ -433,6 +438,8 @@ function params = parse_inputs(varargin)
     
     parser.parse(varargin{:})
     params = parser.Results;
+    
+    params.delta_p = params.P_T * 0.0075; % Convert from Pa to mmHg for use in stretch channels
 end
 
 function u0 = initial_conditions(idx)
