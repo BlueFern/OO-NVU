@@ -1,6 +1,5 @@
 \section{Equations}\label{sec:equations}
 \todo[inline]{Some units need to be corrected in this documentation!}
-\todo[inline]{add equations for NO in each section, add astrocyte calcium and trpv4 equations to that section, add glutamate signal}
 
 \subsection{The Neuron and Astrocyte Model}
 
@@ -31,21 +30,33 @@ End of back buffering (s):
 	t_{3} = t_{1} + \Delta t_1
 \end{equation}
 
+The ratio of bound to total glutamate receptors on the synapse end of the astrocyte as an input simulating increased SC glutamate (dim.less):
+\begin{equation}
+\rho(t) = (A - B) \left( 0.5 \tanh (t - t_0) - 0.5 \tanh (t - t_2) \right) + B.
+\end{equation}
+Glutamate concentration in the SC as an input ($\mu$M):
+\begin{equation}
+Glu_{sc}(t) = Glu_{max} \left( 0.5 \tanh(t-t_0) - 0.5 \tanh (t - t_2) \right)
+\end{equation}
 
 \begin{table}[h!]
 \centering
 \begin{tabular}{ p{0.09\linewidth}  >{\footnotesize} p{0.5\linewidth}  >{\footnotesize} p{0.27\linewidth} >{\footnotesize} p{0.03\linewidth} }
 \hline
-$F_{\text{input}}$ 		& amplitude scaling factor 		& 2.5 		& ME\footnotemark[1]  \\ % on the basis of Filosa2008
+$F_{\text{input}}$ 		& amplitude scaling factor 		& 2.5 		& ME \\ % on the basis of Filosa2008
 $\alpha_n$ 				& beta distribution constant	& 2 		& ME  \\ % on the basis of Ostby2009
 $\beta_n$ 				& beta distribution constant	& 5 		& ME  \\ % on the basis of Ostby2009
 $t_{0}$ 				& start of neuronal activation	& 400 s 	& ME  \\
 $\Delta t_1$ 			& length of neuronal activation & 200 s 	& ME  \\
 $\Delta t_2$ 			& time-scaling factor			& 10 s		& \citep{Ostby2009}   \\
+A						& amplitude of $\rho$ 			& 0.7		& ME \\
+B						& base of $\rho$				& 0.1 		& ME \\
+$Glu_{max}$				& Maximum glutamate concentration & 1846 $\mu$M & \citep{Santucci2008} \\
 \hline
 \end{tabular}
 \end{table}
-\footnote[1]{Model Estimation}
+
+\todo[inline]{The remaining equations have not been updated to NVU 1.2 yet!!}
 
 \subsubsection*{Scaling}
 \gls{AC} volume-area ratio (in m):
@@ -256,7 +267,7 @@ Nernst potential for the BK channel (in mV):
 E_{\text{BK},k} = \frac{R_{\text{gas}} T}{z_K F}\ln\left( \frac{[\K]_p}{[\K]_k}\right) 
 \end{equation}
 %
-Equilibrium state BK-channel (-):
+Equilibrium state BK-channel (-): \todo{update}
 \begin{equation} \label{eq:winf}
 w_{\infty} = 0.5 \left(1+\tanh\left(\frac{v_{k}+v_{6} }{v_{4}} \right)  \right) 
 \end{equation}

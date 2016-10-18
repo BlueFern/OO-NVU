@@ -1,12 +1,14 @@
 \section{Release notes}
 
-\todo[inline]{fix references}
+NVU 1.2 is based on NVU 1.1 with the addition of astrocytic \ca, a TRPV4 channel connecting the astrocyte and PVS, and the NO pathway.
 
 \subsection{Changes to the previous version}
 
 	\subsubsection{Astrocytic Calcium}
 	
 	\citet{Farr2011} implemented an NVU model based on a simple glutamate efflux into the SC simulating neuronal activity. This model included AC $Ca^{2+}$ variations induced by glutamate production into the SC and the subsequent efflux of $K^+$ into the PVS from a $Ca^{2+}$ mediated BK channel. In NVU 1.1 this BK channel was not \ca mediated and instead approximated by assuming a constant astrocytic \ca concentration.
+	
+	The release of glutamate from the neuron in the synaptic cleft is simulated by creating a smooth pulse function $\rho$ that describes the ratio of bound to total glutamate receptors on the synapse end of the astrocyte. This induces an $IP_3$ release into the cell, causing the release of calcium from the ER into the cytosol, which in turn leads to the production of EET. The $K^+$ release into the PVS is controlled by the BK channel. The opening of the BK channel is regulated by the membrane voltage, as well as the EET and $Ca^{2+}$ concentrations.
 			
 	Although the model provided a qualitative description of neurovascular coupling the rate of change of $K_p$ was slow and the dilation of the associated arteriole took too long to reach even small dilations. The $K_p$ at which $v_i$ was maximally hyperpolarised was too high. 
 	Therefore NVU version 1.1 did not contain any astrocytic $Ca^{2+}$ or glutamate input as the results were not satisfactory. 
@@ -36,11 +38,7 @@
 	The ODE for astrocytic \ca is:
 	\begin{equation}
 	\frac{d c_k}{dt} = B_{cyt} \left( J_{IP3_k} - J_{pump_k} + J_{ERleak_k} + J_{TRPV_k} \right). 
-	\end{equation}
-	
-	where the
-	
-	
+	\end{equation}	
 	The ODE for \ca in the astrocytic endoplasmic reticulum (internal stores) is:
 	\begin{equation}
 	\frac{d s_k}{dt} = - B_{cyt} \frac{ \left( J_{IP3_k} - J_{pump_k} + J_{ERleak_k} \right)}{VR_{ERcyt}}. 
@@ -57,29 +55,89 @@
 	\begin{equation}
 	\frac{d eet_k}{dt} = V_{eet} \max(c_k - c_{k_{min}}, 0) - k_{eet} eet_k.
 	\end{equation}
+	\\
 	
 	The additional algebraic variables and fluxes are as follows.
-	The flux of \ca through the \ip mediated channel on the ER is: 
+	The flux of \ca through the \ip mediated channel on the ER into the AC cytosol is: 
 	\begin{equation}
 	J_{IP3_k} = J_{max} \left[  \left(\frac{i_k}{i_k + K_i}\right) \left(\frac{c_k}{c_k + K_{act}}\right) h_k \right]^3
 				\left( 1 - \frac{c_k}{s_k}  \right)  
 	\end{equation}
-	The flux of \ca through the 
+	The flux of \ca through the SERCA pump on the ER into the AC cytosol is:
+	\begin{equation}
+	J_{pump_k} = V_{max} \frac{c_k^2}{c_k^2 + k_{pump}^2}.
+	\end{equation}
+	The flux of \ca through the leak channel on the ER into the AC cytosol is:
+	\begin{equation}
+	J_{ERleak_k} = P_L \left(  1 - \frac{c_k}{s_k}  \right).
+	\end{equation}
+	The buffering term of \ca in the AC cytosol is:
+	\begin{equation}
+	B_{cyt} = 1 \left/ \left( 1 + BK_{end} + \frac{K_{ex} B_{ex}}{(K_{ex} + c_k)^2}  \right) \right. .
+	\end{equation}
+	The ratio of active G-protein to total G-protein is:
+	\begin{equation}
+	G = \frac{\rho + \delta}{K_G + \rho + \delta}.
+	\end{equation}
+	The ratio of bound to total glutamate receptors on the synapse end of the astrocyte as an input function of time is:
+	\begin{equation}
+	\rho(t) = (A - B) \left( 0.5 \tanh (t - t_0) - 0.5 \tanh (t - t_2) \right) + B.
+	\end{equation}
+	\\
 	
-	\todo[inline]{continue here}
+	The following variables are modified from NVU 1.1 to suit the addition of astrocytic \ca. 
+	The time constant associated with the opening of the BK channel is:
+	\begin{equation}
+	\phi_n = \psi_n \cosh \left( \frac{v_k - v_3}{2 v_4} \right).
+	\end{equation}
+	The equilibrium distribution of openings for the BK channel is:
+	\begin{equation}
+	w_{\infty} = 0.5 \left( 1 + \tanh \left( \frac{v_k + eet_{shift} eet_k - v_3}{v_4}  \right)  \right).
+	\end{equation}
+	The voltage associated with the opening of half the population of BK channels is:
+	\begin{equation}
+	v_3 = - \frac{v_5}{2} \tanh \left(  \frac{c_k - Ca_3}{Ca_4}  \right) + v_7.
+	\end{equation}
 	
-	
-	The relevant parameters are found in Table \ref{tab:NVU12accaparam}. 
+	The relevant parameters are found in Table \ref{tab:NVU12accaparam}. Further info on astrocytic \ca can be found in \cite{Farr2011}.
 				
-				\begin{table}[h!]
+				\begin{table}[p!]
 					\small
 					\centering
-						\begin{tabular}{c c c l}
+						\begin{tabular}{c c c p{110mm}}
 					\hline
 					Parameter & Value & Unit & Description \\
 					\hline
-					$Ca_{decay_k}$ & 0.5 & - & Rate of decay of \ca in PVS \\
-
+					$VR_{ERcyt}$ & 0.185 & - & Volume ratio between ER and AC cytosol \\
+					$k_{on}$ & 2 & $\mu$Ms$^{-1}$ & Rate of \ca binding to the inhibitory site on the $IP_3R$ \\
+					$K_{inh}$ & 0.1 & $\mu$M & Disassociation constant of $IP_3R$ \\
+					$r_h$ & 4.8 & $\mu$M & Max rate of \ip production in AC due to glutamate attachment at metabotropic receptors \\
+					$k_{deg}$ & 1.25 & s$^{-1}$ & Rate constant for \ip degradation in AC \\
+					$V_{eet}$ & 72 & $\mu$M & Rate constant for EET production \\
+					$c_{k_{min}}$ & 0.1 & $\mu$M & Min \ca concentration required for EET production \\
+					$k_{eet}$ & 7.2 & $\mu$M & Rate constant for EET degradation \\
+					$J_{max}$ & 2880 & \mus & Max rate of \ca through the \ip mediated channel \\
+					$K_i$ & 0.03 & $\mu$M & Disassociation constant for \ip binding to an $IP_3R$ \\
+					$K_{act}$ & 0.17 & $\mu$M & Disassociation constant for \ca binding to an activation site on an $IP_3R$ \\
+					$V_{max}$ & 20 & \mus & Maximum pumping rate \\
+					$k_{pump}$ & 0.24 & $\mu$M & Pump disassociation constant \\
+					$P_L$ & 0.0804 & $mu$M & Determined from the steady state \ca balance \\
+					$BK_{end}$ & 40 & [-] & Related to AC buffering \\
+					$K_{ex}$ & 0.26 & $\mu$M & Related to AC buffering \\
+					$B_{ex}$ & 11.35 & $\mu$M & Related to AC buffering \\
+					$\delta$ & $1.235 \times 10^{-2}$ & [-] & Ratio of the activities of the unbound and bound receptors \\
+					$K_G$ & 8.82 & $\mu$M & G-protein disassociation constant \\
+					A & 0.7 & [-] & Amplitude of $\rho$ \\
+					B & 0.1 & [-] & Base of $\rho$ \\
+					$t_0$ & variable & s & Start time of neuronal stimulation \\
+					$t_2$ & variable & s & End time of neuronal stimulation \\
+					$\psi_n$ & 2.664 & s$^{-1}$ & Characteristic time \\
+					$v_4$ & $14.5 \times 10^{-3}$ & V & Measure of the spread of the distribution \\
+					$eet_{shift}$ & $2 \times 10^{-3}$ & [-] & Describes the EET dependent voltage shift \\
+					$v_5$ & $8 \times 10^{-3}$ & V & Determines the range of the shift of $w_{\infty}$ as \ca varies \\
+					$Ca_3$ & 0.4 & $\mu$M & Related to $v_3$ \\
+					$Ca_4$ & 0.35 & $\mu$M & Related to $v_3$ \\
+					$v_7$ & $-13.57 \times 10^{-3}$ & V & Related to $v_3$ \\
 					\hline
 						\end{tabular}
 						\caption{Model parameters related to the astrocytic \ca pathway.}
@@ -88,6 +146,9 @@
 	
 
 	\subsubsection{TRPV4 channel}
+	
+	*** Note there is an issue with the \ca concentration in the astrocytic ER ($s_k$) when the TRPV4 channel is included - the concentration continually rises instead of tending to a steady state. ***
+	\\
 	
 	Included is a transient receptor potential cation (TRPV4) channel on the astrocytic endfeet adjacent to the PVS.
 	These channels are an important factor in astrocytic sensory and vasoregulatory functions as \cite{Dunn2013} have shown that certain TRPV4 channels can induce CICR in the endfeet of astrocytes and increase the strength of neurovascular coupling.
@@ -205,8 +266,8 @@
 	
 		Nitric oxide (NO) is a neurotransmitter known to act as a potent cerebral vasodilator. It is not produced in advance or stored and due its small size it is able to diffuse widely and readily in all 3 dimensions and is not limited to local effects, setting it apart from other signalling molecules of the central nervous system. It can rapidly spread even through membranes as it is extremely diffusible in aqueous and lipid environments. However NO has a very short half life as it is an unstable gaseous free radical, limiting its activity temporally \citep{Dobutovic2011} . 
 					
-		NO is produced in a variety of different tissues. The biochemical reaction that synthesises NO is catalysed by the enzyme family of nitric oxide synthases (NOS): neuronal (nNOS), endothelial (eNOS), and inducible (iNOS), found in neurons, ECs and multiple cell types respectively \citep{Forstermann2006}. 
-		The literature suggests that the production source and quantity of NO determines its function; NO may either act neuroprotectively by controlling vascular smooth muscle tone and blood flow and hence preventing ischaemic cell injury, or neurotoxically leading to cerebral degeneration \citep{aurelia2010role}.
+		NO is produced in a variety of different tissues. The biochemical reaction that synthesises NO is catalysed by the enzyme family of nitric oxide synthases (NOS): neuronal (nNOS), endothelial (eNOS), and inducible (iNOS), found in neurons, ECs and multiple cell types respectively \citep{Foerstermann2006}. 
+		The literature suggests that the production source and quantity of NO determines its function; NO may either act neuroprotectively by controlling vascular smooth muscle tone and blood flow and hence preventing ischaemic cell injury, or neurotoxically leading to cerebral degeneration \citep{Zorrilla-Zubilete2010}.
 				
 		The focus of the NO pathway is on NO production by nNOS and eNOS. Both enzymes' activation is mediated by intracellular $Ca^{2+}$ of the NE and EC respectively and eNOS is also activated by blood flow induced wall shear stress (WSS) in cerebral arterioles.
 		NO is able to diffuse rapidly into other compartments. When NO reaches the SMC it interacts with intracellular enzyme activation and regulates SMC relaxation. 
@@ -225,7 +286,6 @@
 		
 		The initial NVU model version 1.1 is extended into version 1.2 by additional mathematical equations that represent production, diffusion and consumption of NO in different cell types, as well as the interaction of NO with other biochemical species and ion channel open probabilities. The model of NVU 1.2 also contains astrocytic $Ca^{2+}$ and a TRPV4 channel. 		
 		The additional NO pathway equations are found in the appendix of \cite{Dormanns2016} and corresponding additional state variables are detailed in Table \ref{tab:NVU12}. 		
-		\todo[inline]{add equations here}
 
 		\begin{table}[h!]
 			\small
@@ -258,5 +318,6 @@
 		
 		Hence the SC $K^+$ release governs the fast onset of vasodilation whilst the NO-modulated mechanisms (increase of SMC cGMP leads to shift in $w_i$) and the WSS activated NO release from the EC is responsible for maintaining the dilation longer and thus providing more oxygen and glucose to adjacent brain tissue with increased cerebral blood flow. In the resting state the EC provides the major contribution towards vasorelaxation, whereas during neuronal stimulation NO produced by the NE dominates \citep{Dormanns2016}.	
 		
-		The radius $r$ in this term is set as constant 25 $\mu m$ in order to create a reasonable boundary condition at the lumen side of the NVU based on physiological results.
+		The following variables are modified from NVU 1.1 to suit the addition of the NO pathway.
+		
 		
