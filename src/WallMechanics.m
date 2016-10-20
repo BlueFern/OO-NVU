@@ -49,7 +49,7 @@ classdef WallMechanics < handle
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
             R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
            % R_new = self.input_R(t);
-            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * pR * p.P_T ./ h - ...
+            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * pR .* self.input_Pressure(t)' ./ h - ...
                 E .* (R - R_0) ./ R_0);
 
             du = bsxfun(@times, self.enabled, du);
@@ -58,6 +58,8 @@ classdef WallMechanics < handle
                Uout = zeros(self.n_out, size(u, 2));
                Uout(self.idx_out.F_r, :) = F_r;
                Uout(self.idx_out.K_2, :) = K_2;
+               Uout(self.idx_out.P_T_t_wall, :) = self.input_Pressure(t);
+               Uout(self.idx_out.M, :) = M;
                varargout{1} = Uout;
             end
         end
@@ -79,6 +81,15 @@ classdef WallMechanics < handle
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
+        
+        function Pressurechange = input_Pressure(self, t)      
+            p = self.params;
+            Pressurechange = ones(size(t))*p.P_T*0.0075;
+            if p.PressureSwitch == 1
+                Pressurechange(p.Pressurechange_t_1 <= t & t <= p.Pressurechange_t_2) = p.Pressure_change*0.0075; 
+            end
+        end
+        
     end 
 end
 
@@ -96,6 +107,7 @@ function [idx, n] = output_indices()
     idx.F_r = 2;
     idx.R = 3;
     idx.K_2 = 4;
+    idx.P_T_t_wall=5;
     n = numel(fieldnames(idx));
 end
 
@@ -118,9 +130,14 @@ function params = parse_inputs(varargin)
     parser.addParameter('alpha', 0.6); % [-]
     parser.addParameter('k_mlcp_b', 0.0086); % [s^-1]
     parser.addParameter('k_mlcp_c', 0.0327); % [s^-1]
-
+    
+    parser.addParameter('PressureSwitch',1);
+    parser.addParameter('Pressure_change', 4000); % Pressure in Pa
+    
     parser.parse(varargin{:});
     params = parser.Results;
+    params.Pressurechange_t_1=100;
+    params.Pressurechange_t_2=300;
 
 end
 function u0 = initial_conditions(idx)

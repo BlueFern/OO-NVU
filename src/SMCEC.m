@@ -53,8 +53,9 @@ classdef SMCEC < handle
                 (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
             J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* ...
                 (v_i - p.v_NaCa_i);
+
             J_stretch_i = p.G_stretch ./ ...
-                (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
+                (1 + exp(-p.alpha_stretch*(self.input_Pressure(t)'.*R./h - p.sigma_0))) .* ...
                 (v_i - p.E_SAC);
             J_NaK_i = p.F_NaK_i;
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
@@ -70,8 +71,9 @@ classdef SMCEC < handle
             J_CICR_j = p.C_j * s_j.^2 ./ (p.s_c_j^2 + s_j.^2) .* ...
                 Ca_j.^4 ./ (p.c_c_j^4 + Ca_j.^4);
             J_extrusion_j = p.D_j * Ca_j;
+            
             J_stretch_j = p.G_stretch ./ ...
-                (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
+                (1 + exp(-p.alpha_stretch*(self.input_Pressure(t)'.*R./h - p.sigma_0))) .* ...
                 (v_j - p.E_SAC);
             
             J_ER_leak_j = p.L_j * s_j;
@@ -145,7 +147,7 @@ classdef SMCEC < handle
                 J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
-            du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;
+            du(idx.I_j, :) = self.input_PLC(t)' - J_degrad_j - J_IP3_coup_i;
             
             
             % NO pathway
@@ -201,6 +203,8 @@ classdef SMCEC < handle
                 Uout(self.idx_out.c_w_i, :) = c_w_i;
                 Uout(self.idx_out.tau_wss, :) = tau_wss;
                 Uout(self.idx_out.E_5c, :) = E_5c;
+                Uout(self.idx_out.J_PLC_t, :) = self.input_PLC(t);
+                Uout(self.idx_out.P_T_t, :) = self.input_Pressure(t);
 
                 varargout{1} = Uout; 
             end
@@ -224,9 +228,25 @@ classdef SMCEC < handle
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
+             % Input of K+ into SC
+        function PLCchange = input_PLC(self, t)      
+            p = self.params;                
+            PLCchange = ones(size(t))*p.J_PLC_steadystate;
+            if p.PLCSwitch == 1
+                PLCchange(p.PLC_t_1 <= t & t <= p.PLC_t_2) = p.J_PLC_vasomotion; 
+            end
+        end
         
+        function Pressurechange = input_Pressure(self, t)      
+            p = self.params;
+            Pressurechange = ones(size(t))*p.P_T*0.0075;
+            if p.PressureSwitch == 1
+                Pressurechange(p.Pressurechange_t_1 <= t & t <= p.Pressurechange_t_2) = p.Pressure_change*0.0075; 
+            end
+        end
         
     end
+
 end
 
 function idx = indices()
@@ -291,6 +311,9 @@ function [idx, n] = output_indices()
     idx.tau_wss = 35;
     idx.E_5c = 36;
     
+    idx.J_PLC_t=37;
+    idx.P_T_t=38;
+    
 
     n = numel(fieldnames(idx));
 end
@@ -300,6 +323,8 @@ function params = parse_inputs(varargin)
     
     % Turn on or off NO production
     parser.addParameter('NOswitch', 1); 
+    parser.addParameter('PLCSwitch', 1);
+    parser.addParameter('PressureSwitch',1);
     
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
@@ -307,7 +332,9 @@ function params = parse_inputs(varargin)
 
     % Endothelial Cell ODE Constants
     parser.addParameter('C_m_j', 25.8); %pF
-    parser.addParameter('J_PLC', 0.18); % uMs^-1
+    parser.addParameter('J_PLC_steadystate', 0.18); % uMs^-1
+    parser.addParameter('J_PLC_vasomotion', 0.4); % uMs^-1
+    
     parser.addParameter('J_0_j', 0.029); %constant Ca influx (EC)uMs^-1
 
     % Smooth Muscle Cell Flux Constants
@@ -341,7 +368,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('sigma_0', 500); % mmHg                 (Also EC parameter)
     parser.addParameter('E_SAC', -18); % mV                     (Also EC parameter)
     parser.addParameter('P_T', 4000); % Pressure in Pa
-
+    parser.addParameter('Pressure_change', 4000); % Pressure in Pa
+    
     parser.addParameter('F_NaK_i', 4.32e-2); %uM s^-1
 
     parser.addParameter('G_Cl_i', 1.34e-3); %uM mV^-1 s^-1
@@ -439,7 +467,15 @@ function params = parse_inputs(varargin)
     parser.parse(varargin{:})
     params = parser.Results;
     
-    params.delta_p = params.P_T * 0.0075; % Convert from Pa to mmHg for use in stretch channels
+    %params.delta_p = params.P_T * 0.0075; % Convert from Pa to mmHg for use in stretch channels
+    
+    %make J_PLC change over time
+    params.PLC_t_1=100;
+    params.PLC_t_2=300;
+    params.Pressurechange_t_1=100;
+    params.Pressurechange_t_2=300;
+    
+    
 end
 
 function u0 = initial_conditions(idx)
