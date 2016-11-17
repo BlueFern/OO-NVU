@@ -44,10 +44,18 @@ classdef SMCEC < handle
             
             %% SMC fluxes
             J_IP3_i = p.F_i * I_i.^2 ./ (p.K_r_i^2 + I_i.^2);
-            J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);
+            J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);%SERCA
             J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* ...
                 Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
             J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
+            %old, based on koenigsberger
+            if p.newextrusionswitch == 1
+                J_extrusion_i= p.I_PMCA .* Ca_i./(Ca_i+p.K_PMCA) * (1./(p.z_ca .* p.Faraday .* p.vol_ca)) *1e6 / 300; % new based on Kapela %Timvdboom
+            else
+                J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
+            end
+                
+            
             J_SR_leak_i = p.L_i * s_i;
             J_VOCC_i =p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ ...
                 (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
@@ -135,7 +143,7 @@ classdef SMCEC < handle
                 0.1*J_stretch_i + J_Ca_coup_i;
             
             du(idx.s_i, :) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
-            du(idx.v_i, :) = p.gamma_i * (...
+            du(idx.v_i, :) =p.gamma_i * (...
                 -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i ...
                 -J_stretch_i - J_KIR_i) + V_coup_i;
             du(idx.w_i, :) = p.lambda_i * (K_act_i - w_i);
@@ -229,20 +237,33 @@ classdef SMCEC < handle
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
              % Input of K+ into SC
-        function PLCchange = input_PLC(self, t)      
-            p = self.params;                
-            PLCchange = ones(size(t))*p.J_PLC_steadystate;
-            if p.PLCSwitch == 1
-                PLCchange(p.PLC_t_1 <= t & t <= p.PLC_t_2) = p.J_PLC_vasomotion; 
-            end
+%         function PLCchange = input_PLC(self, t)    %TimvdBoom    
+%             p = self.params;                
+%             PLCchange = ones(size(t))*p.J_PLC_steadystate;
+%             if p.PLCSwitch == 1
+%                 PLCchange(p.PLC_t_1 <= t & t <= p.PLC_t_2) = p.J_PLC_vasomotion*t;
+%                 PLCchange(p.PLC_t_2 <= t & t <= p.PLC_t_3) = p.J_PLC_vasomotion;
+%                 PLCchange(p.PLC_t_3 <= t & t <= p.PLC_t_4) = p.J_PLC_vasomotion;
+%                 PLCchange(p.PLC_t_4 <= t & t <= p.PLC_t_5) = p.J_PLC_vasomotion;
+%                 
+%             end
+%         end
+        
+        function PLCchange = input_PLC(self, t)   %TimvdBoom
+            % Input signal; the smooth pulse function rho
+            
+            p = self.params;
+            PLCchange = p.PLCSwitch * (p.J_PLC_vasomotion - p.J_PLC_steadystate) * ( ...
+                0.5 * tanh((t - p.PLC_t_1) / 2) - ...
+                0.5 * tanh((t - p.PLC_t_2) / 2)) + p.J_PLC_steadystate;
         end
         
-        function Pressurechange = input_Pressure(self, t)      
+        function Pressurechange = input_Pressure(self, t) %TimvdBoom
+            
             p = self.params;
-            Pressurechange = ones(size(t))*p.P_T*0.0075;
-            if p.PressureSwitch == 1
-                Pressurechange(p.Pressurechange_t_1 <= t & t <= p.Pressurechange_t_2) = p.Pressure_change*0.0075; 
-            end
+            Pressurechange = 0.0075*p.PressureSwitch * (p.Pressure_change - p.P_T) * ( ...
+                0.5 * tanh((t - p.Pressurechange_t_1) / 10) - ...
+                0.5 * tanh((t - p.Pressurechange_t_2) / 10)) + 0.0075*p.P_T;
         end
         
     end
@@ -325,6 +346,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('NOswitch', 1); 
     parser.addParameter('PLCSwitch', 1);
     parser.addParameter('PressureSwitch',1);
+    parser.addParameter('newextrusionswitch',1);
     
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
@@ -348,7 +370,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('s_c_i', 2.0); %uM
     parser.addParameter('c_c_i', 0.9); %uM
 
-    parser.addParameter('D_i', 0.24); %s^-1
+    parser.addParameter('D_i', 0.24); %s^-1 %original = 0.24
     parser.addParameter('v_d', -100); %mV
     parser.addParameter('R_d_i', 250); %mV
 
@@ -463,6 +485,12 @@ function params = parse_inputs(varargin)
     parser.addParameter('x_ki', 25); % [um]  (M.E.)
     parser.addParameter('x_ij', 3.75); % [um]  (Kavdia2002)
 
+    parser.addParameter('I_PMCA', 5.37); % [pA]  max current (Kapela2008)
+    parser.addParameter('K_PMCA', 170e-3); % [uM]  michaelis constant (Kapela2008 - O'Donnel and Owen1994)
+    parser.addParameter('Faraday', 96487); % [C/mol]  Faraday constant
+    parser.addParameter('z_ca', 2); % [-]  calcium valancy
+    parser.addParameter('vol_ca', 0.7); % [pL]  volume calcium
+    
     
     parser.parse(varargin{:})
     params = parser.Results;
@@ -471,9 +499,14 @@ function params = parse_inputs(varargin)
     
     %make J_PLC change over time
     params.PLC_t_1=100;
-    params.PLC_t_2=300;
+    params.PLC_t_2=400;
+    params.PLC_t_3=225;
+    params.PLC_t_4=300;
+    params.PLC_t_5=375;
+    
     params.Pressurechange_t_1=100;
     params.Pressurechange_t_2=300;
+    
     
     
 end

@@ -82,12 +82,12 @@ classdef WallMechanics < handle
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
         
-        function Pressurechange = input_Pressure(self, t)      
+        function Pressurechange = input_Pressure(self, t) %TimvdBoom
+            
             p = self.params;
-            Pressurechange = ones(size(t))*p.P_T*0.0075;
-            if p.PressureSwitch == 1
-                Pressurechange(p.Pressurechange_t_1 <= t & t <= p.Pressurechange_t_2) = p.Pressure_change*0.0075; 
-            end
+            Pressurechange = 0.0075*p.PressureSwitch * (p.Pressure_change - p.P_T) * ( ...
+                0.5 * tanh((t - p.Pressurechange_t_1) / 10) - ...
+                0.5 * tanh((t - p.Pressurechange_t_2) / 10)) + 0.0075*p.P_T;
         end
         
     end 
