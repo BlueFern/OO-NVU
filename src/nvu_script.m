@@ -18,28 +18,24 @@
 % tolerances.
 clear all
 clc
-odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
+odeopts = odeset('RelTol', 1e-06, 'AbsTol', 1e-06, 'MaxStep', 1, 'Vectorized', 1);
 
 % Handy parameters to modify
-START_PULSE  = 400;      % Time of neuronal stimulation
-LENGTH_PULSE = 40;       % Length of stimulation (used if CURRENT_TYPE = 2)
-GLU_SWITCH   = 1;        % Turn on glutamate input to SC
-NAT_SWITCH   = 1;        % Turn on NaT channel in dendrite
-BUFF_SWITCH  = 1;        % Turn on K+ buffering of ECS by AC
-NO_SWITCH    = 1;        % Turn on Nitric Oxide production 
-CURRENT_TYPE = 1;        % 1 for Gaussian, 2 for tanh function
-J_PLC        = 0.18;     % Jplc value in EC: 0.18 for steady state, 0.4 for oscillations
+START_PULSE  = 200;         % Start time of neuronal stimulation
+LENGTH_PULSE = 20;          % Length of stimulation
+CURRENT_STRENGTH = 0.012;   % Strength of current input
+J_PLC        = 0.18;        % Jplc value in EC: 0.18 for steady state, 0.4 for oscillations
+XLIM1 = 150; XLIM2 = 250;   % Plotting limits
 
-nv = NVU(Neuron('startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'GluSwitch', GLU_SWITCH, 'NaTswitch', NAT_SWITCH, 'buffSwitch', BUFF_SWITCH, 'NOswitch', NO_SWITCH, 'currentType',CURRENT_TYPE), ...
-    Astrocyte('startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'rhoSwitch', GLU_SWITCH), ...
+
+nv = NVU(Neuron('startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'Istrength', CURRENT_STRENGTH), ...
+    Astrocyte(), ...
     WallMechanics(), ...
-    SMCEC('J_PLC', J_PLC, 'NOswitch', NO_SWITCH), 'odeopts', odeopts);
+    SMCEC('J_PLC', J_PLC), 'odeopts', odeopts);
 
-nv.T = linspace(0, 500, 10000);    
+nv.T = [0 300];    
     
 nv.simulate()
-
-% legend('no NaT, no buffer','NaT, no buffer','no NaT, buffer','NaT,buffer')
 
 % Lists of quantities that can be retrieved from the NVU model after
 % simulation are given in the documentation pages of the individual model
@@ -53,42 +49,42 @@ nv.simulate()
 % xlabel('time (s)')
 % ylabel('[Ca^{2+}] (\muM)')
 
-figure(6);
+figure(70);
 subplot(4,2,1)
 hold all;
 plot(nv.T, nv.out('R')*1e6)
 xlabel('Time [s]'); ylabel('R [\mum]')
-xlim([380 500])
+xlim([XLIM1 XLIM2]);
 
 subplot(4,2,2)
 hold all;
 plot(nv.T, nv.out('K_s')/1e3)
 xlabel('Time [s]'); ylabel('K_s')
-xlim([380 500])
+xlim([XLIM1 XLIM2]);
 
 subplot(4,2,3)
 hold all;
 plot(nv.T, nv.out('v_sa'));
 xlabel('Time [s]'); ylabel('v_{sa}')
-xlim([380 500])
+xlim([XLIM1 XLIM2]);
 
 subplot(4,2,4)
 hold all;
 plot(nv.T, nv.out('K_e'))
 xlabel('Time [s]'); ylabel('K_e')
-xlim([380 500])
+xlim([XLIM1 XLIM2]);
 
 subplot(4,2,5)
 hold all;
 plot(nv.T, nv.out('K_p')/1e3)
 xlabel('Time [s]'); ylabel('K_p')
-xlim([380 500])
+xlim([XLIM1 XLIM2]);
 
-subplot(4,2,6)
-hold all;
-plot(nv.T, nv.out('O2'))
-xlabel('Time [s]'); ylabel('Oxygen')
-xlim([380 500])
+% subplot(4,2,6)
+% hold all;
+% plot(nv.T, nv.out('Cl_sa'))
+% xlabel('Time [s]'); ylabel('Cl soma/axon')
+% xlim([XLIM1 XLIM2]);
 
 % subplot(4,2,7)
 % hold all;
@@ -100,23 +96,21 @@ subplot(4,2,7)
 hold all;
 plot(nv.T, nv.out('current'))
 xlabel('Time [s]'); ylabel('current')
-xlim([380 500])
+xlim([XLIM1 XLIM2]);
+
+% % 
+% figure(7);
+% subplot(2,2,1)
+% hold all;
+% plot(nv.T, nv.out('J_KIR_i'))
+% xlabel('Time [s]'); ylabel('KIR flux')
 % 
-figure(7);
-subplot(2,2,1)
-hold all;
-plot(nv.T, nv.out('J_KIR_i'))
-xlabel('Time [s]'); ylabel('KIR flux')
-xlim([380 500])
-
-subplot(2,2,2)
-hold all;
-plot(nv.T, nv.out('J_BK_k'))
-xlabel('Time [s]'); ylabel('BK flux')
-xlim([380 500])
-
-subplot(2,2,3)
-hold all;
-plot(nv.T, nv.out('Ca_i'))
-xlabel('Time [s]'); ylabel('Ca_i')
-xlim([380 500])
+% subplot(2,2,2)
+% hold all;
+% plot(nv.T, nv.out('J_BK_k'))
+% xlabel('Time [s]'); ylabel('BK flux')
+% 
+% subplot(2,2,3)
+% hold all;
+% plot(nv.T, nv.out('Ca_i'))
+% xlabel('Time [s]'); ylabel('Ca_i')

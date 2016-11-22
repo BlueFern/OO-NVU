@@ -1,0 +1,152 @@
+This is BibTeX, Version 0.99d (TeX Live 2013/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: NVUDocumentation.aux
+A level-1 auxiliary file: ReleaseNotes.aux
+A level-1 auxiliary file: CodeStructure.aux
+A level-1 auxiliary file: Introduction.aux
+A level-1 auxiliary file: ExistingModels.aux
+A level-1 auxiliary file: Equations.aux
+The style file: KathisBibstyle.bst
+Database file #1: library.bib
+Repeated entry---line 1174 of file library.bib
+ : @article{Witthoft2012
+ :                      ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 1191 of file library.bib
+ : @article{Farr2011
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 2163 of file library.bib
+ : @article{Farr2011
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 4097 of file library.bib
+ : @article{LoesEvert
+ :                   ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 4287 of file library.bib
+ : @article{Farr2011
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 5546 of file library.bib
+ : @article{Koenigsberger2006
+ :                           ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 5738 of file library.bib
+ : @article{Foerstermann2006
+ :                          ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 6121 of file library.bib
+ : @article{Koenigsberger2005
+ :                           ,
+I'm skipping whatever remains of this entry
+"}" immediately follows an entry type---line 6125 of file library.bib
+ : institution = {Ecole Polytechnique F{\'{e}}d{\'{e}}rale de Lausanne, Laboratory of Cell Biophysics, Lausanne, Switzerland. michele.koenigsberger@epfl.ch
+ :                                                                                                                                                         },
+I'm skipping whatever remains of this entry
+Repeated entry---line 7404 of file library.bib
+ : @article{Hai1988
+ :                 ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 7561 of file library.bib
+ : @article{Hai1988
+ :                 ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 7995 of file library.bib
+ : @article{Witthoft2012
+ :                      ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 8365 of file library.bib
+ : @article{Koenigsberger2006
+ :                           ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 9020 of file library.bib
+ : @article{Koenigsberger2005
+ :                           ,
+I'm skipping whatever remains of this entry
+"}" immediately follows an entry type---line 9045 of file library.bib
+ : institution = {Ecole Polytechnique F{\'{e}}d{\'{e}}rale de Lausanne, Laboratory of Cell Biophysics, Lausanne, Switzerland. michele.koenigsberger@epfl.ch
+ :                                                                                                                                                         },
+I'm skipping whatever remains of this entry
+Repeated entry---line 9766 of file library.bib
+ : @article{Koenigsberger2006
+ :                           ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 9848 of file library.bib
+ : @article{Koenigsberger2005
+ :                           ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 10052 of file library.bib
+ : @article{Witthoft2012
+ :                      ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 10607 of file library.bib
+ : @article{Filosa2006
+ :                    ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 12546 of file library.bib
+ : @article{Koenigsberger2006
+ :                           ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 13012 of file library.bib
+ : @article{Farr2011
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 13029 of file library.bib
+ : @article{Farr2011
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 13177 of file library.bib
+ : @article{Farr2011
+ :                  ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 13482 of file library.bib
+ : @article{Ostby2009
+ :                   ,
+I'm skipping whatever remains of this entry
+Warning--I didn't find a database entry for "Hai1989"
+Warning--I didn't find a database entry for "Gore"
+Warning--empty journal in LoesEvert
+Warning--empty journal in Gore1985
+You've used 21 entries,
+            2714 wiz_defined-function locations,
+            750 strings with 10230 characters,
+and the built_in function-call counts, 16350 in all, are:
+= -- 1316
+> -- 724
+< -- 64
++ -- 277
+- -- 256
+* -- 1373
+:= -- 2290
+add.period$ -- 21
+call.type$ -- 21
+change.case$ -- 190
+chr.to.int$ -- 22
+cite$ -- 23
+duplicate$ -- 1200
+empty$ -- 1078
+format.name$ -- 326
+if$ -- 3270
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 229
+newline$ -- 67
+num.names$ -- 84
+pop$ -- 422
+preamble$ -- 1
+purify$ -- 169
+quote$ -- 0
+skip$ -- 603
+stack$ -- 0
+substring$ -- 870
+swap$ -- 856
+text.length$ -- 54
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 189
+warning$ -- 2
+while$ -- 119
+width$ -- 0
+write$ -- 231
+(There were 24 error messages)

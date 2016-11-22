@@ -17,16 +17,12 @@ classdef Neuron < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, NO_k, R, K_s, Na_s)
+        function [du, varargout] = rhs(self, t, u, R)
             t = t(:).';
             p = self.params;
             idx = self.index;
             
         %% State variables
-            %% NO pathway 
-            Ca_n = u(idx.Ca_n, :);                  
-            nNOS_act_n = u(idx.nNOS_act_n, :);
-            NO_n = u(idx.NO_n, :);
             
             %% Elshin neuron model
             v_sa = u(idx.v_sa, :);      % membrane potential of soma/axon, mV
@@ -41,8 +37,11 @@ classdef Neuron < handle
             Na_e = u(idx.Na_e, :);      % Na+ concentration of ECS, mM
             Cl_e = u(idx.Cl_e, :);      % Cl- concentration of ECS, mM
             
-            Buff = u(idx.Buff, :);      % Buffer concentration for K+ buffering in ECS, mM
+            Buff_e = u(idx.Buff_e, :);      % Buffer concentration for K+ buffering in ECS, mM
+            Buff_s = u(idx.Buff_s, :);      % Buffer concentration for K+ buffering in SC, mM
             O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
+            B_CBV = u(idx.B_CBV, :);    % BOLD CBV
+            K_buff = u(idx.K_buff, :);        % K+ concentration in SC that gets buffered
             
             % Gating variables
             m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
@@ -60,27 +59,10 @@ classdef Neuron < handle
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
             h6 = u(idx.h6, :);          % Inactivation gating variable, soma/axon NaT channel (Na+)
-            
+
+            du = zeros(size(u));
             
         %% Algebraic expressions       
-            %% NO pathway
-            w_NR2A      = self.input_Glu(t, v_sa) ./ (p.K_mA + self.input_Glu(t, v_sa)); %[-] 
-            w_NR2B      = self.input_Glu(t, v_sa) ./ (p.K_mB + self.input_Glu(t, v_sa)); %[-]
-            I_Ca        = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) ./ (1 + exp(-80 * (p.v_n + 0.02)))...         
-                            .* (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) ./ (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
-%             I_Ca        = (-4 * v_sa/1000 * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) ./ (1 + exp(-80 * (v_sa/1000 + 0.02)))...         
-%                             .* (exp(2 * v_sa/1000 * p.F / (p.R_gas * p.T))) ./ (1 - exp(2 * v_sa/1000 * p.F / (p.R_gas * p.T))); %[fA]
-            I_Ca_tot    = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B); %[fA]
-            phi_N       = 1 + p.Q1 * Ca_n + p.Q1 * p.Q2 * Ca_n.^2 + p.Q1 * p.Q2 * p.Q3 * Ca_n.^3 + p.Q1 * p.Q2 * p.Q3 * p.Q4 * Ca_n.^4; %[-]
-            dphi_N      = p.Q1 + 2 * p.Q1 * p.Q2 * Ca_n + 3 * p.Q1 * p.Q2 * p.Q3 * Ca_n.^2 + 4 * p.Q1 * p.Q2 * p.Q3 * p.Q4 * Ca_n.^3; %[uM^-1]
-            m_c         = (Ca_n ./ phi_N) .* dphi_N; %[-]
-            CaM         = Ca_n ./ m_c; %[uM]
-            tau_nk      = p.x_nk ^ 2 ./  (2 * p.D_cNO);
-            p_NO_n      = p.NOswitch * (nNOS_act_n .* p.V_max_NO_n .* p.O2_n ./ (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) ); %[uM/s] %*****
-            c_NO_n      = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
-%             p_NO_n      = nNOS_act_n .* p.V_max_NO_n .* O2*1000 ./ (p.K_mO2_n + O2*1000) * p.LArg_n / (p.K_mArg_n + p.LArg_n); %[uM/s]
-%             c_NO_n      = p.k_O2_n * NO_n.^2 .* O2*1000; %[uM/s]
-            d_NO_n      = (NO_k - NO_n) ./ tau_nk; %[uM/s]
             
             %% Elshin neuron model
             %% Nernst potential for Na,K ions in soma and dendrite (Cl constant)
@@ -108,8 +90,10 @@ classdef Neuron < handle
             m8beta      = 0.28 * ((v_sa + 24.89) ./ (exp(0.2 * v_sa + 4.978) - 1));
             h6alpha     = 0.128 * exp(-(0.056 * v_sa + 2.94));
             h6beta      = 4 ./ (1 + exp(-(0.2 * v_sa + 6)));
+            %J_NaT_sa    = (m8.^2 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
             J_NaT_sa    = (m8.^3 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
 
+            
             % K flux through KDR channel in soma using GHK
             m2alpha     = 0.016 * ((v_sa + 34.9) ./ (1 - exp(-((0.2 * v_sa) + 6.98))));
             m2beta      = 0.25 * exp(-((0.025 * v_sa) + 1.25));
@@ -133,10 +117,11 @@ classdef Neuron < handle
             m5alpha     = 0.5 ./ (1 + exp((13.5 - K_e) / 1.42));
             m5beta      = 0.5 - m5alpha;
             h4alpha     = 1 ./ (2000 * (1 + exp((K_e - 6.75) / 0.71)));
-            h4beta      = 5e-4 - h4alpha;  %%% different from Chang! - from Elshin's code, works better. Maybe error in Chang paper
-            %h4beta      = 5e-5 - h4alpha;
-            J_NMDA_d    = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+            h4beta      = 5e-4 - h4alpha;
+            J_NMDA_K_d    = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+            J_NMDA_Na_d    = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
 
+            
             % K flux through KDR channel in dendrite using GHK
             m6alpha     = 0.016 * ((v_d + 34.9) ./ (1 - exp(-((0.2 * v_d) + 6.98))));
             m6beta      = 0.25 * exp(-((0.025 * v_d) + 1.25));
@@ -154,8 +139,10 @@ classdef Neuron < handle
             J_pump1init_sa  = (1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_sa / p.Na_init_sa)).^(-3);
             J_pump1_d       = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
             J_pump1init_d   = (1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_d / p.Na_init_d)).^(-3);
-            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
-
+            
+            %J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
+            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * p.O2_0) + p.alph * p.O2_0)).^(-1);
+            
             J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
 
@@ -166,13 +153,13 @@ classdef Neuron < handle
             
             %% Total ion fluxes
             %Total ion fluxes in soma
-            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + p.NaTswitch *  J_NaT_sa;
+            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
-            J_Cl_tot_sa = p.gClleak_sa * (v_sa- p.E_Cl_sa); % leak 
+            J_Cl_tot_sa = p.gClleak_sa * (v_sa - p.E_Cl_sa); % leak 
             
             % Total ion fluxes in dendrite
-            J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_d;
-            J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_d;
+            J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_Na_d;
+            J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
             J_Cl_tot_d  = p.gClleak_d * (v_d - p.E_Cl_d); % leak
                         
             % Total ion fluxes in soma and dendrite
@@ -186,12 +173,10 @@ classdef Neuron < handle
             J_O2_background = p.CBF_init * P_02 * (1 - p.gamm);
             J_O2_pump       = p.CBF_init * P_02 * p.gamm .* ((J_pump1_sa + J_pump1_d) ./ (J_pump1init_sa + J_pump1init_d));
             
+            %% BOLD
+            J_CBF_norm      = CBF/0.03219;
             
-        %% Conservation equations
-            %% NO pathway
-            du(idx.Ca_n, :)         = (I_Ca_tot / (2 * p.F * p.V_spine) - (p.k_ex * (Ca_n - p.Ca_rest))) / (1 + p.lambda_buf);  %[uM/s]
-            du(idx.nNOS_act_n, :)   = p.V_maxNOS * CaM ./ (p.K_actNOS + CaM) - p.mu2_n * nNOS_act_n;                            %[uM/s]
-            du(idx.NO_n, :)         = p_NO_n - c_NO_n + d_NO_n;                                                                 %[uM/s]
+        %% Conservation equations                                                         
             
             %% Elshin neuron model
             
@@ -209,18 +194,25 @@ classdef Neuron < handle
             du(idx.K_d, :)      = -p.Ad / (p.Farad * p.Vd) * J_K_tot_d + p.D_K * (p.Vs + p.Vd) ./ (2 * p.dhod.^2 * p.Vd) * (K_sa - K_d);
             du(idx.Cl_d, :)     = -p.Ad / (p.Farad * p.Vd) * J_Cl_tot_d + p.D_Cl * (p.Vs + p.Vd) ./ (2 * p.dhod.^2 * p.Vd) * (Cl_sa - Cl_d);
             
-            % change in potassium buffer for K+ in the extracellular space
-            J_buff              = p.Mu * K_e .* (p.B0 - Buff) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff); % Elshin
-            %J_buff              = 8e-6 * K_e .* Buff .* exp((K_e - 5.5) ./ -1.09) - 8e-6 * (200 - Buff);   % Chang
-            du(idx.Buff, :)     = J_buff;
-
+            % change in buffer for K+ in the extracellular space
+            du(idx.Buff_e, :)     = p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e);
+            
+            % change in potassium buffer for K+ in the SC
+            du(idx.Buff_s, :)     = p.Mu * K_buff .* (p.B0 - Buff_s) ./ (1 + exp(-((K_buff - 5.5) ./ 1.09))) - (p.Mu * Buff_s);
+            
+            % change in K+ concentration in the section of SC that gets buffered?
+            du(idx.K_buff, :)        = p.SC_coup ./ (p.Farad * p.fe) * ( (p.As .* J_K_tot_sa) / p.Vs  + ( p.Ad .* J_K_tot_d) / (p.Vd ) ) - du(idx.Buff_s);
+            
             % change in concentration of Na,K,Cl in the extracellular space 
             du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - p.buffSwitch*J_buff;
+            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e);
             du(idx.Cl_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Cl_tot_sa) / p.Vs) + ((p.Ad * J_Cl_tot_d) / p.Vd));
             
             % change in tissue oxygen
             du(idx.O2, :)       = J_O2_vascular - J_O2_background - J_O2_pump;
+            
+            % change in BOLD response
+            du(idx.B_CBV, :)       = 1/(p.tns + p.g) .* ( J_CBF_norm - B_CBV.^2.5 ); 
 
             % Change in activation gating variables m
             du(idx.m1, :)       = 1000 * ((m1alpha .* (1 - m1)) - (m1beta .* m1));
@@ -244,30 +236,16 @@ classdef Neuron < handle
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
             	Uout = zeros(self.n_out, size(u, 2));
-                Uout(self.idx_out.Glu, :) = self.input_Glu(t, v_sa);
                 Uout(self.idx_out.current, :) = self.input_current(t);
-            	Uout(self.idx_out.w_NR2A, :) = w_NR2A;
-            	Uout(self.idx_out.w_NR2B, :) = w_NR2B;
-            	Uout(self.idx_out.I_Ca, :) = I_Ca;
-            	Uout(self.idx_out.I_Ca_tot, :) = I_Ca_tot;
-            	Uout(self.idx_out.phi_N, :) = phi_N;
-                Uout(self.idx_out.dphi_N, :) = dphi_N;
-            	Uout(self.idx_out.m_c, :) = m_c;
-            	Uout(self.idx_out.CaM, :) = CaM;
-            	Uout(self.idx_out.tau_nk, :) = tau_nk;
-            	Uout(self.idx_out.p_NO_n, :) = p_NO_n;
-            	Uout(self.idx_out.c_NO_n, :) = c_NO_n;
-            	Uout(self.idx_out.d_NO_n, :) = d_NO_n;
                 Uout(self.idx_out.CBF, :) = CBF;
             	varargout = {Uout};
             end
         end
         
-       function [J_K_NEtoSC, J_Na_NEtoSC, NO_n, v_sa] = shared(self, t, u, K_s, Na_s)    %shared variable
+       function J_K_NEtoSC = shared(self, t, u)    %shared variable
             p = self.params;
             idx = self.index;
             
-            % Duplication of earlier equations - necessary but gross, fix later
             v_sa = u(idx.v_sa, :);      % membrane potential of soma/axon, mV
             v_d = u(idx.v_d, :);        % membrane potential of dendrite, mV
             K_sa = u(idx.K_sa, :);      % K+ concentration of soma/axon, mM
@@ -275,98 +253,52 @@ classdef Neuron < handle
             K_d = u(idx.K_d, :);        % K+ concentration of dendrite, mM
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
             K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
-            Na_e = u(idx.Na_e, :);      % Na+ concentration of ECS, mM
+            Buff_s = u(idx.Buff_s, :);  % Buffer concentration for K+ buffering in SC, mM
             O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
-            m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
+            K_buff = u(idx.K_buff, :);        % K+ concentration in SC that gets buffered
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
-            m4 = u(idx.m4, :);          % Activation gating variable, dendrite NaP channel (Na+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
             m6 = u(idx.m6, :);          % Activation gating variable, dendrite KDR channel (K+)
             m7 = u(idx.m7, :);          % Activation gating variable, dendrite KA channel (K+)
-            m8 = u(idx.m8, :);          % Activation gating variable, soma/axon NaT channel (Na+)
-            h1 = u(idx.h1, :);          % Inactivation gating variable, soma/axon NaP channel (Na+)
             h2 = u(idx.h2, :);          % Inactivation gating variable, soma/axon KA channel (K+)
-            h3 = u(idx.h3, :);          % Inactivation gating variable, dendrite NaP channel (Na+)
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
-            h6 = u(idx.h6, :);          % Inactivation gating variable, soma/axon NaT channel (Na+)
-            Buff = u(idx.Buff, :);
             
-            E_Na_sa     = p.ph * log(Na_e ./ Na_sa);
             E_K_sa      = p.ph * log(K_e ./ K_sa);
-            E_Na_d      = p.ph * log(Na_e ./ Na_d);
             E_K_d       = p.ph * log(K_e ./ K_d);
-            J_Naleak_sa = p.gNaleak_sa * (v_sa - E_Na_sa);
+            
             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
-            J_Naleak_d  = p.gNaleak_d * (v_d - E_Na_d);
             J_Kleak_d   = p.gKleak_d * (v_d - E_K_d);
-            J_NaP_sa    = (m1.^2 .* h1 .* p.gNaP_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-            J_NaT_sa    = (m8.^3 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
             J_KDR_sa    =(m2.^2 .* p.gKDR_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
             J_KA_sa     = (m3.^2 .* h2 .* p.gKA_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-            J_NaP_d     = (m4.^2 .* h3 .* p.gNaP_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
-            J_NMDA_d    = ((m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)))) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+            J_NMDA_K_d  = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
             J_KDR_d     = (m6.^2 .* p.gKDR_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
             J_KA_d      = (m7.^2 .* h5 .* p.gKA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
             J_pump1_sa  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
             J_pump1_d   = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
-            J_pump2     = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
+            
+            %J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
+            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * p.O2_0) + p.alph * p.O2_0)).^(-1);
+            
             J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
-            J_Napump_sa = 3 * J_pump_sa;
             J_Kpump_sa  = -2 * J_pump_sa;
-            J_Napump_d  = 3 * J_pump_d;
-            J_Kpump_d   = -2 * J_pump_d;             
-            J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_d;
-            J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_d;
-            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + p.NaTswitch * J_NaT_sa;
+            J_Kpump_d   = -2 * J_pump_d;  
+
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
+            J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
             
-            J_buff              = p.Mu * K_e .* (p.B0 - Buff) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff); % Elshin
-            %J_buff              = 8e-6 * K_e .* Buff .* exp((K_e - 5.5) ./ -1.09) - 8e-6 * (200 - Buff);   % Chang
-            
-            % Fluxes from neuron to SC
-            J_K_NEtoSC =  1 / (p.Farad * p.fe) * ( ( (p.As* J_K_tot_sa) / p.Vs )   +  ( (p.Ad * J_K_tot_d) / p.Vd  )  ) * 1000 - p.buffSwitch*J_buff*1000;
-            J_Na_NEtoSC = 1 / (p.Farad * p.fe) * ( ( (p.As* J_Na_tot_sa) / p.Vs  )  +  ( (p.Ad * J_Na_tot_d) / p.Vd  ) ) * 1000;            
-%             J_K_NEtoSC =  1 / (p.Farad) * ( ( (p.As* J_K_tot_sa) / (p.Vs*(0.15*p.Vs)/(p.Vs+p.Vd)) )   +  ( (p.Ad * J_K_tot_d) / (p.Vd*(0.15*p.Vd)/(p.Vs+p.Vd))  )  ) * 1000 - p.buffSwitch*J_buff*1000;
-%             J_Na_NEtoSC = 1 / (p.Farad) * ( ( (p.As* J_Na_tot_sa) / (p.Vs*(0.15*p.Vs)/(p.Vs+p.Vd))  )  +  ( (p.Ad * J_Na_tot_d) / (p.Vd*(0.15*p.Vd)/(p.Vs+p.Vd))  ) ) * 1000;   
-           
-            NO_n = u(idx.NO_n, :);
-            
+            J_K_NEtoSC = p.SC_coup ./ (p.Farad * p.fe) * ( (p.As .* J_K_tot_sa)/p.Vs  + (p.Ad .* J_K_tot_d)/p.Vd  ) - ( p.Mu * K_buff .* (p.B0 - Buff_s) ./ (1 + exp(-((K_buff - 5.5) ./ 1.09))) - (p.Mu * Buff_s) );
+
        end
        
-        % This is basically a scaled version of input_rho(t) in Astrocyte
-        function Glu = input_Glu(self, t, v_sa) 
-            p = self.params;
-%             Glu = p.GluSwitch * (p.Glu_max - p.Glu_min) * ( ...
-%             0.5 * tanh((t - p.t_0_Glu) / p.theta_L_Glu) - ...
-%             0.5 * tanh((t - p.t_2_Glu) / p.theta_R_Glu)) + p.Glu_min;
-            vsaMin = -68; vsaMax = -20;
-            if (v_sa > vsaMax)
-                Glu = p.GluSwitch * 1846;
-            elseif (v_sa < vsaMin)
-                Glu = p.GluSwitch * 0;
-            else
-                Glu = p.GluSwitch * ( 1846/(vsaMax - vsaMin) ) * (v_sa - vsaMin);
-            end
-
-        end
         
         % Current input to neuron
         function current = input_current(self, t) 
             p = self.params;
-            t_0 = p.t_0;
-            t_2 = p.t_2;        
-            
-            if p.currentType == 1
-%                 current = 0.012 * rectpuls(t - t_0, 4);
-                current = 0.02 * ( rectpuls(t - t_0, 1.5) + rectpuls(t-t_0-4,1.5) + rectpuls(t-t_0-8,1.5) + rectpuls(t-t_0-12,1.5) + rectpuls(t-t_0-16,1.5) );
-%                 current = 0.03*gaussmf(t, [6, t_0+15]);
-            elseif p.currentType == 2
-                current = 0.03 * (0.5 * tanh((t - t_0)/5) - ...
-                0.5 * tanh((t - t_2)/5));
-            end
+            current = p.Istrength * rectpuls(t - p.t_0, p.lengthpulse);                                  
+            %current = p.Istrength * ( 0.5 * tanh(t - p.t_0) - 0.5 * tanh(t - (t_0 + p.lengthpulse)) );
         end        
         
         function names = varnames(self)
@@ -376,9 +308,9 @@ classdef Neuron < handle
 end    
         
 function idx = indices()    %for state variables
-    idx.Ca_n = 1;                  
-    idx.nNOS_act_n = 2;
-    idx.NO_n = 3;
+    idx.Buff_s = 1;
+    idx.B_CBV = 2;
+    idx.K_buff = 3;    
     idx.v_sa = 4;
     idx.v_d = 5;
     idx.K_sa = 6;
@@ -390,7 +322,7 @@ function idx = indices()    %for state variables
     idx.K_e = 12;
     idx.Na_e = 13;
     idx.Cl_e = 14;
-    idx.Buff = 15;
+    idx.Buff_e = 15;
     idx.O2 = 16;
     idx.m1 = 17;
     idx.m2 = 18;
@@ -406,44 +338,29 @@ function idx = indices()    %for state variables
     idx.h4 = 28;
     idx.h5 = 29;
     idx.h6 = 30;
-            
 end        
 
 function [idx, n] = output_indices()    %for variables in nargout loop
-    idx.ft = 1;
-    idx.J_Na_n = 2;
-    idx.Glu = 3; 
-    idx.w_NR2A = 4; 
-    idx.w_NR2B = 5; 
-    idx.I_Ca = 6; 
-    idx.I_Ca_tot = 7; 
-    idx.phi_N = 8; 
-    idx.dphi_N = 9; 
-    idx.m_c = 10; 
-    idx.CaM = 11; 
-    idx.tau_nk = 12; 
-    idx.p_NO_n = 13;    
-    idx.c_NO_n = 14; 
-    idx.d_NO_n = 15;    
-    idx.current = 16;
-    idx.CBF = 17;
+    idx.current = 1;
+    idx.CBF = 2;
     n = numel(fieldnames(idx));
 end
         
 function params = parse_inputs(varargin)
     parser = inputParser();
     
-    parser.addParameter('GluSwitch', 1); 
-    parser.addParameter('NaTswitch', 1); 
-    parser.addParameter('buffSwitch', 1); 
-    parser.addParameter('NOswitch', 1); 
+    % Elshin model constants
+    parser.addParameter('Istrength', 0.012);    % [mV] Current input strength
+    parser.addParameter('SC_coup', 9.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
     
-    parser.addParameter('currentType', 1); 
+    % BOLD constants
+    parser.addParameter('tns', 3);              % [s] Transit time
+    parser.addParameter('g', 20);               
     
     % global constants
-    parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
-    parser.addParameter('R_gas', 8.315); %J mol^-1 K^-1; Gas constant
-    parser.addParameter('T', 310); % K; Temperature
+    parser.addParameter('F', 9.65e4);           %C mol^-1; Faraday's constant
+    parser.addParameter('R_gas', 8.315);        %J mol^-1 K^-1; Gas constant
+    parser.addParameter('T', 310);              % K; Temperature
     
     % input 
     parser.addParameter('startpulse', 200);    
@@ -457,43 +374,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('Glu_max', 1846);       % microM (one vesicle, Santucci2008)
     parser.addParameter('Glu_min', 0);          % microM
     parser.addParameter('theta_L_Glu', 1);      % slope of Glu input 
-    parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
-
-    % NO pathway
-    parser.addParameter('K_mA', 650);           % [uM] - fit to Santucci2008
-    parser.addParameter('K_mB', 2800);          % [uM] - fit to Santucci2008
-
-    parser.addParameter('v_n', -0.04);          % [V] ; the neuronal membrane potential , assumed to be approx constant in this model ********
-    parser.addParameter('G_M', 46000);          % [fS]! was 46 pS! ; the conductance of the NMDA channel to Ca2+ compaired  
-    parser.addParameter('P_Ca_P_M', 3.6);       % [-] ; the relative conductance of the NMDA channel to Ca2+ compared to monovalent ions
-    parser.addParameter('Ca_ex', 2e3);          % [microM] ; the external calcium concentration (in Comerford+David2008: 1.5 mM!)
-    parser.addParameter('M', 1.3e5);            % [microM] ; the concentration of monovalent ions in the neuron
-
-    parser.addParameter('n_NR2A', 0.63);        % [-] ; average number of NR2A NMDA receptors per synapse (Santucci2008)
-    parser.addParameter('n_NR2B', 11);          % [-] ; average number of NR2B NMDA receptors per synapse (Santucci2008)
-    parser.addParameter('V_max_NO_n', 4.22);    % [s^-1] ; maximum catalytic rate of NO production (Chen2006) - obtained from fig 6 & equ 17 & 18
-    parser.addParameter('O2_n', 200);           % [uM] ; tissue O2 concentration in the neuron (M.E.) *************
-    parser.addParameter('K_mO2_n', 243);        % [uM] ; Chen2006
-    parser.addParameter('LArg_n', 100);         % [uM] ; 
-    parser.addParameter('K_mArg_n', 1.5);       % [uM] ; 
-    
-    parser.addParameter('k_O2_n', 9.6e-6);      % [uM^-2 s^-1] ; % (Kavdia2002)
-    parser.addParameter('x_nk', 25);            % [um] ;  (M.E.)
-    parser.addParameter('D_cNO', 3300);         % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)
-    
-    parser.addParameter('V_spine', 8e-8);       % [nL] ; volume of the neuronal dendritic spine Santucci2008
-    parser.addParameter('k_ex', 1600);          % [s^-1] ; decay rate constant of internal calcium concentration Santucci2008
-    parser.addParameter('Ca_rest', 0.1);        % [uM] ; resting calcium concentration (in Comerford+David2008: 2.830 mM; in Santucci2008P: 0.1 \muM)
-    parser.addParameter('lambda_buf', 20);      % [-] ; buffer capacity Santucci2008
-
-    parser.addParameter('V_maxNOS', 25e-3);     % [] ; M.E.
-    parser.addParameter('K_actNOS', 9.27e-2);   % [uM] ; 
-    parser.addParameter('mu2_n', 0.0167);       % [s^-1] ; rate constant at which the nNOS is deactivated Comerford2008
-    
-    parser.addParameter('Q1', 1.9e5);           % [uM^-1]
-    parser.addParameter('Q2', 2.1e5);           % [uM^-1]
-    parser.addParameter('Q3', 0.4e5);           % [uM^-1]
-    parser.addParameter('Q4', 0.26e5);          % [uM^-1]
+    parser.addParameter('theta_R_Glu', 1);      % slope of Glu input
 
     % Elshin neuron model
     parser.addParameter('E_Cl_sa', -70);        % Nernst potential for Cl- in soma      [mV]
@@ -519,21 +400,22 @@ function params = parse_inputs(varargin)
     parser.addParameter('gKA_GHk', 1e-5);
     parser.addParameter('gNMDA_GHk', 1e-5);   
     parser.addParameter('gNaT_GHk', 10e-5); 
+             
+%     parser.addParameter('gNaleak_sa', 4.36e-5);    
+%     parser.addParameter('gKleak_sa', 1.54e-4);
+%     parser.addParameter('gClleak_sa', 10*4.36e-5);
+%     parser.addParameter('gNaleak_d', 4.42e-5);   
+%     parser.addParameter('gKleak_d', 1.54e-4); 
+%     parser.addParameter('gClleak_d', 10*4.42e-5);  
     
-    parser.addParameter('gNaleak_sa', 4.36e-5);     % Elshin's values based on 4x Kager ******
-    parser.addParameter('gKleak_sa', 1.54e-4);
-    parser.addParameter('gClleak_sa', 10*4.36e-5);
-    parser.addParameter('gNaleak_d', 4.42e-5);   
-    parser.addParameter('gKleak_d', 1.54e-4); 
-    parser.addParameter('gClleak_d', 10*4.42e-5);  
+    parser.addParameter('gNaleak_sa', 4.1333e-5);   
+    parser.addParameter('gKleak_sa', 1.4623e-4);
+    parser.addParameter('gClleak_sa', 10*4.1333e-5);
+    parser.addParameter('gNaleak_d', 4.1915e-5);   
+    parser.addParameter('gKleak_d', 1.4621e-4); 
+    parser.addParameter('gClleak_d', 10*4.1915e-5);  
+     
     parser.addParameter('Imax', 0.013*4);             
-%     parser.addParameter('Imax', 1.48e-3);               % Chang values ******
-%     parser.addParameter('gNaleak_sa', 9.5999e-6 );
-%     parser.addParameter('gKleak_sa', 3.4564e-5);
-%     parser.addParameter('gClleak_sa', 10*9.5999e-6);
-%     parser.addParameter('gNaleak_d', 1.0187e-5 );   
-%     parser.addParameter('gKleak_d', 3.4564e-5); 
-%     parser.addParameter('gClleak_d', 10*1.0187e-5);   
     
     parser.addParameter('O2_0', 2e-2);          % [mM]
     parser.addParameter('alph',  0.05);         % percentage of ATP production independent of O2
@@ -569,9 +451,9 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     
-    u0(idx.Ca_n) = 0.0001;
-    u0(idx.nNOS_act_n) = 0.3;
-    u0(idx.NO_n) = 0.1;
+    u0(idx.Buff_s) = 170;
+    u0(idx.B_CBV) = 1;
+    u0(idx.K_buff) = 3.5006;
     u0(idx.v_sa) = -70;
     u0(idx.v_d) = -70;
     u0(idx.K_sa) = 133.5;
@@ -583,7 +465,7 @@ function u0 = initial_conditions(idx)
     u0(idx.K_e) = 3.5006;
     u0(idx.Na_e) = 139.76;
     u0(idx.Cl_e) = 144.1;
-    u0(idx.Buff) = 170;
+    u0(idx.Buff_e) = 170;
     u0(idx.O2) = 0.022715;
     u0(idx.m1) = 0.012869;
     u0(idx.m2) = 0.0012175;
@@ -599,5 +481,5 @@ function u0 = initial_conditions(idx)
     u0(idx.h4) = 0.99005;
     u0(idx.h5) = 0.12053;
     u0(idx.h6) = 0.9961;
-
+    
 end
