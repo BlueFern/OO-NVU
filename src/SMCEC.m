@@ -23,7 +23,6 @@ classdef SMCEC < handle
             % Initalise inputs and parameters
             p = self.params;
             idx = self.index;
-            
             Ca_i = u(idx.Ca_i, :);
             s_i = u(idx.s_i, :);
             v_i = u(idx.v_i, :);
@@ -63,7 +62,7 @@ classdef SMCEC < handle
                 (v_i - p.v_NaCa_i);
 
             J_stretch_i = p.G_stretch ./ ...
-                (1 + exp(-p.alpha_stretch*(self.input_Pressure(t)'.*R./h - p.sigma_0))) .* ...
+                (1 + exp(-p.alpha_stretch*(p.P_T.*R./h - p.sigma_0))) .* ...
                 (v_i - p.E_SAC);
             J_NaK_i = p.F_NaK_i;
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
@@ -74,14 +73,14 @@ classdef SMCEC < handle
             J_degrad_i = p.k_d_i * I_i;
             
             %% EC fluxes
-            J_IP3_j = p.F_j * I_j.^2 ./ (p.K_r_j^2 + I_j.^2);
+            J_IP3_j =p.F_j * I_j.^2 ./ (p.K_r_j^2 + I_j.^2);
             J_ER_uptake_j = p.B_j * Ca_j.^2 ./ (p.c_b_j^2 + Ca_j.^2);
             J_CICR_j = p.C_j * s_j.^2 ./ (p.s_c_j^2 + s_j.^2) .* ...
                 Ca_j.^4 ./ (p.c_c_j^4 + Ca_j.^4);
             J_extrusion_j = p.D_j * Ca_j;
             
             J_stretch_j = p.G_stretch ./ ...
-                (1 + exp(-p.alpha_stretch*(self.input_Pressure(t)'.*R./h - p.sigma_0))) .* ...
+                (1 + exp(-p.alpha_stretch*(p.P_T.*R./h - p.sigma_0))) .* ...
                 (v_j - p.E_SAC);
             
             J_ER_leak_j = p.L_j * s_j;
@@ -103,9 +102,9 @@ classdef SMCEC < handle
             J_IP3_coup_i = -p.P_IP3 * (I_i - I_j);
             J_Ca_coup_i = -p.P_Ca * (Ca_i - Ca_j);
             
-            c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
+            c_w_i = p.cwswitch * 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
 %           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.gam_i * cGMP_i)); % NO included - new (but no epsilon_i, alpha_i, gam_i defined here)
-%           c_w_i = 0; % NO excluded
+     %       c_w_i = 0; % NO excluded
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
@@ -212,7 +211,7 @@ classdef SMCEC < handle
                 Uout(self.idx_out.tau_wss, :) = tau_wss;
                 Uout(self.idx_out.E_5c, :) = E_5c;
                 Uout(self.idx_out.J_PLC_t, :) = self.input_PLC(t);
-                Uout(self.idx_out.P_T_t, :) = self.input_Pressure(t);
+                Uout(self.idx_out.P_T_t, :) = p.P_T;
 
                 varargout{1} = Uout; 
             end
@@ -254,17 +253,11 @@ classdef SMCEC < handle
             
             p = self.params;
             PLCchange = p.PLCSwitch * (p.J_PLC_vasomotion - p.J_PLC_steadystate) * ( ...
-                0.5 * tanh((t - p.PLC_t_1) / 2) - ...
-                0.5 * tanh((t - p.PLC_t_2) / 2)) + p.J_PLC_steadystate;
+                0.5 * tanh((t - p.PLC_t_1) / 1) - ...
+                0.5 * tanh((t - p.PLC_t_2) / 1)) + p.J_PLC_steadystate;
         end
         
-        function Pressurechange = input_Pressure(self, t) %TimvdBoom
-            
-            p = self.params;
-            Pressurechange = 0.0075*p.PressureSwitch * (p.Pressure_change - p.P_T) * ( ...
-                0.5 * tanh((t - p.Pressurechange_t_1) / 10) - ...
-                0.5 * tanh((t - p.Pressurechange_t_2) / 10)) + 0.0075*p.P_T;
-        end
+
         
     end
 
@@ -347,6 +340,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('PLCSwitch', 1);
     parser.addParameter('PressureSwitch',1);
     parser.addParameter('newextrusionswitch',1);
+    parser.addParameter('cwswitch',1);
     
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
@@ -498,14 +492,14 @@ function params = parse_inputs(varargin)
     %params.delta_p = params.P_T * 0.0075; % Convert from Pa to mmHg for use in stretch channels
     
     %make J_PLC change over time
-    params.PLC_t_1=100;
-    params.PLC_t_2=400;
+    params.PLC_t_1=235;
+    params.PLC_t_2=2000;
     params.PLC_t_3=225;
     params.PLC_t_4=300;
     params.PLC_t_5=375;
     
-    params.Pressurechange_t_1=100;
-    params.Pressurechange_t_2=300;
+    params.Pressurechange_t_1=1000;
+    params.Pressurechange_t_2=2000;
     
     
     

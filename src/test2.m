@@ -11,7 +11,7 @@ h = lsline;
 lsline
 set(h,'linewidth',2, 'color', 'k')
 title('amplitude [\mum]')
-xlabel('G_C_a * factor [-]')
+xlabel('VOCC * factor [-]')
 
 subplot(1,2,2)
 scatter(factor, frequency, 'fill')
@@ -19,4 +19,4 @@ h = lsline;
 lsline
 set(h,'linewidth',2, 'color', 'k')
 title('frequency [Hz]')
-xlabel('G_C_a * factor [-]')
+xlabel('VOCC * factor [-]')
