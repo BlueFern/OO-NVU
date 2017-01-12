@@ -98,7 +98,7 @@ classdef SMCEC < handle
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
-            tau_wss = R * 9.1e4; % from Dormanns 2016
+            tau_wss = R/2 * p.delta_pl; % from Dormanns 2016
             
             % NO pathway 
             tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
@@ -130,7 +130,7 @@ classdef SMCEC < handle
             % Smooth muscle cell
             du(idx.Ca_i, :) = J_IP3_i - J_SR_uptake_i - J_extrusion_i + ...
                 J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i + ...
-                0.1*J_stretch_i + J_Ca_coup_i;
+                p.stretchFix*0.1*J_stretch_i + J_Ca_coup_i;
             
             du(idx.s_i, :) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
             du(idx.v_i, :) = p.gamma_i * (...
@@ -142,7 +142,7 @@ classdef SMCEC < handle
             % Endothelial Cell
             du(idx.Ca_j, :) = J_IP3_j - J_ER_uptake_j + J_CICR_j - ...
                 J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j + ...
-                J_stretch_j - J_Ca_coup_i;
+                p.stretchFix*J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
             du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;           % p.J_PLC or self.input_plc(t)
@@ -318,6 +318,7 @@ function params = parse_inputs(varargin)
     parser = inputParser();
     
     parser.addParameter('NOswitch', 1); 
+    parser.addParameter('stretchFix', 1); 
     
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
@@ -356,7 +357,7 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('G_stretch', 6.1e-3); % uM mV^-1 s^-1   (Also EC parameter)
     parser.addParameter('alpha_stretch', 7.4e-3); % mmHg^-1     (Also EC parameter)
-    parser.addParameter('delta_p', 30); % mmHg                  (Also EC parameter)
+    parser.addParameter('delta_p', 30); % mmHg                  (Also EC parameter) 30 mmHg = 4000 Pa
     parser.addParameter('sigma_0', 500); % mmHg                 (Also EC parameter)
     parser.addParameter('E_SAC', -18); % mV                     (Also EC parameter)
 
@@ -449,7 +450,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_eNOS', 4.5e-1); % [uM] ;    
     parser.addParameter('g_max', 0.06); % [uM s^-1] ;    
     parser.addParameter('alp', 2); % [-] ; zero shear open channel constant (Comerford2008); in Wiesner1997: alp = 3
-    
+    parser.addParameter('delta_pl', 9.1e4); % 9.1e4: ME
     parser.addParameter('x_ki', 25); % [um]  (M.E.)
     parser.addParameter('x_ij', 3.75); % [um]  (Kavdia2002)
 

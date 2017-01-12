@@ -31,8 +31,7 @@ classdef Neuron < handle
             % NO pathway
             w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
             w_NR2B = self.input_Glu(t) ./ (p.K_mB + self.input_Glu(t)); %[-]
-            I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02)))...
-                   * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
+            I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02))) * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
             I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B); %[fA]
             phi_N = 1 + p.Q1 * Ca_n + p.Q1 * p.Q2 * Ca_n.^2 + p.Q1 * p.Q2 * p.Q3 * Ca_n.^3 + p.Q1 * p.Q2 * p.Q3 * p.Q4 * Ca_n.^4; %[-]
             dphi_N = p.Q1 + 2 * p.Q1 * p.Q2 * Ca_n + 3 * p.Q1 * p.Q2 * p.Q3 * Ca_n.^2 + 4 * p.Q1 * p.Q2 * p.Q3 * p.Q4 * Ca_n.^3; %[uM^-1]

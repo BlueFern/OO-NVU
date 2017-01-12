@@ -98,6 +98,28 @@ classdef NVU < handle
 
             toc
         end
+        function simulateManualICs(self)
+            f = @(t, u) self.rhs(t, u);
+            tic
+            [self.T, self.U] = ode15s(f, self.T, self.u0, self.odeopts);
+            % Now evaluate all of the additional parameters
+            un = self.U(:, self.i_neuron).';
+            ua = self.U(:, self.i_astrocyte).';
+            us = self.U(:, self.i_smcec).';
+            uw = self.U(:, self.i_wall).';
+
+            [J_NaK_n, NO_n] = self.neuron.shared(self.T, un);
+            [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
+            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
+            [R, h] = self.wall.shared(self.T, uw);
+                     
+            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i, J_NaK_i, J_K_i);
+            [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
+            [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
+
+            toc
+        end
         function u = out(self, input_str)
             success = false;
             modules = {self.neuron, self.astrocyte, self.smcec, self.wall};

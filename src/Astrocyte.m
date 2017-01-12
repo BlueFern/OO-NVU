@@ -66,9 +66,7 @@ classdef Astrocyte < handle
             
             %% Astrocyte
             % Volume-surface Ratio; Scaling ODE
-            du(idx.R_k, :) = p.L_p * ( ...
-                Na_k + K_k + Cl_k + HCO3_k - ...
-                Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
+            du(idx.R_k, :) = p.L_p * (Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
             
             % Nernst potentials
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
@@ -129,7 +127,7 @@ classdef Astrocyte < handle
             
             %% Parent Calcium equations
 %            v_6 = 22e-3; % Ca excluded
-           v_6 = p.eet_shift * eet_k - v_3; % Ca included
+%            v_6 = p.eet_shift * eet_k - v_3; % Ca included
             
 %            w_inf = 0.5 * (1 + tanh((v_k + v_6) / p.v_4)); % Ca excluded
            w_inf = 0.5 * (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4)); % Ca included
@@ -186,7 +184,7 @@ classdef Astrocyte < handle
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
             
             % Differential Equation for the ECS
-            du(idx.K_e, :) = p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (p.VR_se / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
+            du(idx.K_e, :) = self.input_ECS(t) + p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (p.VR_se / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
@@ -243,11 +241,22 @@ classdef Astrocyte < handle
         % C_input Block function to switch channel on and off
         function out = flux_ft(self, t)
             p = self.params;
-            out = p.blockSwitch * (...
-                0.5 * tanh((t - p.t_0) / 0.0005) - ...
-                0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
-%             out = 1;
+%             out = p.blockSwitch * (...
+%                 0.5 * tanh((t - p.t_0) / 0.0005) - ...
+%                 0.5 * tanh((t - p.t_1 - p.lengthpulse) / 0.0005));
+            out = 1;
             out = out(:).';
+        end
+        
+                
+        function f = input_ECS(self, t)
+            % Input of K+ into the ECS, if you want to use set t0 and tend
+            % here and turn off other inputs
+            p = self.params;
+            f = zeros(size(t));
+            t0 = 100; lengtht = 20; tend = 200;
+                    f(t0 <= t & t < t0+lengtht ) = p.ECS_input*1e3;
+                    f(tend  <= t & t <= tend+lengtht ) = -p.ECS_input*1e3;
         end
 
         function names = varnames(self)
@@ -316,10 +325,12 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+
+    parser.addParameter('ECS_input', 9); 
     
     parser.addParameter('rhoSwitch', 1); 
     parser.addParameter('blockSwitch', 1); 
-    parser.addParameter('PVStoECS', 1); 
+    parser.addParameter('PVStoECS', 0); 
     parser.addParameter('SCtoECS', 1); 
     parser.addParameter('ECSswitch', 1); 
     parser.addParameter('trpv_switch', 1); 
