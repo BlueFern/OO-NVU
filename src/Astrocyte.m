@@ -68,13 +68,13 @@ classdef Astrocyte < handle
             % Volume-surface Ratio; Scaling ODE
             du(idx.R_k, :) = p.L_p * (Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
             
-            % Nernst potentials
+            % Nernst potentials ( in V)
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
             E_Na_k = p.R_g * p.T / (p.z_Na * p.F) * log(Na_s ./ Na_k);
             E_Cl_k = p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
             E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * ...
                 log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
-            E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p
+            E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p. In V
 
             E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV
             
@@ -86,7 +86,7 @@ classdef Astrocyte < handle
             % Membrane voltage
             g_BK_k = p.G_BK_k*1e-12 / p.A_ef_k;
             g_TRPV_k = (p.G_TRPV_k* 1e-12)/(p.A_ef_k);%mho m^-2
-            v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + ...
+            v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + ...           % V not mV?
                 p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + ...
                 g_BK_k * w_k .* E_BK_k - ...
                 J_NaK_k * p.F / p.C_correction) ./ ...
@@ -217,7 +217,7 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.phi_w, :) = phi_w;
                 Uout(self.idx_out.J_BK_p, :) = J_BK_p;
                 Uout(self.idx_out.J_BK_k, :) = J_BK_k;
-
+                Uout(self.idx_out.E_TRPV_k, :) = E_TRPV_k;
                 varargout = {Uout};
             end
         end
@@ -254,9 +254,9 @@ classdef Astrocyte < handle
             % here and turn off other inputs
             p = self.params;
             f = zeros(size(t));
-            t0 = 100; lengtht = 20; tend = 200;
-                    f(t0 <= t & t < t0+lengtht ) = p.ECS_input*1e3;
-                    f(tend  <= t & t <= tend+lengtht ) = -p.ECS_input*1e3;
+            lengtht = 20;
+                    f(p.t0_ECS <= t & t < p.t0_ECS + lengtht ) = p.ECS_input * 1e3;
+                    f(p.tend_ECS  <= t & t <= p.tend_ECS + lengtht ) = -p.ECS_input * 1e3;
         end
 
         function names = varnames(self)
@@ -319,15 +319,19 @@ function [idx, n] = output_indices(self)
     idx.J_Na_k  = 25;
     idx.J_BK_p = 26;
     idx.J_BK_k = 27;
-    
+    idx.E_TRPV_k = 28;
     n = numel(fieldnames(idx));
 end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
 
+    % ECS K+ input parameters
     parser.addParameter('ECS_input', 9); 
+    parser.addParameter('t0_ECS', 10000);
+    parser.addParameter('tend_ECS', 20000);
     
+    % Switches to turn on and off some things
     parser.addParameter('rhoSwitch', 1); 
     parser.addParameter('blockSwitch', 1); 
     parser.addParameter('PVStoECS', 0); 
@@ -335,19 +339,19 @@ function params = parse_inputs(varargin)
     parser.addParameter('ECSswitch', 1); 
     parser.addParameter('trpv_switch', 1); 
     
-        % Joerik suggested changes
-        %   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % Joerik BK channel
-        %   parser.addParameter('v_7', -13.57e-3);          % Joerik BK channel
-        %   parser.addParameter('reverseBK', -0.08135);     % Joerik BK channel
-        %   parser.addParameter('switchBK', 0);             % Joerik BK channel
-        %   parser.addParameter('Ca_4', 0.35); % uM         % Joerik BK channel
+    % Joerik suggested changes
+    %   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % Joerik BK channel
+    %   parser.addParameter('v_7', -13.57e-3);          % Joerik BK channel
+    %   parser.addParameter('reverseBK', -0.08135);     % Joerik BK channel
+    %   parser.addParameter('switchBK', 0);             % Joerik BK channel
+    %   parser.addParameter('Ca_4', 0.35); % uM         % Joerik BK channel
 
-        % Normal parameters
-        parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
-        parser.addParameter('v_7', -15e-3); %V 
-        parser.addParameter('reverseBK', 0);
-        parser.addParameter('switchBK', 1);
-        parser.addParameter('Ca_4', 0.15); % uM
+    % Normal parameters
+    parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
+    parser.addParameter('v_7', -15e-3); %V 
+    parser.addParameter('reverseBK', 0);
+    parser.addParameter('switchBK', 1);
+    parser.addParameter('Ca_4', 0.15); % uM
 
     % ECS constants
     parser.addParameter('VR_se', 1);
@@ -360,7 +364,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('X_k', 12.41e-3); % uM m
     parser.addParameter('R_tot', 8.79e-8); % m
 
-    % Input signal
+    % Input K+ and glutamate signal
     parser.addParameter('startpulse', 200); % s
     parser.addParameter('lengthpulse', 200); % s
     parser.addParameter('lengtht1', 10); % s

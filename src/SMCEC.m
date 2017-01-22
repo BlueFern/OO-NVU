@@ -318,7 +318,7 @@ function params = parse_inputs(varargin)
     parser = inputParser();
     
     parser.addParameter('NOswitch', 1); 
-    parser.addParameter('stretchFix', 1); 
+    parser.addParameter('stretchFix', -1); 
     
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1
