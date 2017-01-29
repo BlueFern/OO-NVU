@@ -57,14 +57,14 @@ classdef NVU < handle
             % Evaluate the coupling quantities to be passed between
             % submodels as coupling
 
-            [K_p] = self.astrocyte.shared(t, ua);
-            [J_K_NEtoSC] = self.neuron.shared(t, un);
+            [K_p, K_s] = self.astrocyte.shared(t, ua);
+            [J_K_NEtoSC] = self.neuron.shared(t, un, K_s);
             [J_KIR_i, Ca_i] = self.smcec.shared(t, us, K_p); 
             [R, h] = self.wall.shared(t, uw);
 
             du = zeros(size(u));
             du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, J_K_NEtoSC);
-            du(self.i_neuron, :) = self.neuron.rhs(t, un, R);
+            du(self.i_neuron, :) = self.neuron.rhs(t, un, R, K_s);
             du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i);
             du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p);
         end
@@ -86,12 +86,12 @@ classdef NVU < handle
             us = self.U(:, self.i_smcec).';
             uw = self.U(:, self.i_wall).';
 
-            [K_p] = self.astrocyte.shared(self.T, ua);
-            [J_K_NEtoSC] = self.neuron.shared(self.T, un);
+            [K_p, K_s] = self.astrocyte.shared(self.T, ua);
+            [J_K_NEtoSC] = self.neuron.shared(self.T, un, K_s);
             [J_KIR_i, Ca_i] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      
-            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, R);
+            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, R, K_s);
             [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, J_K_NEtoSC);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i);

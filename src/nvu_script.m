@@ -21,19 +21,25 @@ clc
 odeopts = odeset('RelTol', 1e-06, 'AbsTol', 1e-06, 'MaxStep', 1, 'Vectorized', 1);
 
 % Handy parameters to modify
-START_PULSE  = 200;         % Start time of neuronal stimulation
-LENGTH_PULSE = 20;          % Length of stimulation
-CURRENT_STRENGTH = 0.012;   % Strength of current input
-J_PLC        = 0.18;        % Jplc value in EC: 0.18 for steady state, 0.4 for oscillations
-XLIM1 = 150; XLIM2 = 250;   % Plotting limits
+START_PULSE         = 200;         % Start time of neuronal stimulation
+LENGTH_PULSE        = 5;          % Length of neuronal stimulation
+CURRENT_STRENGTH    = 0.0155;   % Strength of current input
+J_PLC               = 0.1;        % Jplc value in EC: 0.1 for steady state, 0.3 for oscillations
+XLIM1  = 180; XLIM2  = 300;   % Plotting limits
+
+% Params for input of K+ into ECS. Don't use!
+ECS_START       = 2000;      % Start of ECS K+ input
+ECS_LENGTH      = 1;      % Length of ECS K+ input
 
 
-nv = NVU(Neuron('startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'Istrength', CURRENT_STRENGTH), ...
+
+
+nv = NVU(Neuron('ECS_input', 9, 'SC_coup', 9.5, 'startpulse', START_PULSE, 'lengthpulse', LENGTH_PULSE, 'Istrength', CURRENT_STRENGTH, 't0_ECS', ECS_START, 'ECS_length', ECS_LENGTH), ...
     Astrocyte(), ...
     WallMechanics(), ...
     SMCEC('J_PLC', J_PLC), 'odeopts', odeopts);
 
-nv.T = [0 300];    
+nv.T = 0:0.01:XLIM2;    
     
 nv.simulate()
 
@@ -49,35 +55,41 @@ nv.simulate()
 % xlabel('time (s)')
 % ylabel('[Ca^{2+}] (\muM)')
 
-figure(70);
-subplot(4,2,1)
+figure(102);
+subplot(3,2,1)
 hold all;
 plot(nv.T, nv.out('R')*1e6)
 xlabel('Time [s]'); ylabel('R [\mum]')
 xlim([XLIM1 XLIM2]);
 
-subplot(4,2,2)
+subplot(3,2,2)
 hold all;
 plot(nv.T, nv.out('K_s')/1e3)
 xlabel('Time [s]'); ylabel('K_s')
 xlim([XLIM1 XLIM2]);
 
-subplot(4,2,3)
+subplot(3,2,3)
 hold all;
 plot(nv.T, nv.out('v_sa'));
 xlabel('Time [s]'); ylabel('v_{sa}')
 xlim([XLIM1 XLIM2]);
 
-subplot(4,2,4)
+subplot(3,2,4)
 hold all;
 plot(nv.T, nv.out('K_e'))
 xlabel('Time [s]'); ylabel('K_e')
 xlim([XLIM1 XLIM2]);
 
-subplot(4,2,5)
+subplot(3,2,5)
 hold all;
-plot(nv.T, nv.out('K_p')/1e3)
+plot(nv.T, nv.out('K_p'))
 xlabel('Time [s]'); ylabel('K_p')
+xlim([XLIM1 XLIM2]);
+
+subplot(3,2,6)
+hold all;
+plot(nv.T, nv.out('J_K_NEtoSC'))
+xlabel('Time [s]'); ylabel('J_K_NEtoSC')
 xlim([XLIM1 XLIM2]);
 
 % subplot(4,2,6)
@@ -92,11 +104,7 @@ xlim([XLIM1 XLIM2]);
 % xlabel('Time [s]'); ylabel('CBF')
 % xlim([380 500])
 
-subplot(4,2,7)
-hold all;
-plot(nv.T, nv.out('current'))
-xlabel('Time [s]'); ylabel('current')
-xlim([XLIM1 XLIM2]);
+
 
 % % 
 % figure(7);

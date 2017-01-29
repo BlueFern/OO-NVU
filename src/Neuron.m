@@ -17,7 +17,7 @@ classdef Neuron < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R)
+        function [du, varargout] = rhs(self, t, u, R, K_s)
             t = t(:).';
             p = self.params;
             idx = self.index;
@@ -41,7 +41,7 @@ classdef Neuron < handle
             Buff_s = u(idx.Buff_s, :);      % Buffer concentration for K+ buffering in SC, mM
             O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
             B_CBV = u(idx.B_CBV, :);    % BOLD CBV
-            K_buff = u(idx.K_buff, :);        % K+ concentration in SC that gets buffered
+            %K_buff = u(idx.K_buff, :);        % K+ concentration in SC that gets buffered
             
             % Gating variables
             m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
@@ -197,15 +197,15 @@ classdef Neuron < handle
             % change in buffer for K+ in the extracellular space
             du(idx.Buff_e, :)     = p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e);
             
-            % change in potassium buffer for K+ in the SC
-            du(idx.Buff_s, :)     = p.Mu * K_buff .* (p.B0 - Buff_s) ./ (1 + exp(-((K_buff - 5.5) ./ 1.09))) - (p.Mu * Buff_s);
+            % change in buffer for K+ in the SC
+            du(idx.Buff_s, :)     = p.Mu * K_s .* (p.B0 - Buff_s) ./ (1 + exp(-((K_s - 5.5) ./ 1.09))) - (p.Mu * Buff_s);
             
             % change in K+ concentration in the section of SC that gets buffered?
-            du(idx.K_buff, :)        = p.SC_coup ./ (p.Farad * p.fe) * ( (p.As .* J_K_tot_sa) / p.Vs  + ( p.Ad .* J_K_tot_d) / (p.Vd ) ) - du(idx.Buff_s);
+            %du(idx.K_buff, :)        = p.SC_coup ./ (p.Farad * p.fe) * ( (p.As .* J_K_tot_sa) / p.Vs  + ( p.Ad .* J_K_tot_d) / (p.Vd ) ) - du(idx.Buff_s);
             
             % change in concentration of Na,K,Cl in the extracellular space 
             du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e);
+            du(idx.K_e, :)      = self.input_ECS(t) + 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e);
             du(idx.Cl_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Cl_tot_sa) / p.Vs) + ((p.Ad * J_Cl_tot_d) / p.Vd));
             
             % change in tissue oxygen
@@ -242,7 +242,7 @@ classdef Neuron < handle
             end
         end
         
-       function J_K_NEtoSC = shared(self, t, u)    %shared variable
+       function J_K_NEtoSC = shared(self, t, u, K_s)    %shared variable
             p = self.params;
             idx = self.index;
             
@@ -254,8 +254,7 @@ classdef Neuron < handle
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
             K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
             Buff_s = u(idx.Buff_s, :);  % Buffer concentration for K+ buffering in SC, mM
-            O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
-            K_buff = u(idx.K_buff, :);        % K+ concentration in SC that gets buffered
+            %K_buff = u(idx.K_buff, :);  % K+ concentration in SC that gets buffered
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
@@ -265,19 +264,34 @@ classdef Neuron < handle
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
             
-            E_K_sa      = p.ph * log(K_e ./ K_sa);
-            E_K_d       = p.ph * log(K_e ./ K_d);
+            % Channels going into SC NOT ECS - K_e replaced with K_s
+            E_K_sa      = p.ph * log(K_s ./ K_sa);
+            E_K_d       = p.ph * log(K_s ./ K_d);
             
             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
             J_Kleak_d   = p.gKleak_d * (v_d - E_K_d);
-            J_KDR_sa    =(m2.^2 .* p.gKDR_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-            J_KA_sa     = (m3.^2 .* h2 .* p.gKA_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-            J_NMDA_K_d  = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
-            J_KDR_d     = (m6.^2 .* p.gKDR_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
-            J_KA_d      = (m7.^2 .* h5 .* p.gKA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
-            J_pump1_sa  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
-            J_pump1_d   = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
+            J_KDR_sa    =(m2.^2 .* p.gKDR_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_s))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+            J_KA_sa     = (m3.^2 .* h2 .* p.gKA_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_s))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+            J_NMDA_K_d  = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_s))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+            J_KDR_d     = (m6.^2 .* p.gKDR_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_s))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
+            J_KA_d      = (m7.^2 .* h5 .* p.gKA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_s))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
+            J_pump1_sa  = (1 + (p.K_init_e ./ K_s)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
+            J_pump1_d   = (1 + (p.K_init_e ./ K_s)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
             
+            % K_e original
+%             E_K_sa      = p.ph * log(K_e ./ K_sa);
+%             E_K_d       = p.ph * log(K_e ./ K_d);
+%             
+%             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
+%             J_Kleak_d   = p.gKleak_d * (v_d - E_K_d);
+%             J_KDR_sa    =(m2.^2 .* p.gKDR_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+%             J_KA_sa     = (m3.^2 .* h2 .* p.gKA_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+%             J_NMDA_K_d  = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+%             J_KDR_d     = (m6.^2 .* p.gKDR_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
+%             J_KA_d      = (m7.^2 .* h5 .* p.gKA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
+%             J_pump1_sa  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
+%             J_pump1_d   = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
+%             
             %J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * p.O2_0) + p.alph * p.O2_0)).^(-1);
             
@@ -289,7 +303,7 @@ classdef Neuron < handle
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
             J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
             
-            J_K_NEtoSC = p.SC_coup ./ (p.Farad * p.fe) * ( (p.As .* J_K_tot_sa)/p.Vs  + (p.Ad .* J_K_tot_d)/p.Vd  ) - ( p.Mu * K_buff .* (p.B0 - Buff_s) ./ (1 + exp(-((K_buff - 5.5) ./ 1.09))) - (p.Mu * Buff_s) );
+            J_K_NEtoSC = p.SC_coup ./ (p.Farad * p.fe) * ( (p.As .* J_K_tot_sa)/p.Vs  + (p.Ad .* J_K_tot_d)/p.Vd  ) - ( p.Mu * K_s .* (p.B0 - Buff_s) ./ (1 + exp(-((K_s - 5.5) ./ 1.09))) - (p.Mu * Buff_s) );
 
        end
        
@@ -297,20 +311,31 @@ classdef Neuron < handle
         % Current input to neuron
         function current = input_current(self, t) 
             p = self.params;
-            current = p.Istrength * rectpuls(t - p.t_0, p.lengthpulse);                                  
+            current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse);                                  
             %current = p.Istrength * ( 0.5 * tanh(t - p.t_0) - 0.5 * tanh(t - (t_0 + p.lengthpulse)) );
         end        
+        
+        function f = input_ECS(self, t)
+            % Input of K+ into the ECS, if you want to use set t0 and tend
+            % here and turn off other inputs
+            p = self.params;
+            f = zeros(size(t));
+            lengtht = p.ECS_length;
+                    f(p.t0_ECS <= t & t < p.t0_ECS + lengtht ) = p.ECS_input;
+                    %f(p.tend_ECS  <= t & t <= p.tend_ECS + lengtht ) = -p.ECS_input;
+        end
         
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
+
     end
 end    
         
 function idx = indices()    %for state variables
     idx.Buff_s = 1;
     idx.B_CBV = 2;
-    idx.K_buff = 3;    
+    %idx.K_buff = 3;    
     idx.v_sa = 4;
     idx.v_d = 5;
     idx.K_sa = 6;
@@ -337,7 +362,7 @@ function idx = indices()    %for state variables
     idx.h3 = 27;
     idx.h4 = 28;
     idx.h5 = 29;
-    idx.h6 = 30;
+    idx.h6 = 3;
 end        
 
 function [idx, n] = output_indices()    %for variables in nargout loop
@@ -349,8 +374,13 @@ end
 function params = parse_inputs(varargin)
     parser = inputParser();
     
+    % ECS K+ input parameters
+    parser.addParameter('ECS_input', 9); 
+    parser.addParameter('t0_ECS', 10000);
+    parser.addParameter('ECS_length', 20);
+    
     % Elshin model constants
-    parser.addParameter('Istrength', 0.012);    % [mV] Current input strength
+    parser.addParameter('Istrength', 0.014);    % [mV] Current input strength
     parser.addParameter('SC_coup', 9.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
     
     % BOLD constants
@@ -400,13 +430,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('gKA_GHk', 1e-5);
     parser.addParameter('gNMDA_GHk', 1e-5);   
     parser.addParameter('gNaT_GHk', 10e-5); 
-             
-%     parser.addParameter('gNaleak_sa', 4.36e-5);    
-%     parser.addParameter('gKleak_sa', 1.54e-4);
-%     parser.addParameter('gClleak_sa', 10*4.36e-5);
-%     parser.addParameter('gNaleak_d', 4.42e-5);   
-%     parser.addParameter('gKleak_d', 1.54e-4); 
-%     parser.addParameter('gClleak_d', 10*4.42e-5);  
     
     parser.addParameter('gNaleak_sa', 4.1333e-5);   
     parser.addParameter('gKleak_sa', 1.4623e-4);
@@ -414,9 +437,24 @@ function params = parse_inputs(varargin)
     parser.addParameter('gNaleak_d', 4.1915e-5);   
     parser.addParameter('gKleak_d', 1.4621e-4); 
     parser.addParameter('gClleak_d', 10*4.1915e-5);  
-     
-    parser.addParameter('Imax', 0.013*4);             
-    
+    parser.addParameter('Imax', 0.013*4);  
+%     
+%     parser.addParameter('gNaleak_sa', 6.2378e-5);   
+%     parser.addParameter('gKleak_sa', 2.1989e-4);
+%     parser.addParameter('gClleak_sa', 10*6.2378e-5);
+%     parser.addParameter('gNaleak_d', 6.2961e-5);   
+%     parser.addParameter('gKleak_d', 2.1987e-4); 
+%     parser.addParameter('gClleak_d', 10*6.2961e-5);  
+%     parser.addParameter('Imax', 0.013*6);  
+%     
+%     parser.addParameter('gNaleak_sa', 9.5999e-6);   
+%     parser.addParameter('gKleak_sa', 3.4564e-5);
+%     parser.addParameter('gClleak_sa', 10*9.5999e-6);
+%     parser.addParameter('gNaleak_d', 1.0187e-5);   
+%     parser.addParameter('gKleak_d', 3.4564e-5); 
+%     parser.addParameter('gClleak_d', 10*1.0187e-5);  
+%     parser.addParameter('Imax', 0.013);     
+%     
     parser.addParameter('O2_0', 2e-2);          % [mM]
     parser.addParameter('alph',  0.05);         % percentage of ATP production independent of O2
     parser.addParameter('D_Na', 1.33e-5);       % [cm2 / s]
@@ -453,7 +491,7 @@ function u0 = initial_conditions(idx)
     
     u0(idx.Buff_s) = 170;
     u0(idx.B_CBV) = 1;
-    u0(idx.K_buff) = 3.5006;
+    %u0(idx.K_buff) = 3.5006;
     u0(idx.v_sa) = -70;
     u0(idx.v_d) = -70;
     u0(idx.K_sa) = 133.5;

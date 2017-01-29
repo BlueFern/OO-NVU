@@ -61,7 +61,7 @@ classdef Astrocyte < handle
             
             %% Astrocyte 
             % Volume-surface Ratio; Scaling ODE
-            du(idx.R_k, :) = 0;%p.L_p * ( Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
+            du(idx.R_k, :) = p.L_p * ( Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
             
             % Nernst potentials
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
@@ -123,8 +123,8 @@ classdef Astrocyte < handle
             du(idx.K_p, :) = J_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay * (K_p - p.K_p_min);
             
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) =  J_K_NEtoSC_k + J_K_k - 2*J_NaK_k - J_NKCC1_k - J_KCC1_k;               %*********
-            du(idx.N_Na_s, :) = -J_K_NEtoSC_k - du(idx.N_Na_k, :);                       %*********
+            du(idx.N_K_s, :) = J_K_k - 2*J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k;               %*********
+            du(idx.N_Na_s, :) = - du(idx.N_Na_k, :) - J_K_NEtoSC_k;                       %*********
                         
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
 
@@ -143,7 +143,7 @@ classdef Astrocyte < handle
                Uout(self.idx_out.J_NBC_k, :) = J_NBC_k;
                Uout(self.idx_out.J_KCC1_k, :) = J_KCC1_k;
                Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
-               
+               Uout(self.idx_out.J_K_NEtoSC, :) = J_K_NEtoSC;
                Uout(self.idx_out.w_inf, :) = w_inf;
                Uout(self.idx_out.phi_w, :) = phi_w;
               
@@ -151,8 +151,15 @@ classdef Astrocyte < handle
             end
         end    
         
-        function K_p = shared(self, ~, u)
+        function [K_p, K_s] = shared(self, ~, u)
+            p = self.params;
+            
             K_p = u(self.index.K_p, :);
+            N_K_s = u(self.index.N_K_s, :);
+            R_k = u(self.index.R_k, :);
+            R_s = p.R_tot - R_k; 
+            
+            K_s = (N_K_s ./ R_s)/1e3; % SC K+ conc in mM
         end
         
 %         function f = input_f(self, t)
@@ -203,6 +210,7 @@ idx.J_K_k = 9;
 idx.J_Na_k = 10;
 idx.J_NBC_k = 11;
 idx.J_KCC1_k = 12; 
+idx.J_K_NEtoSC = 13;
 %idx.ft = 14;
 
 n = numel(fieldnames(idx));

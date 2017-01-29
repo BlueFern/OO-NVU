@@ -1,7 +1,7 @@
 % Plot all variables & fluxes in categories with labels. Automated except
 % for subplot dimensions - need to be changed manually. 
 
-XLIM1 = 150; XLIM2 = 250; 
+%XLIM1 = 150; XLIM2 = 250; 
 
 %% Plot state variables
 
