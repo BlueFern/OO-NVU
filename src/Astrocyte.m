@@ -41,13 +41,18 @@ classdef Astrocyte < handle
             N_HCO3_s = u(idx.N_HCO3_s, :);
             w_k = u(idx.w_k, :);
             I_k = u(idx.I_k, :);
+            
+            %Ca_k = self.input_Cak(t);
             Ca_k = u(idx.Ca_k, :);
+            
             h_k = u(idx.h_k, :);
             s_k = u(idx.s_k, :);
             m_k = u(idx.m_k, :); 
             eet_k = u(idx.eet_k, :);
             NO_k = u(idx.NO_k, :);
             du = zeros(size(u));
+            
+            %J_input = self.input_Cak(t);
             
             %% Synaptic Cleft:
             % Electroneutrality condition
@@ -94,8 +99,7 @@ classdef Astrocyte < handle
                 g_BK_k * w_k);
             
             % Fluxes
-            J_N_BK_k = g_BK_k / p.F * w_k .* ...
-                (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
+            J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
             J_BK_p = J_N_BK_k ./ (R_k * p.VR_pa); % K+ influx into the PVS (uM/s)
             J_BK_k = J_N_BK_k ./ R_k; % K+ efflux from the AC (uM/s)
             J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
@@ -118,16 +122,17 @@ classdef Astrocyte < handle
             I_TRPV_k = p.G_TRPV_k * m_k .* (v_k-E_TRPV_k) * p.C_correction; %current TRPV
             J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); 
             
+            rho = 0.1 + 0.6/1846 * self.input_Glu(t)*1000000;                     %********************************************************
+            %rho = self.input_rho(t);
+            
             % Other equations
             B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
                 (p.K_ex + Ca_k).^2);
-            G = (self.input_rho(t) + p.delta) ./ ...
-                (p.K_G + self.input_rho(t) + p.delta);
-            v_3 = -p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4) + p.v_7; % Ca included
+            G = (rho + p.delta) ./ ...
+                (p.K_G + rho + p.delta);
+            v_3 = -p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4) + p.v_6; % Ca included
             
             %% Parent Calcium equations
-%            v_6 = 22e-3; % Ca excluded
-%            v_6 = p.eet_shift * eet_k - v_3; % Ca included
             
 %            w_inf = 0.5 * (1 + tanh((v_k + v_6) / p.v_4)); % Ca excluded
            w_inf = 0.5 * (1 + tanh((v_k + p.eet_shift * eet_k - v_3) / p.v_4)); % Ca included
@@ -139,7 +144,6 @@ classdef Astrocyte < handle
             H_Ca_k = Ca_k ./ p.gam_cai_k + Ca_p ./ p.gam_cae_k;
             eta = (R - p.R_0_passive_k) ./ (p.R_0_passive_k);
             minf_k = (1 ./ (1 + exp(-(eta - p.epshalf_k) ./ p.kappa_k))) .* ((1 ./ (1 + H_Ca_k)) .* (H_Ca_k + tanh(((v_k) - p.v1_TRPV_k) ./ p.v2_TRPV_k))); %Define epsilon
-            t_Ca_k = p.t_TRPV_k ./ Ca_p;
             J_VOCC_k = J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
             
             
@@ -160,15 +164,12 @@ classdef Astrocyte < handle
                 du(idx.N_HCO3_k, :);
             
             % Differential Calcium Equations in Astrocyte
-            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k/p.r_buff); % TRPV flux is buffered (at lower rate).
-            %du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak) + J_TRPV_k; % TRPV flux is NOT buffered.
-            
+            du(idx.Ca_k, :) = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k/p.r_buff); % TRPV flux is buffered (at lower rate).            
             du(idx.s_k, :) = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak)) ./ (p.VR_ER_cyt); % rewritten in fluxes
             du(idx.h_k, :) = p.k_on * (p.K_inh - (Ca_k + p.K_inh) .* h_k);
             du(idx.I_k, :) = p.r_h * G - p.k_deg * I_k;
-            du(idx.m_k, :) = p.trpv_switch .* ((minf_k - m_k) ./ (t_Ca_k .* Ca_p)) ; %TRPV open probability, the trpv_switch can switch the turn the channel on or off.
-            du(idx.eet_k, :) = p.V_eet * max(Ca_k - p.Ca_k_min, 0) - ...
-                p.k_eet * eet_k;
+            du(idx.m_k, :) = p.trpv_switch .* ((minf_k - m_k) ./ p.t_TRPV_k) ; %TRPV open probability, the trpv_switch can switch the turn the channel on or off.
+            du(idx.eet_k, :) = p.V_eet * max(Ca_k - p.Ca_k_min, 0) - p.k_eet * eet_k;
             du(idx.w_k, :) = phi_w .* (w_inf - w_k);
             
             % Differential Equations in the Perivascular space
@@ -194,7 +195,11 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.K_s, :) = K_s;
                 Uout(self.idx_out.K_p, :) = K_p;
                 Uout(self.idx_out.J_N_BK_k, :) = J_N_BK_k;
-                Uout(self.idx_out.rho, :) = self.input_rho(t);
+                Uout(self.idx_out.Cak, :) = self.input_Cak(t);
+                
+                %Uout(self.idx_out.rho, :) = self.input_rho(t);
+                Uout(self.idx_out.rho, :) = rho;
+                
                 Uout(self.idx_out.B_cyt, :) = B_cyt;
                 Uout(self.idx_out.G, :) = G;
                 Uout(self.idx_out.v_3, :) = v_3;
@@ -238,6 +243,13 @@ classdef Astrocyte < handle
                 0.5 * tanh((t - p.t_2) / p.theta_R)) + p.base;
         end
         
+       function Glu = input_Glu(self, t) 
+            p = self.params;
+            Glu = p.GluSwitch * (p.Glu_max - p.Glu_min) * ( ...
+            0.5 * tanh((t - p.t_0_Glu) / p.theta_L_Glu) - ...
+            0.5 * tanh((t - p.t_2_Glu) / p.theta_R_Glu)) + p.Glu_min;
+        end
+        
         % C_input Block function to switch channel on and off
         function out = flux_ft(self, t)
             p = self.params;
@@ -259,6 +271,21 @@ classdef Astrocyte < handle
                     f(p.tend_ECS  <= t & t <= p.tend_ECS + lengtht ) = -p.ECS_input * 1e3;
         end
 
+                        
+        function Cak = input_Cak(self, t)
+            p = self.params;
+            Cak = (17 - 0.15) * ( ...
+                0.5 * tanh((t - p.t_0) / p.theta_L) - ...
+                0.5 * tanh((t - p.t_2) / p.theta_R)) + 0.15;
+        end
+        
+        function ip3 = input_ip3(self, t)
+            p = self.params;
+            ip3 = (5 - 0.05) * ( ...
+                0.5 * tanh((t - p.t_0) / p.theta_L) - ...
+                0.5 * tanh((t - p.t_2) / p.theta_R)) + 0.05;
+        end
+        
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
         end
@@ -320,6 +347,7 @@ function [idx, n] = output_indices(self)
     idx.J_BK_p = 26;
     idx.J_BK_k = 27;
     idx.E_TRPV_k = 28;
+    idx.Cak = 29;
     n = numel(fieldnames(idx));
 end
 
@@ -334,21 +362,27 @@ function params = parse_inputs(varargin)
     % Switches to turn on and off some things
     parser.addParameter('rhoSwitch', 1); 
     parser.addParameter('blockSwitch', 1); 
+    parser.addParameter('GluSwitch', 1); 
     parser.addParameter('PVStoECS', 0); 
     parser.addParameter('SCtoECS', 1); 
     parser.addParameter('ECSswitch', 1); 
     parser.addParameter('trpv_switch', 1); 
     
+    parser.addParameter('Glu_max', 1846);       % microM (one vesicle, Santucci2008)
+    parser.addParameter('Glu_min', 0);          % microM
+    parser.addParameter('theta_L_Glu', 1);      % slope of Glu input 
+    parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
+    
     % Joerik suggested changes
     %   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % Joerik BK channel
-    %   parser.addParameter('v_7', -13.57e-3);          % Joerik BK channel
+    %   parser.addParameter('v_6', -13.57e-3);          % Joerik BK channel
     %   parser.addParameter('reverseBK', -0.08135);     % Joerik BK channel
     %   parser.addParameter('switchBK', 0);             % Joerik BK channel
     %   parser.addParameter('Ca_4', 0.35); % uM         % Joerik BK channel
 
     % Normal parameters
     parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
-    parser.addParameter('v_7', -15e-3); %V 
+    parser.addParameter('v_6', -15e-3); %V 
     parser.addParameter('reverseBK', 0);
     parser.addParameter('switchBK', 1);
     parser.addParameter('Ca_4', 0.15); % uM
@@ -379,7 +413,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('base', 0.1);
     parser.addParameter('theta_L', 1);
     parser.addParameter('theta_R', 1);
-    parser.addParameter('delta', 1.235e-2); %THIS MAY BE WRONG
+    parser.addParameter('delta', 1.235e-2); 
     parser.addParameter('BK_switch', -2.5e-10);
     parser.addParameter('VR_ER_cyt', 0.185)
     parser.addParameter('k_on', 2); %uM s^-1
@@ -401,9 +435,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('gam_cai_k', 0.01); %uM
      parser.addParameter('epshalf_k', 0.1); % 
     parser.addParameter('kappa_k', 0.1);
-    parser.addParameter('v1_TRPV_k', 0.120); %mV
-    parser.addParameter('v2_TRPV_k', 0.013); %mV
-    parser.addParameter('t_TRPV_k', 0.9); %mV
+    parser.addParameter('v1_TRPV_k', 0.120); %V
+    parser.addParameter('v2_TRPV_k', 0.013); %V
+    parser.addParameter('t_TRPV_k', 0.9); 
     parser.addParameter('R_0_passive_k', 20e-6); 
     parser.addParameter('Ca_decay_k', 0.5);
     parser.addParameter('G_TRPV_k', 50); %pS
@@ -471,6 +505,10 @@ function params = parse_inputs(varargin)
     params.gab = factorial(params.alpha + params.beta - 1);
     params.ga = factorial(params.alpha - 1);
     params.gb = factorial(params.beta - 1);
+    params.t_0_Glu = params.t_0;
+    params.t_2_Glu = params.t_2;
+    params.startpulse_Glu = params.startpulse;
+    params.lengthpulse_Glu = params.lengthpulse;
 
 end
 

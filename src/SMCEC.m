@@ -92,9 +92,8 @@ classdef SMCEC < handle
             J_IP3_coup_i = -p.P_IP3 * (I_i - I_j);
             J_Ca_coup_i = -p.P_Ca * (Ca_i - Ca_j);
             
-            c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
-%           c_w_i = 1 ./ (p.epsilon_i + p.alpha_i * exp(p.gam_i * cGMP_i)); % NO included - new
-%           c_w_i = 0; % NO excluded
+            %c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
+            c_w_i = 1/2 * (1 + tanh((cGMP_i - 10.75)/0.668) ); % Nicer form
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
@@ -115,7 +114,6 @@ classdef SMCEC < handle
             p_NO_j = p.NOswitch * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
             
-            %J_lumen = - NO_j * 4 * p.D_cNO ./ ((1e6*R).^2); 
             J_lumen = - NO_j * 4 * p.D_cNO ./ (25.^2); 
             d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 
 
