@@ -127,8 +127,7 @@ classdef SMCEC < handle
             %% Differential Equations
             % Smooth muscle cell
             du(idx.Ca_i, :) = J_IP3_i - J_SR_uptake_i - J_extrusion_i + ...
-                J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i + ...
-                p.stretchFix*0.1*J_stretch_i + J_Ca_coup_i;
+                J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i - 0.1*J_stretch_i + J_Ca_coup_i;
             
             du(idx.s_i, :) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
             du(idx.v_i, :) = p.gamma_i * (...
@@ -139,8 +138,7 @@ classdef SMCEC < handle
             du(idx.K_i, :) = J_NaK_i - J_KIR_i - J_K_i;
             % Endothelial Cell
             du(idx.Ca_j, :) = J_IP3_j - J_ER_uptake_j + J_CICR_j - ...
-                J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j + ...
-                p.stretchFix*J_stretch_j - J_Ca_coup_i;
+                J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j - J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
             du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;           % p.J_PLC or self.input_plc(t)
@@ -316,7 +314,6 @@ function params = parse_inputs(varargin)
     parser = inputParser();
     
     parser.addParameter('NOswitch', 1); 
-    parser.addParameter('stretchFix', -1); 
     
     % Smooth Muscle Cell ODE Constants
     parser.addParameter('gamma_i', 1970); %mV uM^-1

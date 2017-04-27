@@ -52,8 +52,6 @@ classdef Astrocyte < handle
             NO_k = u(idx.NO_k, :);
             du = zeros(size(u));
             
-            %J_input = self.input_Cak(t);
-            
             %% Synaptic Cleft:
             % Electroneutrality condition
             N_Cl_s = N_Na_s + N_K_s - N_HCO3_s;
@@ -95,8 +93,9 @@ classdef Astrocyte < handle
                 p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + ...
                 g_BK_k * w_k .* E_BK_k - ...
                 J_NaK_k * p.F / p.C_correction) ./ ...
-                (p.g_Na_k +p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + ... %TRPV
+                (p.g_Na_k + p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + ... %TRPV
                 g_BK_k * w_k);
+%             v_k = -86.5e-3 + self.input_Cak(t);
             
             % Fluxes
             J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
@@ -122,15 +121,14 @@ classdef Astrocyte < handle
             I_TRPV_k = p.G_TRPV_k * m_k .* (v_k-E_TRPV_k) * p.C_correction; %current TRPV
             J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); 
             
-            rho = 0.1 + 0.6/1846 * self.input_Glu(t)*1000000;                     %********************************************************
-            %rho = self.input_rho(t);
+            rho = 0.1 + 0.6/1846 * self.input_Glu(t);           
             
             % Other equations
             B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
                 (p.K_ex + Ca_k).^2);
             G = (rho + p.delta) ./ ...
                 (p.K_G + rho + p.delta);
-            v_3 = -p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4) + p.v_6; % Ca included
+            v_3 = p.v_6 - p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4); % Ca included
             
             %% Parent Calcium equations
             
@@ -143,7 +141,7 @@ classdef Astrocyte < handle
             %% TRPV Channel open probabilty equations
             H_Ca_k = Ca_k ./ p.gam_cai_k + Ca_p ./ p.gam_cae_k;
             eta = (R - p.R_0_passive_k) ./ (p.R_0_passive_k);
-            minf_k = (1 ./ (1 + exp(-(eta - p.epshalf_k) ./ p.kappa_k))) .* ((1 ./ (1 + H_Ca_k)) .* (H_Ca_k + tanh(((v_k) - p.v1_TRPV_k) ./ p.v2_TRPV_k))); %Define epsilon
+            minf_k = (1 ./ (1 + exp(-(eta - p.epshalf_k) ./ p.kappa_k))) .* ((1 ./ (1 + H_Ca_k)) .* (H_Ca_k + tanh((v_k - p.v1_TRPV_k) ./ p.v2_TRPV_k))); %Define epsilon
             J_VOCC_k = J_VOCC_i; %This flux is now from SMC to PVS (instead of from SMC to extracellular space)
             
             
@@ -176,6 +174,7 @@ classdef Astrocyte < handle
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
                 p.VR_ps - p.R_decay * (K_p - p.K_p_min) + p.ECSswitch * p.PVStoECS * (1 / p.tau) * (K_e - K_p);
             du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); %calcium concentration in PVS
+           
             % Differential Equations in the Synaptic Cleft
             du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + p.ECSswitch * p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
             du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
@@ -274,9 +273,7 @@ classdef Astrocyte < handle
                         
         function Cak = input_Cak(self, t)
             p = self.params;
-            Cak = (17 - 0.15) * ( ...
-                0.5 * tanh((t - p.t_0) / p.theta_L) - ...
-                0.5 * tanh((t - p.t_2) / p.theta_R)) + 0.15;
+            Cak = t*0.05e-3;
         end
         
         function ip3 = input_ip3(self, t)
@@ -373,19 +370,11 @@ function params = parse_inputs(varargin)
     parser.addParameter('theta_L_Glu', 1);      % slope of Glu input 
     parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
     
-    % Joerik suggested changes
-    %   parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2) % Joerik BK channel
-    %   parser.addParameter('v_6', -13.57e-3);          % Joerik BK channel
-    %   parser.addParameter('reverseBK', -0.08135);     % Joerik BK channel
-    %   parser.addParameter('switchBK', 0);             % Joerik BK channel
-    %   parser.addParameter('Ca_4', 0.35); % uM         % Joerik BK channel
-
-    % Normal parameters
-    parser.addParameter('G_BK_k', 4.3e3); % pS (later converted to mho m^-2)
-    parser.addParameter('v_6', -15e-3); %V 
+    parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2)
+    parser.addParameter('v_6', -55e-3); %V 
     parser.addParameter('reverseBK', 0);
     parser.addParameter('switchBK', 1);
-    parser.addParameter('Ca_4', 0.15); % uM
+    parser.addParameter('Ca_4', 0.35); % uM  
 
     % ECS constants
     parser.addParameter('VR_se', 1);
@@ -430,7 +419,7 @@ function params = parse_inputs(varargin)
     %TRPV4
     parser.addParameter('Capmin_k', 2000); %uM
     parser.addParameter('C_astr_k', 40);%pF
-    parser.addParameter('gamma_k',834.3);%mV/uM
+    parser.addParameter('gamma_k', 834.3);%mV/uM
     parser.addParameter('gam_cae_k', 200); %uM
     parser.addParameter('gam_cai_k', 0.01); %uM
      parser.addParameter('epshalf_k', 0.1); % 
@@ -482,8 +471,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_ex', 0.26); %uM
     parser.addParameter('B_ex', 11.35); %uM
     parser.addParameter('K_G', 8.82); %uM
-    parser.addParameter('v_4', 14.5e-3); %V
-    parser.addParameter('v_5', 8e-3); %V
+    parser.addParameter('v_4', 8e-3); %V
+    parser.addParameter('v_5', 15e-3); %V
 %     parser.addParameter('v_6', 22e-3); %V
     parser.addParameter('psi_w', 2.664); %s^-1
 
@@ -516,7 +505,7 @@ function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
     u0 = zeros(length(fieldnames(idx)), 1);
-    u0(idx.R_k) = 0.061e-6;
+    u0(idx.R_k) = 0.0621e-6;
     u0(idx.N_Na_k) = 0.99796e-3;
     u0(idx.N_K_k) = 5.52782e-3;
     u0(idx.N_HCO3_k) = 0.58804e-3;
@@ -525,7 +514,7 @@ function u0 = initial_conditions(idx,self)
     u0(idx.N_K_s) = 0.0807e-3;
     u0(idx.N_HCO3_s) = 0.432552e-3;
     u0(idx.K_p) = 3e3;
-    u0(idx.w_k) = 0.1815e-3;
+    u0(idx.w_k) = 1;%0.1815e-3;
     u0(idx.Ca_k) = 0.1; % Michelle: 0.05e-3 !!! (Bennet 2008)
     u0(idx.s_k) = 400;
     u0(idx.h_k) = 0.1e-3;

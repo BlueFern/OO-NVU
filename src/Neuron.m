@@ -221,4 +221,3 @@ function u0 = initial_conditions(idx)
     u0(idx.nNOS_act_n) = 0.3;
     u0(idx.NO_n) = 0.1;
 end
-
