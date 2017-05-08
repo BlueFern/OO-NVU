@@ -27,8 +27,6 @@ classdef WallMechanics < handle
             % duplicating equations
             [R, h] = self.shared(t, u);
 
-            [pR] = self.inflate(t);
-
             Mp = u(idx.Mp, :);
             AMp = u(idx.AMp, :);
             AM = u(idx.AM, :);
@@ -36,8 +34,6 @@ classdef WallMechanics < handle
             %% Contraction Equations
             K_1 = p.gamma_cross * Ca_i.^p.n_cross;
             K_6 = K_1;
-            
-%             K_2 = 0.5; % NO excluded
             K_2 = 58.1395 * p.k_mlcp_b + 58.1395 * p.k_mlcp_c * R_cGMP2;
             K_5 = K_2;
             
@@ -50,8 +46,8 @@ classdef WallMechanics < handle
             F_r = AMp + AM;
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
             R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
-           % R_new = self.input_R(t);
-            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * pR * p.P_T ./ h - ...
+
+            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * p.P_T ./ h - ...
                 E .* (R - R_0) ./ R_0);
 
             du = bsxfun(@times, self.enabled, du);
@@ -64,17 +60,7 @@ classdef WallMechanics < handle
                Uout(self.idx_out.K_2, :) = K_2;
                varargout{1} = Uout;
             end
-        end
-
-%         function R_input = input_R(~, t)
-%             % Input signal; the smooth pulse function rho
-%             R_input = 7.74e-6* (0.5* tanh((t-110)/0.8)-0.5* tanh((t-115)/1.9))+19.37e-6;
-%         end
-
-        function [pR] = inflate(self, t)
-%             t_scalar = t(end,:);
-            pR = 1; %5*(0.5 .* tanh((t-75)./0.8)-0.5.* tanh((t-76) ./1.9)); %u(self.index.R, :);
-        end   
+        end 
 
         function [R, h] = shared(self, ~,u)
            
@@ -108,13 +94,12 @@ end
 function params = parse_inputs(varargin)
     parser = inputParser();
     % Contraction Equation Constants
-    % parser.addParameter('K_2', 0.5); % s^-1
     parser.addParameter('K_3', 0.4); % s^-1
     parser.addParameter('K_4', 0.1); % s^-1
-    % parser.addParameter('K_5', 0.5); % s^-1
     parser.addParameter('K_7', 0.1); % s^-1
     parser.addParameter('gamma_cross', 17); %uM^-3 s^-1
     parser.addParameter('n_cross', 3); % fraction constant of the phosphorylation crossbridge
+    
     % Mechanical Equation Constants
     parser.addParameter('eta', 1e4); %Pa s
     parser.addParameter('R_0_passive', 20e-6); % m
@@ -135,5 +120,5 @@ function u0 = initial_conditions(idx)
     u0(idx.Mp) = .25;
     u0(idx.AMp) = .25;
     u0(idx.AM) = .25;
-    u0(idx.R) = 24.8e-6; %15e-6;
+    u0(idx.R) = 24.8e-6;
 end

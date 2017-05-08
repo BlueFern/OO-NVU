@@ -43,7 +43,7 @@ classdef SMCEC < handle
             
             
             %% SMC fluxes
-            J_IP3_i = p.F_i * I_i.^2 ./ (p.K_r_i^2 + I_i.^2);           % IP3/RYR channel?
+            J_IP3_i = p.F_i * I_i.^2 ./ (p.K_r_i^2 + I_i.^2);           % IP3 channel
             J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);   % SERCA pump
             J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* ...
                 Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
@@ -91,9 +91,8 @@ classdef SMCEC < handle
             V_coup_i = -p.G_coup * (v_i - v_j);
             J_IP3_coup_i = -p.P_IP3 * (I_i - I_j);
             J_Ca_coup_i = -p.P_Ca * (Ca_i - Ca_j);
-            
-            %c_w_i = 1e-7 ./ (1e-7 + 1e7 * exp(-3 * cGMP_i)); % NO included  - old
-            c_w_i = 1/2 * (1 + tanh((cGMP_i - 10.75)/0.668) ); % Nicer form
+
+            c_w_i = 1/2 * (1 + tanh((cGMP_i - 10.75)/0.668) );
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
@@ -118,7 +117,7 @@ classdef SMCEC < handle
             d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 
 
             W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2)); 
-            F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); % last term was added to get no NO at 0 wss (!)
+            F_wss = 1 / (1 + p.alp * exp(-W_wss)) - 1 / (1 + p.alp); 
 
             Act_eNOS_Ca = p.K_dis * Ca_j / (p.K_eNOS + Ca_j); 
             Act_eNOS_wss = p.g_max * F_wss;  
@@ -136,6 +135,7 @@ classdef SMCEC < handle
             du(idx.w_i, :) = p.lambda_i * (K_act_i - w_i);
             du(idx.I_i, :) = J_IP3_coup_i - J_degrad_i;
             du(idx.K_i, :) = J_NaK_i - J_KIR_i - J_K_i;
+            
             % Endothelial Cell
             du(idx.Ca_j, :) = J_IP3_j - J_ER_uptake_j + J_CICR_j - ...
                 J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j - J_stretch_j - J_Ca_coup_i;
@@ -143,13 +143,11 @@ classdef SMCEC < handle
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
             du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;           % p.J_PLC or self.input_plc(t)
             
-            
             % NO pathway
             du(idx.NO_i, :) = p_NO_i - c_NO_i + d_NO_i;
             du(idx.E_b, :)  = -p.k1 * E_b .* NO_i + p.k_1 * E_6c + k4 .* E_5c;     
             du(idx.E_6c, :) = p.k1 * E_b .* NO_i - (p.k_1 + p.k2) * E_6c - p.k3 * E_6c .* NO_i;
             du(idx.cGMP_i, :) = p.V_max_sGC * E_5c - V_max_pde .* cGMP_i ./ (p.K_m_pde + cGMP_i); 
-
             du(idx.eNOS_act_j, :) = (p.gam_eNOS * Act_eNOS_Ca  + (1 - p.gam_eNOS) * Act_eNOS_wss - p.mu2_j * eNOS_act_j); 
             du(idx.NO_j, :) = p_NO_j - c_NO_j + d_NO_j;
             
@@ -253,7 +251,6 @@ function idx = indices()
     idx.E_b = 8;
     idx.E_6c = 9;
     idx.cGMP_i = 10;
-
     idx.Ca_j = 11;
     idx.s_j = 12;
     idx.v_j = 13;
@@ -282,7 +279,6 @@ function [idx, n] = output_indices()
     idx.J_KIR_i = 15;
     idx.K_act_i = 16;
     idx.J_degrad_i = 17;
-
     idx.V_coup_j = 18;
     idx.J_Ca_coup_j = 19;
     idx.J_IP3_coup_j = 20;
@@ -408,7 +404,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('G_coup', 0.5); %s^-1
 
     % Additional Equations Constants
-%     parser.addParameter('c_w_i', 0); %uM
     parser.addParameter('beta_i', 0.13); %uM^2
     parser.addParameter('v_Ca3_i', -27); %mV
     parser.addParameter('R_K_i', 12); %mV
@@ -417,7 +412,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('z_3', 4.2e-4); %uM mV^-1 s^-1
     parser.addParameter('z_4', 12.6); %uM mV^-1 s^-1
     parser.addParameter('z_5', -7.4e-2); %uM mV^-1 s^-1
-
     
     % NO pathway
     parser.addParameter('D_cNO', 3300); % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)
@@ -456,7 +450,7 @@ end
 
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
-    % Inital estimations of parameters from experimental data
+
     u0(idx.Ca_i) = 0.1649; % 0.1;
     u0(idx.s_i) = 1.361; % 0.1;
     u0(idx.v_i) = -50.3; % -60;
@@ -467,7 +461,6 @@ function u0 = initial_conditions(idx)
     u0(idx.E_b) = 1/3; % 1/3;
     u0(idx.E_6c) = 1/3; % 1/3;
     u0(idx.cGMP_i) = 6; % 8;
-
     u0(idx.Ca_j) = 0.5628; % 0.1;
     u0(idx.s_j) = 0.8392; % 0.1;
     u0(idx.v_j) = -65.24; % -75;

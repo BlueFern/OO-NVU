@@ -25,19 +25,21 @@ classdef Neuron < handle
             nNOS_act_n = u(idx.nNOS_act_n, :);
             NO_n = u(idx.NO_n, :);
             
-            % Algebraic expressions
+            % K+ input
             J_NaK_n = p.k_C * self.input_K(t);
             
             % NO pathway
             w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
             w_NR2B = self.input_Glu(t) ./ (p.K_mB + self.input_Glu(t)); %[-]
+            
             I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02))) * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
             I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B); %[fA]
+            
             phi_N = 1 + p.Q1 * Ca_n + p.Q1 * p.Q2 * Ca_n.^2 + p.Q1 * p.Q2 * p.Q3 * Ca_n.^3 + p.Q1 * p.Q2 * p.Q3 * p.Q4 * Ca_n.^4; %[-]
             dphi_N = p.Q1 + 2 * p.Q1 * p.Q2 * Ca_n + 3 * p.Q1 * p.Q2 * p.Q3 * Ca_n.^2 + 4 * p.Q1 * p.Q2 * p.Q3 * p.Q4 * Ca_n.^3; %[uM^-1]
-            m_c = (Ca_n ./ phi_N) .* dphi_N; %[-]
-            CaM = Ca_n ./ m_c; %[uM]
-            tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);
+            CaM = Ca_n / p.m_c; %[uM]
+            tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO); %[s]
+            
             p_NO_n = p.NOswitch * ( nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) ); %[uM/s]
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
@@ -59,7 +61,6 @@ classdef Neuron < handle
             	Uout(self.idx_out.I_Ca_tot, :) = I_Ca_tot;
             	Uout(self.idx_out.phi_N, :) = phi_N;
                 Uout(self.idx_out.dphi_N, :) = dphi_N;
-            	Uout(self.idx_out.m_c, :) = m_c;
             	Uout(self.idx_out.CaM, :) = CaM;
             	Uout(self.idx_out.tau_nk, :) = tau_nk;
             	Uout(self.idx_out.p_NO_n, :) = p_NO_n;
@@ -70,7 +71,7 @@ classdef Neuron < handle
             end
         end
         
-       function [J_Na_n, NO_n] = shared(self, t, u)    %shared variable
+       function [J_Na_n, NO_n] = shared(self, t, u)    %shared variables
             t = t(:).';
             p = self.params;
             idx = self.index;
@@ -94,7 +95,6 @@ classdef Neuron < handle
             end
         end
         
-        % This is basically a scaled version of input_rho(t) in Astrocyte
         function Glu = input_Glu(self, t) 
             p = self.params;
             Glu = p.GluSwitch * (p.Glu_max - p.Glu_min) * ( ...
@@ -112,7 +112,6 @@ function idx = indices()    %for state variables
     idx.Ca_n = 1;                  
     idx.nNOS_act_n = 2;
     idx.NO_n = 3;
-            
 end        
 
 function [idx, n] = output_indices()    %for variables in nargout loop
@@ -125,12 +124,11 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.I_Ca_tot = 7; 
     idx.phi_N = 8; 
     idx.dphi_N = 9; 
-    idx.m_c = 10; 
-    idx.CaM = 11; 
-    idx.tau_nk = 12; 
-    idx.p_NO_n = 13;    
-    idx.c_NO_n = 14; 
-    idx.d_NO_n = 15;       
+    idx.CaM = 10; 
+    idx.tau_nk = 11; 
+    idx.p_NO_n = 12;    
+    idx.c_NO_n = 13; 
+    idx.d_NO_n = 14;       
     
     n = numel(fieldnames(idx));
 end
@@ -161,7 +159,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('theta_L_Glu', 1);      % slope of Glu input 
     parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
 
-    % NO pathway
+    % NO pathway 
+    parser.addParameter('m_c', 4);              % [-] Number of Ca2+ bound per calmodulin (approximated as parameter, originally an algebraic variable)
+    
     parser.addParameter('K_mA', 650);           % [uM] - fit to Santucci2008
     parser.addParameter('K_mB', 2800);          % [uM] - fit to Santucci2008
 

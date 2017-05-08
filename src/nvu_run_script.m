@@ -31,9 +31,9 @@ ECS_END         = 200000000;      % End of ECS K+ input
 J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for oscillations
 
 ECS             = 1;        % Include ECS compartment or not
-CA_SWITCH       = 1;        % Turn on Ca pathway
-NO_INPUT_SWITCH = 0;        % Turn on NO stimulation
-NO_PROD_SWITCH  = 0;        % Turn on Nitric Oxide production 
+CA_SWITCH       = 1;        % Turn on Ca2+ pathway
+NO_INPUT_SWITCH = 1;        % Turn on NO stimulation
+NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 K_SWITCH        = 1;        % Turn on K+ input into SC
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 
@@ -45,13 +45,12 @@ nv = NVU(Neuron('F_input', 2.67, 'startpulse', NEURONAL_START, 'lengthpulse', NE
 nv.T = linspace(0, XLIM2*2, 5000);
 nv.simulate()
 
-% Run this to take the ICs as the end of the last simulation run i.e.steady state ICs
+% Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
 ICs = (nv.U(end, :))';
 nv.u0 = ICs;
 nv.simulateManualICs() 
 
 % Plot figures - whatever you want
-
 figure(FIG_NUM);
 
 subplot(2,2,1);
@@ -71,8 +70,8 @@ subplot(2,2,3);
     xlim([XLIM1 XLIM2])
 subplot(2,2,4);
     hold all;
-    plot(nv.T, nv.out('v_k')*1e3 - nv.out('E_BK_k')*1e3, 'LineWidth', 1);
-    ylabel('v_k - E_{BK}');
+    plot(nv.T, nv.out('v_k')*1e3, nv.T, nv.out('E_BK_k')*1e3, 'LineWidth', 1);
+    ylabel('v_k and E_{BK}');
     xlim([XLIM1 XLIM2])
 
 figure(FIG_NUM + 1);
