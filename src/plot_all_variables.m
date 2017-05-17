@@ -5,13 +5,13 @@
 
 %% Plot state variables
 
-figure(1);
+figure(10);
 hold on
 set(gcf,'Name', 'Neuron State Variables')
 neuron_vars = fieldnames(nv.neuron.index);
 i_neuron = size(neuron_vars, 1);
 for i = 1:1:i_neuron
-    subplot(2,2,i)
+    subplot(6,6,i)
     plot(nv.T, nv.out(char(neuron_vars(i))));
     xlabel('Time [s]'); ylabel(neuron_vars(i));
     xlim([XLIM1 XLIM2])

@@ -57,9 +57,10 @@ classdef SMCEC < handle
                 (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
                 (v_i - p.E_SAC);
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
+            J_NaK_i = p.F_NaK_i;
+            J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
 
-            [J_KIR_i, J_NaK_i, J_K_i] = self.shared(t, u, K_p);
-            
+            [J_KIR_i] = self.shared(t, u, K_p);
             
             J_degrad_i = p.k_d_i * I_i;
             
@@ -202,11 +203,10 @@ classdef SMCEC < handle
             end
         end
         
-        function [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = shared(self, t, u, K_p)
+        function [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = shared(self, t, u, K_p)
             p = self.params;
             idx = self.index;
             v_i = u(idx.v_i, :);
-            w_i = u(idx.w_i, :);
             Ca_i = u(idx.Ca_i, :);
             NO_i = u(idx.NO_i, :);
             cGMP_i = u(idx.cGMP_i, :);
@@ -218,8 +218,6 @@ classdef SMCEC < handle
             J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
             
             J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
-            J_NaK_i = p.F_NaK_i;
-            J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
         end
         
         function jplc = input_plc(self, t)

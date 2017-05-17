@@ -21,13 +21,12 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i, J_NaK_i, J_K_i)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
             idx = self.index;
 
-            K_e = u(idx.K_e, :);
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
@@ -50,6 +49,7 @@ classdef Astrocyte < handle
             du = zeros(size(u));
             
             %% Synaptic Cleft:
+
             % Electroneutrality condition
             N_Cl_s = N_Na_s + N_K_s - N_HCO3_s;
             
@@ -66,6 +66,10 @@ classdef Astrocyte < handle
             K_k = N_K_k ./ R_k;
             Cl_k = N_Cl_k ./ R_k;
             HCO3_k = N_HCO3_k ./ R_k;
+            
+            % Input of K+ to the SC
+            J_K_NEtoSC_k = J_K_NEtoSC * 1000 .* R_s; % Convert from mM/s to uMm/s
+            
             
             %% Astrocyte
             % Volume-surface Ratio scaling ODE
@@ -167,24 +171,22 @@ classdef Astrocyte < handle
             
             % Differential Equations in the Perivascular space
             du(idx.K_p, :) = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ ...
-                p.VR_ps - p.R_decay * (K_p - p.K_p_min) + p.ECSswitch * p.PVStoECS * (1 / p.tau) * (K_e - K_p);
+                p.VR_ps - p.R_decay * (K_p - p.K_p_min) ;
             du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
            
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_NaK_n + J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + p.ECSswitch * p.SCtoECS * (R_s / p.tau2) .* (K_e - K_s);
-            du(idx.N_Na_s, :) = -J_NaK_n - du(idx.N_Na_k, :);
+            du(idx.N_K_s, :) = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k;
+            du(idx.N_Na_s, :) = -du(idx.N_Na_k, :) - J_K_NEtoSC_k;
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
             
             % NO pathway:
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
-            
-            % Differential Equation for the ECS
-            du(idx.K_e, :) = self.input_ECS(t) + p.ECSswitch * ( - J_NaK_i + J_K_i - p.SCtoECS * (p.VR_se / p.tau2) * (K_e - K_s) - p.PVStoECS * (p.VR_pe / p.tau) * (K_e - K_p) );
-            
+             
             du = bsxfun(@times, self.enabled, du);
             if nargout == 2
 
                 Uout = zeros(self.n_out, size(u, 2));
+                Uout(self.idx_out.J_K_NEtoSC, :) = J_K_NEtoSC;
                 Uout(self.idx_out.v_k, :) = v_k;
                 Uout(self.idx_out.K_s, :) = K_s;
                 Uout(self.idx_out.K_p, :) = K_p;
@@ -217,12 +219,17 @@ classdef Astrocyte < handle
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k] = shared(self, ~, u)
+        function [K_p, NO_k, K_s] = shared(self, ~, u)
             p = self.params;
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
-
+            
+            N_K_s = u(self.index.N_K_s, :);
+            R_k = u(self.index.R_k, :);
+            R_s = p.R_tot - R_k; 
+            
+            K_s = (N_K_s ./ R_s)/1e3; % SC K+ conc in mM
         end
         
        function Glu = input_Glu(self, t) 
@@ -231,15 +238,6 @@ classdef Astrocyte < handle
             0.5 * tanh((t - p.t_0_Glu) / p.theta_L_Glu) - ...
             0.5 * tanh((t - p.t_2_Glu) / p.theta_R_Glu)) + p.Glu_min;
        end   
-                
-        function f = input_ECS(self, t)
-            % Input of K+ into the ECS
-            p = self.params;
-            f = zeros(size(t));
-            lengtht = 20;
-                    f(p.t0_ECS <= t & t < p.t0_ECS + lengtht ) = p.ECS_input * 1e3;
-                    f(p.tend_ECS  <= t & t <= p.tend_ECS + lengtht ) = -p.ECS_input * 1e3;
-        end
         
         function names = varnames(self)
             names = [fieldnames(self.index); fieldnames(self.idx_out)];
@@ -266,9 +264,7 @@ function idx = indices(self)
     idx.eet_k = 15;
     idx.m_k = 16;
     idx.Ca_p = 17;
-    %idx.v_k = 18;
     idx.NO_k = 18;
-    idx.K_e = 19;
 
 end
 
@@ -304,6 +300,7 @@ function [idx, n] = output_indices(self)
     idx.E_TRPV_k = 28;
     idx.Cak = 29;
     idx.Na_k = 30;
+    idx.J_K_NEtoSC = 31;
     n = numel(fieldnames(idx));
 end
 
@@ -481,5 +478,4 @@ function u0 = initial_conditions(idx,self)
     u0(idx.m_k) = 0;
     u0(idx.Ca_p) = 2000;
     u0(idx.NO_k) = 0.1;
-    u0(idx.K_e) = 3e3;
 end
