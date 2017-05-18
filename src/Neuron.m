@@ -190,6 +190,7 @@ classdef Neuron < handle
             w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
             w_NR2B = self.input_Glu(t) ./ (p.K_mB + self.input_Glu(t)); %[-]
             
+%             I_Ca = (-4 * v_sa/1e3 * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (v_sa/1e3 + 0.02))) * (exp(2 * v_sa/1e3 * p.F / (p.R_gas * p.T))) / (1 - exp(2 * v_sa/1e3 * p.F / (p.R_gas * p.T))); %[fA]
             I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02))) * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
             I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B); %[fA]
             
@@ -566,7 +567,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('Mg', 1.2);  
 
     % NO pathway 
-    parser.addParameter('m_c', 4);              % [-] Number of Ca2+ bound per calmodulin (approximated as parameter, originally an algebraic variable)
+    parser.addParameter('m_c', 4);              % [-] Number of Ca2+ bound per calmodulin (approximated as parameter, originally an algebraic variable that changed from 3.999 to 4)
     
     parser.addParameter('K_mA', 650);           % [uM] - fit to Santucci2008
     parser.addParameter('K_mB', 2800);          % [uM] - fit to Santucci2008

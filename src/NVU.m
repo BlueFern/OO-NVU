@@ -78,7 +78,7 @@ classdef NVU < handle
         function simulate(self)
             self.init_conds()
             f = @(t, u) self.rhs(t, u);
-            tic
+            tStart = tic;
             [self.T, self.U] = ode15s(f, self.T, self.u0, self.odeopts);
             % Now evaluate all of the additional parameters
             un = self.U(:, self.i_neuron).';
@@ -96,11 +96,16 @@ classdef NVU < handle
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
 
-            toc
+            tEnd = toc(tStart);
+            fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
         end
+        
+        % Use this function to run with user specified initial conditions -
+        % currently uses the ICs from the previous run to avoid transient
+        % behaviour, see nvu_run_script for details
         function simulateManualICs(self)
             f = @(t, u) self.rhs(t, u);
-            tic
+            tStart = tic;
             [self.T, self.U] = ode15s(f, self.T, self.u0, self.odeopts);
             % Now evaluate all of the additional parameters
             un = self.U(:, self.i_neuron).';
@@ -118,7 +123,8 @@ classdef NVU < handle
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
 
-            toc
+            tEnd = toc(tStart);
+            fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
         end
         function u = out(self, input_str)
             success = false;

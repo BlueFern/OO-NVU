@@ -18,15 +18,18 @@
 % tolerances.
 clear all
 
+timeStart = datestr(now,'dd-mm-yyyy HH:MM:SS');
+fprintf('Start time is %s\n', timeStart);
+
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 340; XLIM2 = 400;
+XLIM1 = 290; XLIM2 = 380;
 FIG_NUM = 1;
 
 
-NEURONAL_START      = 345;      % Start of neuronal stimulation
-NEURONAL_END        = 365;      % End of neuronal stimulation 
-CURRENT_STRENGTH    = 0.015;  % Strength of current input in mA/cm2
+NEURONAL_START      = 300;      % Start of neuronal stimulation
+NEURONAL_END        = 320;      % End of neuronal stimulation 
+CURRENT_STRENGTH    = 0.011;  % Strength of current input in mA/cm2  0.015
 
 ECS_START       = 100000000;      % Start of ECS K+ input
 ECS_END         = 200000000;      % End of ECS K+ input
@@ -34,17 +37,16 @@ J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for 
 
 ECS             = 1;        % Include ECS compartment or not
 CA_SWITCH       = 1;        % Turn on Ca2+ pathway
-NO_INPUT_SWITCH = 0;        % Turn on NO stimulation
+NO_INPUT_SWITCH = 1;        % Turn on NO stimulation
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
-K_SWITCH        = 1;        % Turn on K+ input into SC
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 
-nv = NVU(Neuron('startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', NO_INPUT_SWITCH, 'NOswitch', NO_PROD_SWITCH, 'KSwitch', K_SWITCH, 't0_ECS', ECS_START), ...
+nv = NVU(Neuron('startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', NO_INPUT_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START), ...
     Astrocyte('trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'GluSwitch', CA_SWITCH, 'ECSswitch', ECS, 'PVStoECS', 0, 'SCtoECS', 1), ...
     WallMechanics(), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
-nv.T = linspace(0, XLIM2*2, 20000);
+nv.T = linspace(0, XLIM2*2, 50000);
 nv.simulate()
 
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
@@ -54,8 +56,9 @@ nv.simulate()
 
 % Plot figures - whatever you want
 
-figure(2);
-plot(nv.T, nv.out('DHG'))
+% figure(2);
+% plot(nv.T, nv.out('NO_n'))
+% xlim([XLIM1 XLIM2])
 
 figure(FIG_NUM);
 
@@ -144,3 +147,6 @@ subplot(3,3,9);
 %     xlabel('Time [s]'); 
 %     ylabel('Radius [\mum]');
 %     xlim([XLIM1 XLIM2])
+
+timeEnd = datestr(now,'dd-mm-yyyy HH:MM:SS');
+fprintf('Finish time is %s\n', timeEnd);
