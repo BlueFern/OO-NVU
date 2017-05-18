@@ -183,15 +183,20 @@ classdef Neuron < handle
             
             %% K+ and NO pathway
             
-            % K+ input
+            % K+ input - OLD not used
             J_NaK_n = p.k_C * self.input_K(t);
             
-            % NO pathway
-            w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
-            w_NR2B = self.input_Glu(t) ./ (p.K_mB + self.input_Glu(t)); %[-]
+            % Glutamate input: vesicle released when the neuron membrane potential is above -50 mV (v_switch) and starts firing
+            Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (v_sa - p.v_switch) / p.Glu_slope) );
             
-%             I_Ca = (-4 * v_sa/1e3 * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (v_sa/1e3 + 0.02))) * (exp(2 * v_sa/1e3 * p.F / (p.R_gas * p.T))) / (1 - exp(2 * v_sa/1e3 * p.F / (p.R_gas * p.T))); %[fA]
-            I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02))) * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
+           % NO pathway
+            w_NR2A = Glu ./ (p.K_mA + Glu); %[-] 
+            w_NR2B = Glu ./ (p.K_mB + Glu); %[-]
+%             w_NR2A = self.input_Glu(t) ./ (p.K_mA + self.input_Glu(t)); %[-] 
+%             w_NR2B = self.input_Glu(t) ./ (p.K_mB + self.input_Glu(t)); %[-]
+            
+            I_Ca = (-4 * v_sa/1e3 * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (v_sa/1e3 + 0.02))) * (exp(2 * v_sa/1e3 * p.F / (p.R_gas * p.T))) / (1 - exp(2 * v_sa/1e3 * p.F / (p.R_gas * p.T))); %[fA]
+%             I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02))) * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
             I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B); %[fA]
             
             CaM = Ca_n / p.m_c; %[uM]
@@ -267,7 +272,7 @@ classdef Neuron < handle
             	Uout = zeros(self.n_out, size(u, 2));
             	Uout(self.idx_out.ft, :) = self.input_K(t);
             	Uout(self.idx_out.J_Na_n, :) = J_NaK_n;
-                Uout(self.idx_out.Glu, :) = self.input_Glu(t);
+                Uout(self.idx_out.Glu, :) = Glu; %self.input_Glu(t);
             	Uout(self.idx_out.w_NR2A, :) = w_NR2A;
             	Uout(self.idx_out.w_NR2B, :) = w_NR2B;
             	Uout(self.idx_out.I_Ca, :) = I_Ca;
@@ -464,6 +469,11 @@ function params = parse_inputs(varargin)
     parser.addParameter('KSwitch', 1); 
     parser.addParameter('NOswitch', 1); 
     
+    % Glutamate parameters
+    parser.addParameter('Glu_max', 1846);   % [uM] (one vesicle, Santucci2008)
+    parser.addParameter('Glu_slope', 0.1);  % [mV] Slope of sigmoidal
+    parser.addParameter('v_switch', -50);   % [mV] Threshold past which glutamate vesicle is released (M.E.)
+    
     % ECS K+ input parameters
     parser.addParameter('ECS_input', 9); 
     parser.addParameter('t0_ECS', 10000);
@@ -496,7 +506,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('beta', 5);
     parser.addParameter('delta_t', 10);         %s
     parser.addParameter('k_C', 7.35e-5);        %uM m s^-1
-    parser.addParameter('Glu_max', 1846);       % microM (one vesicle, Santucci2008)
     parser.addParameter('Glu_min', 0);          % microM
     parser.addParameter('theta_L_Glu', 1);      % slope of Glu input 
     parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
