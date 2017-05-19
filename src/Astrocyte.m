@@ -21,7 +21,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, Glu)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -124,7 +124,8 @@ classdef Astrocyte < handle
             I_TRPV_k = p.G_TRPV_k * m_k .* (v_k-E_TRPV_k) * p.C_correction; %current TRPV
             J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); 
             
-            rho = 0.1 + 0.6/1846 * self.input_Glu(t);           
+            %rho = 0.1 + 0.6/1846 * self.input_Glu(t);
+            rho = p.rho_min + (p.rho_max - p.rho_min)/p.Glu_max * Glu;
             
             % Other equations
             B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ ...
@@ -316,10 +317,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('rhoSwitch', 1); 
     parser.addParameter('blockSwitch', 1); 
     parser.addParameter('GluSwitch', 1); 
-    parser.addParameter('PVStoECS', 0); 
-    parser.addParameter('SCtoECS', 1); 
-    parser.addParameter('ECSswitch', 1); 
     parser.addParameter('trpv_switch', 1); 
+    
+    parser.addParameter('rho_min', 0.1);       % microM (one vesicle, Santucci2008)
+    parser.addParameter('rho_max', 0.7);  
     
     parser.addParameter('Glu_max', 1846);       % microM (one vesicle, Santucci2008)
     parser.addParameter('Glu_min', 0);          % microM

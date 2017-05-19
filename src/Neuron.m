@@ -187,7 +187,7 @@ classdef Neuron < handle
             J_NaK_n = p.k_C * self.input_K(t);
             
             % Glutamate input: vesicle released when the neuron membrane potential is above -50 mV (v_switch) and starts firing
-            Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (v_sa - p.v_switch) / p.Glu_slope) );
+            Glu = self.shared(t, u, K_s);
             
            % NO pathway
             w_NR2A = Glu ./ (p.K_mA + Glu); %[-] 
@@ -292,7 +292,7 @@ classdef Neuron < handle
             end
         end
         
-       function [J_K_NEtoSC, NO_n] = shared(self, t, u, K_s)    %shared variables
+       function [Glu, J_K_NEtoSC, NO_n] = shared(self, t, u, K_s)    %shared variables
             t = t(:).';
             p = self.params;
             idx = self.index;
@@ -315,6 +315,8 @@ classdef Neuron < handle
             h2 = u(idx.h2, :);          % Inactivation gating variable, soma/axon KA channel (K+)
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
+            
+            Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (v_sa - p.v_switch) / p.Glu_slope) );
             
             % Channels going into SC NOT ECS - K_e replaced with K_s
             E_K_sa      = p.ph * log(K_s ./ K_sa);

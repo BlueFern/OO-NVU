@@ -67,7 +67,7 @@ set(gcf,'Name', 'Neuron Fluxes/Algebraic Variables')
 neuron_flux_vars = fieldnames(nv.neuron.idx_out);
 i_neuron_flux = size(neuron_flux_vars, 1);
 for i = 1:1:i_neuron_flux
-    subplot(4,4,i)
+    subplot(4,5,i)
     plot(nv.T, nv.out(char(neuron_flux_vars(i))));
     xlabel('Time [s]'); ylabel(neuron_flux_vars(i));
     xlim([XLIM1 XLIM2])
@@ -80,7 +80,7 @@ set(gcf,'Name', 'Astrocyte Fluxes/Algebraic Variables')
 astrocyte_flux_vars = fieldnames(nv.astrocyte.idx_out);
 i_astrocyte_flux = size(astrocyte_flux_vars, 1);
 for i = 1:1:i_astrocyte_flux
-    subplot(5,6,i)
+    subplot(6,6,i)
     plot(nv.T, nv.out(char(astrocyte_flux_vars(i))));
     xlabel('Time [s]'); ylabel(astrocyte_flux_vars(i));
     xlim([XLIM1 XLIM2])
