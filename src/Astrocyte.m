@@ -124,7 +124,7 @@ classdef Astrocyte < handle
             I_TRPV_k = p.G_TRPV_k * m_k .* (v_k-E_TRPV_k) * p.C_correction; %current TRPV
             J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); 
             
-            %rho = 0.1 + 0.6/1846 * self.input_Glu(t);
+%             rho = 0.1 + 0.6/1846 * self.input_Glu(t);
             rho = p.rho_min + (p.rho_max - p.rho_min)/p.Glu_max * Glu;
             
             % Other equations

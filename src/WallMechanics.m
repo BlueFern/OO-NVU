@@ -38,9 +38,9 @@ classdef WallMechanics < handle
             K_5 = K_2;
             
             M = 1 - AM - AMp - Mp;
-            du(idx.Mp, :) = p.K_4 * AMp + K_1 .* M - (K_2 + p.K_3) .* Mp;
-            du(idx.AMp, :) = p.K_3 * Mp + K_6 .* AM - (p.K_4 + K_5) .* AMp;
-            du(idx.AM, :) = K_5 .* AMp - (p.K_7 + K_6) .* AM;
+            du(idx.Mp, :) = p.wallMech * ( p.K_4 * AMp + K_1 .* M - (K_2 + p.K_3) .* Mp );
+            du(idx.AMp, :) = p.wallMech  * ( p.K_3 * Mp + K_6 .* AM - (p.K_4 + K_5) .* AMp );
+            du(idx.AM, :) = p.wallMech  * ( K_5 .* AMp - (p.K_7 + K_6) .* AM );
             
             % Mechanical Equations
             F_r = AMp + AM;
@@ -93,6 +93,10 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+    
+    % Parameter for changing the wall mechanics rate constants
+    parser.addParameter('wallMech', 1);
+    
     % Contraction Equation Constants
     parser.addParameter('K_3', 0.4); % s^-1
     parser.addParameter('K_4', 0.1); % s^-1
