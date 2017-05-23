@@ -141,8 +141,10 @@ classdef Neuron < handle
             J_pump1_d       = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
             J_pump1init_d   = (1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_d / p.Na_init_d)).^(-3);
             
-            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);            % Oxygen dependent
-            %J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * p.O2_0) + p.alph * p.O2_0)).^(-1);
+            O2_p = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
+            
+%             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);            % Oxygen dependent
+            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2_p) + p.alph * p.O2_0)).^(-1);
             
             J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
@@ -176,7 +178,7 @@ classdef Neuron < handle
             
             %% BOLD
             f_out           = CBV.^(1/p.d) + p.tau * (1/(p.tau_MTT + p.tau) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ));
-            CMRO2           = p.CBF_init * P_02 * (1 - p.gamm) + J_O2_pump;
+            CMRO2           = J_O2_background + J_O2_pump;
             CMRO2_init      = p.CBF_init * P_02;
             E               = CMRO2 * p.E_0 ./ CBF;
             BOLD            = p.V_0 * ( p.a_1 * (1 - DHG) - p.a_2 * (1 - CBV) );
@@ -304,9 +306,8 @@ classdef Neuron < handle
             Na_sa = u(idx.Na_sa, :);    % Na+ concentration of soma/axon, mM
             K_d = u(idx.K_d, :);        % K+ concentration of dendrite, mM
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
-            K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
+            %K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
             Buff_s = u(idx.Buff_s, :);  % Buffer concentration for K+ buffering in SC, mM
-            %K_buff = u(idx.K_buff, :);  % K+ concentration in SC that gets buffered
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
@@ -315,6 +316,7 @@ classdef Neuron < handle
             h2 = u(idx.h2, :);          % Inactivation gating variable, soma/axon KA channel (K+)
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
+            O2 = u(idx.O2, :);
             
             %% Glutamate function dependent on neuron membrane potential
             %Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (v_sa - p.v_switch) / p.Glu_slope) );
@@ -348,8 +350,10 @@ classdef Neuron < handle
 %             J_pump1_sa  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
 %             J_pump1_d   = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
 %             
-            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
-%             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * p.O2_0) + p.alph * p.O2_0)).^(-1);
+            O2_p = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
+
+%             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2) + p.alph * p.O2_0)).^(-1);
+            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2_p) + p.alph * p.O2_0)).^(-1);
             
             J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
@@ -472,6 +476,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('GluSwitch', 1); 
     parser.addParameter('KSwitch', 1); 
     parser.addParameter('NOswitch', 1); 
+    parser.addParameter('O2switch', 1); 
     
     % Glutamate parameters
     parser.addParameter('Glu_max', 1846);   % [uM] (one vesicle, Santucci2008)
