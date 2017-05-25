@@ -21,12 +21,13 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, Glu)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
             idx = self.index;
 
+            Buff_s = u(idx.Buff_s, :);      % Buffer concentration for K+ buffering in SC, mM
             R_k = u(idx.R_k, :);
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
@@ -57,7 +58,7 @@ classdef Astrocyte < handle
             %TODO: set as constant and remove to simplify equations
             R_s = p.R_tot - R_k;
             
-            % Scale concentrations to get actual concentrations
+            % Scale concentrations to get actual concentrations in uM!!
             K_s = N_K_s ./ R_s;
             Na_s = N_Na_s ./ R_s;
             Cl_s = N_Cl_s ./ R_s;
@@ -67,13 +68,17 @@ classdef Astrocyte < handle
             Cl_k = N_Cl_k ./ R_k;
             HCO3_k = N_HCO3_k ./ R_k;
             
-            % Input of K+ to the SC
+            % Input of K+ to the SC (assuming that the SC is a small part of the ECS and everything that happens to the ECS also happens to the SC
             J_K_NEtoSC_k = J_K_NEtoSC * 1000 .* R_s; % Convert from mM/s to uMm/s
+            % Input of Na+ to the SC
+            J_Na_NEtoSC_k = J_Na_NEtoSC * 1000 .* R_s; 
             
+            
+             
             
             %% Astrocyte
             % Volume-surface Ratio scaling ODE
-            du(idx.R_k, :) = p.L_p * (Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
+            du(idx.R_k, :) = p.Rk_switch * p.L_p * (Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
             
             % Nernst potentials ( in V)
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
@@ -176,9 +181,12 @@ classdef Astrocyte < handle
             du(idx.Ca_p, :) = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
            
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :) = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k;
-            du(idx.N_Na_s, :) = -du(idx.N_Na_k, :) - J_K_NEtoSC_k;
+            du(idx.Buff_s, :)   = p.Mu * (K_s/1e3) .* (p.B0 - Buff_s) ./ (1 + exp(-(((K_s/1e3) - 5.5) ./ 1.09))) - (p.Mu * Buff_s); % Change in buffer for K+ in the SC, K_s in mM
+            du(idx.N_K_s, :)    = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k - du(idx.Buff_s) * 1e3 .* R_s - p.Ks_decay * (K_s - p.Ks_min) .* R_s;
+            du(idx.N_Na_s, :)   = -du(idx.N_Na_k, :) + J_Na_NEtoSC_k;
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+                        
+
             
             % NO pathway:
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
@@ -220,17 +228,20 @@ classdef Astrocyte < handle
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k, K_s] = shared(self, ~, u)
+        function [K_p, NO_k, K_s, Na_s] = shared(self, ~, u)
             p = self.params;
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
             
             N_K_s = u(self.index.N_K_s, :);
+            N_Na_s = u(self.index.N_Na_s, :);
             R_k = u(self.index.R_k, :);
             R_s = p.R_tot - R_k; 
             
             K_s = (N_K_s ./ R_s)/1e3; % SC K+ conc in mM
+            Na_s = (N_Na_s ./ R_s)/1e3; % SC K+ conc in mM
+            
         end
         
        function Glu = input_Glu(self, t) 
@@ -266,7 +277,7 @@ function idx = indices(self)
     idx.m_k = 16;
     idx.Ca_p = 17;
     idx.NO_k = 18;
-
+    idx.Buff_s = 19;
 end
 
 function [idx, n] = output_indices(self)
@@ -318,6 +329,16 @@ function params = parse_inputs(varargin)
     parser.addParameter('blockSwitch', 1); 
     parser.addParameter('GluSwitch', 1); 
     parser.addParameter('trpv_switch', 1); 
+    parser.addParameter('Rk_switch', 1);
+    
+    % SC decay
+    parser.addParameter('Ks_decay', 0.05);      % [s^-1] (M.E.)
+    parser.addParameter('Ks_min', 3130);         % [uM] (M.E.)
+ 
+
+    % Buffer in SC parameters
+    parser.addParameter('Mu', 8e-4);            % [m/s]
+    parser.addParameter('B0', 500);             % Effective total buffer concentration [mM]
     
     parser.addParameter('rho_min', 0.1);       % microM (one vesicle, Santucci2008)
     parser.addParameter('rho_max', 0.7);  
@@ -461,11 +482,12 @@ function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
     u0 = zeros(length(fieldnames(idx)), 1);
-    u0(idx.R_k) = 0.0621e-6; %0.0621e-6;
+    u0(idx.R_k) = 0.06e-6; %0.0621e-6; 0.0707e-6;
     u0(idx.N_Na_k) = 0.99796e-3;
     u0(idx.N_K_k) = 5.52782e-3;
     u0(idx.N_HCO3_k) = 0.58804e-3;
     u0(idx.N_Cl_k) = 0.32879e-3;
+    u0(idx.Buff_s) = 170;
     u0(idx.N_Na_s) = 4.301041e-3;
     u0(idx.N_K_s) = 0.0807e-3;
     u0(idx.N_HCO3_s) = 0.432552e-3;

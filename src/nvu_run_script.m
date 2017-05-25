@@ -22,34 +22,35 @@ clear all
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 290; XLIM2 = 340;
-FIG_NUM = 4;
+XLIM1 = 290; XLIM2 = 350;
+FIG_NUM = 3;
 
 
 NEURONAL_START      = 300;      % Start of neuronal stimulation
-NEURONAL_END        = 320;      % End of neuronal stimulation 
+NEURONAL_END        = 310;      % End of neuronal stimulation 
 CURRENT_STRENGTH    = 0.015;  % Strength of current input in mA/cm2  (0.009 for subthreshold, 0.011 for bursting, 0.015 for constant stimulation)
 
-ECS_START       = 100000000;      % Start of ECS K+ input
-ECS_END         = 200000000;      % End of ECS K+ input
+ECS_START       = 30000;      % Start of ECS K+ input
+ECS_END         = 32000;      % End of ECS K+ input
 
-J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for oscillations
+J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.35 for oscillations
 
 GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
+RK_SWITCH       = 0;        % Make R_k variable (1) or constant (0)
 
 % Output start time and estimated finish time based on how many sec of
 % stimulation there will be and speed of computer 
-%(home: 0.3, work: 0.85)
-estimatedMinutes = (NEURONAL_END - NEURONAL_START)*0.85;
+%(home: 0.35, work: 0.85)
+estimatedMinutes = (NEURONAL_END - NEURONAL_START)*0.35;
 timeStart = datetime('now');
 estimatedTimeEnd = timeStart + minutes(estimatedMinutes); 
 fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
 
-nv = NVU(Neuron('v_switch', -50, 'O2switch', 0, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START), ...
-    Astrocyte('trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
-    WallMechanics('wallMech', 5), ...
+nv = NVU(Neuron('SC_coup', 3, 'O2switch', 1, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
+    Astrocyte('Rk_switch', RK_SWITCH, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
+    WallMechanics('wallMech', 3), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
 numTimeSteps = 150000;
@@ -60,8 +61,8 @@ nv.simulate()
 % the values for DHG and CBV at that time for normalisation of these two
 % variables
 preNeuronalStimTime = floor((NEURONAL_START-10)*numTimeSteps/XLIM2);
-CBV_0 = nv.U(nv.T(preNeuronalStimTime), nv.neuron.index.CBV);
-DHG_0 = nv.U(nv.T(preNeuronalStimTime), nv.neuron.index.DHG);
+CBV_0 = nv.U(preNeuronalStimTime, nv.neuron.index.CBV);
+DHG_0 = nv.U(preNeuronalStimTime, nv.neuron.index.DHG);
 
 np = nv.neuron.params; % Shortcut for neuron parameters
 
@@ -71,13 +72,13 @@ np = nv.neuron.params; % Shortcut for neuron parameters
 % nv.simulateManualICs() 
 
 % Plot figures - whatever you want
-% 
-% figure(20);
-% subplot(1,3,1);
-% hold all;
-% plot(nv.T, nv.out('R_k'))
-% ylabel('R_k')
-% xlim([XLIM1 XLIM2])
+% % 
+figure(20);
+subplot(1,1,1);
+hold all;
+plot(nv.T, nv.out('K_e'), nv.T, nv.out('K_s')/1e3)
+ylabel('Ke and Ks')
+xlim([XLIM1 XLIM2])
 % subplot(1,3,2);
 % hold all;
 % plot(nv.T, nv.out('rho'))
