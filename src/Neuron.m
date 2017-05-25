@@ -217,7 +217,7 @@ classdef Neuron < handle
               
             % change in concentration of Na,K,Cl in the extracellular space 
             du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-            du(idx.K_e, :)      = self.input_ECS(t) + 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e);% - 1/p.tau_e * (K_e - K_s);
+            du(idx.K_e, :)      = self.input_ECS(t) + 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e) - 0.05 * (K_e - K_s);
            
             % change in tissue oxygen
             du(idx.O2, :)       = J_O2_vascular - J_O2_background - J_O2_pump;
@@ -351,7 +351,7 @@ classdef Neuron < handle
             J_Na_tot_d = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_Na_d;
 
             dKe_dt = self.input_ECS(t) + 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd));
-            J_K_NEtoSC = p.SC_coup * ( dKe_dt ); % + 1/p.tau_e * (K_e - K_s)
+            J_K_NEtoSC = p.SC_coup * ( dKe_dt + 0.05 * (K_e - K_s)); % 
             
             dNae_dt = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
             J_Na_NEtoSC = p.SC_coup * dNae_dt;

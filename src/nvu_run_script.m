@@ -27,7 +27,7 @@ FIG_NUM = 3;
 
 
 NEURONAL_START      = 300;      % Start of neuronal stimulation
-NEURONAL_END        = 310;      % End of neuronal stimulation 
+NEURONAL_END        = 320;      % End of neuronal stimulation 
 CURRENT_STRENGTH    = 0.015;  % Strength of current input in mA/cm2  (0.009 for subthreshold, 0.011 for bursting, 0.015 for constant stimulation)
 
 ECS_START       = 30000;      % Start of ECS K+ input

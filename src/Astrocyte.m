@@ -182,7 +182,7 @@ classdef Astrocyte < handle
            
             % Differential Equations in the Synaptic Cleft
             du(idx.Buff_s, :)   = p.Mu * (K_s/1e3) .* (p.B0 - Buff_s) ./ (1 + exp(-(((K_s/1e3) - 5.5) ./ 1.09))) - (p.Mu * Buff_s); % Change in buffer for K+ in the SC, K_s in mM
-            du(idx.N_K_s, :)    = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k - du(idx.Buff_s) * 1e3 .* R_s - p.Ks_decay * (K_s - p.Ks_min) .* R_s;
+            du(idx.N_K_s, :)    = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k - du(idx.Buff_s) * 1e3 .* R_s;% - p.Ks_decay * (K_s - p.Ks_min) .* R_s;
             du(idx.N_Na_s, :)   = -du(idx.N_Na_k, :) + J_Na_NEtoSC_k;
             du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
                         
