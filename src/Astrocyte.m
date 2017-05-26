@@ -482,7 +482,7 @@ function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
     u0 = zeros(length(fieldnames(idx)), 1);
-    u0(idx.R_k) = 0.06e-6; %0.0621e-6; 0.0707e-6;
+    u0(idx.R_k) = 0.06e-6; %0.0621e-6; 
     u0(idx.N_Na_k) = 0.99796e-3;
     u0(idx.N_K_k) = 5.52782e-3;
     u0(idx.N_HCO3_k) = 0.58804e-3;

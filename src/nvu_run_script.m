@@ -22,12 +22,12 @@ clear all
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 290; XLIM2 = 350;
-FIG_NUM = 3;
+XLIM1 = 290; XLIM2 = 400;
+FIG_NUM = 13;
 
 
 NEURONAL_START      = 300;      % Start of neuronal stimulation
-NEURONAL_END        = 320;      % End of neuronal stimulation 
+NEURONAL_END        = 310;      % End of neuronal stimulation 
 CURRENT_STRENGTH    = 0.015;  % Strength of current input in mA/cm2  (0.009 for subthreshold, 0.011 for bursting, 0.015 for constant stimulation)
 
 ECS_START       = 30000;      % Start of ECS K+ input
@@ -50,7 +50,7 @@ fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(es
 
 nv = NVU(Neuron('SC_coup', 3, 'O2switch', 1, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
     Astrocyte('Rk_switch', RK_SWITCH, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
-    WallMechanics('wallMech', 3), ...
+    WallMechanics('wallMech', 5), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
 numTimeSteps = 150000;
@@ -61,6 +61,8 @@ nv.simulate()
 % the values for DHG and CBV at that time for normalisation of these two
 % variables
 preNeuronalStimTime = floor((NEURONAL_START-10)*numTimeSteps/XLIM2);
+CBF = nv.out('CBF');
+CBF_0 = CBF(preNeuronalStimTime);
 CBV_0 = nv.U(preNeuronalStimTime, nv.neuron.index.CBV);
 DHG_0 = nv.U(preNeuronalStimTime, nv.neuron.index.DHG);
 
@@ -72,13 +74,12 @@ np = nv.neuron.params; % Shortcut for neuron parameters
 % nv.simulateManualICs() 
 
 % Plot figures - whatever you want
-% % 
-figure(20);
-subplot(1,1,1);
-hold all;
-plot(nv.T, nv.out('K_e'), nv.T, nv.out('K_s')/1e3)
-ylabel('Ke and Ks')
-xlim([XLIM1 XLIM2])
+% 
+% figure(20);
+% subplot(1,1,1);
+% hold all;
+% plot(nv.T, nv.out('NO_n'))
+% % xlim([XLIM1 XLIM2])
 % subplot(1,3,2);
 % hold all;
 % plot(nv.T, nv.out('rho'))
@@ -99,8 +100,8 @@ subplot(3,3,1);
     xlim([XLIM1 XLIM2])
 subplot(3,3,2);
     hold all;
-    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
-    ylabel('v_{sa} [mV]');
+    plot(nv.T, nv.out('Glu'), 'LineWidth', 1);
+    ylabel('Glu');
     xlim([XLIM1 XLIM2])
 subplot(3,3,3);
     hold all;
@@ -109,8 +110,8 @@ subplot(3,3,3);
     xlim([XLIM1 XLIM2])
 subplot(3,3,4);
     hold all;
-    plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
-    ylabel('K_s [mM]');
+    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+    ylabel('v_{sa} [mV]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,5);
     hold all;
@@ -124,8 +125,8 @@ subplot(3,3,6);
     xlim([XLIM1 XLIM2])
 subplot(3,3,7);
     hold all;
-    plot(nv.T, nv.out('K_p'), 'LineWidth', 1);
-    ylabel('K_p');
+    plot(nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
+    ylabel('\Delta CBF / CBF_0');
     xlim([XLIM1 XLIM2])
 subplot(3,3,8);
     hold all;
