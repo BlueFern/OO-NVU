@@ -45,17 +45,12 @@ classdef SMCEC < handle
             %% SMC fluxes
             J_IP3_i = p.F_i * I_i.^2 ./ (p.K_r_i^2 + I_i.^2);           % IP3 channel
             J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);   % SERCA pump
-            J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* ...
-                Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
+            J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
             J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
             J_SR_leak_i = p.L_i * s_i;
-            J_VOCC_i =p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ ...
-                (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
-            J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* ...
-                (v_i - p.v_NaCa_i);
-            J_stretch_i = p.G_stretch ./ ...
-                (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
-                (v_i - p.E_SAC);
+            J_VOCC_i =p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
+            J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* (v_i - p.v_NaCa_i);
+            J_stretch_i = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* (v_i - p.E_SAC);
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
             J_NaK_i = p.F_NaK_i;
             J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
@@ -67,22 +62,12 @@ classdef SMCEC < handle
             %% EC fluxes
             J_IP3_j = p.F_j * I_j.^2 ./ (p.K_r_j^2 + I_j.^2);
             J_ER_uptake_j = p.B_j * Ca_j.^2 ./ (p.c_b_j^2 + Ca_j.^2);  
-            J_CICR_j = p.C_j * s_j.^2 ./ (p.s_c_j^2 + s_j.^2) .* ...
-                Ca_j.^4 ./ (p.c_c_j^4 + Ca_j.^4);
+            J_CICR_j = p.C_j * s_j.^2 ./ (p.s_c_j^2 + s_j.^2) .* Ca_j.^4 ./ (p.c_c_j^4 + Ca_j.^4);
             J_extrusion_j = p.D_j * Ca_j;
-            J_stretch_j = p.G_stretch ./ ...
-                (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* ...
-                (v_j - p.E_SAC);
-            
+            J_stretch_j = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* (v_j - p.E_SAC);
             J_ER_leak_j = p.L_j * s_j;
-            
-            J_cation_j = p.G_cat_j * (p.E_Ca_j - v_j) * 0.5 .* ...
-                (1 + tanh((log10(Ca_j) - p.m_3_cat_j) / p.m_4_cat_j));
-            
-            J_BK_Ca_j = 0.2 * (1 + tanh( ...
-                ((log10(Ca_j) - p.c) .* (v_j - p.bb_j) - p.a_1_j) ./ ...
-                (p.m_3b_j * (v_j + p.a_2_j*(log10(Ca_j) - p.c) - p.bb_j).^2 + ...
-                p.m_4b_j)));
+            J_cation_j = p.G_cat_j * (p.E_Ca_j - v_j) * 0.5 .* (1 + tanh((log10(Ca_j) - p.m_3_cat_j) / p.m_4_cat_j));
+            J_BK_Ca_j = 0.2 * (1 + tanh( ((log10(Ca_j) - p.c) .* (v_j - p.bb_j) - p.a_1_j) ./ (p.m_3b_j * (v_j + p.a_2_j*(log10(Ca_j) - p.c) - p.bb_j).^2 + p.m_4b_j)));
             J_SK_Ca_j = 0.3 * (1 + tanh((log10(Ca_j) - p.m_3s_j) / p.m_4s_j));
             J_K_j = p.G_tot_j * (v_j - p.v_K_j) .* (J_BK_Ca_j + J_SK_Ca_j);
             J_R_j = p.G_R_j * (v_j - p.v_rest_j);
@@ -126,20 +111,16 @@ classdef SMCEC < handle
             
             %% Differential Equations
             % Smooth muscle cell
-            du(idx.Ca_i, :) = J_IP3_i - J_SR_uptake_i - J_extrusion_i + ...
-                J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i - 0.1*J_stretch_i + J_Ca_coup_i;
+            du(idx.Ca_i, :) = J_IP3_i - J_SR_uptake_i - J_extrusion_i + J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i - 0.1*J_stretch_i + J_Ca_coup_i;
             
             du(idx.s_i, :) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
-            du(idx.v_i, :) = p.gamma_i * (...
-                -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i ...
-                -J_stretch_i - J_KIR_i) + V_coup_i;
+            du(idx.v_i, :) = p.gamma_i * ( -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i -J_stretch_i - J_KIR_i) + V_coup_i;
             du(idx.w_i, :) = p.lambda_i * (K_act_i - w_i);
             du(idx.I_i, :) = J_IP3_coup_i - J_degrad_i;
             du(idx.K_i, :) = J_NaK_i - J_KIR_i - J_K_i;
             
             % Endothelial Cell
-            du(idx.Ca_j, :) = J_IP3_j - J_ER_uptake_j + J_CICR_j - ...
-                J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j - J_stretch_j - J_Ca_coup_i;
+            du(idx.Ca_j, :) = J_IP3_j - J_ER_uptake_j + J_CICR_j - J_extrusion_j + J_ER_leak_j + J_cation_j + p.J_0_j - J_stretch_j - J_Ca_coup_i;
             du(idx.s_j, :) = J_ER_uptake_j - J_CICR_j - J_ER_leak_j;
             du(idx.v_j, :) = -1/p.C_m_j * (J_K_j + J_R_j) - V_coup_i;
             du(idx.I_j, :) = p.J_PLC - J_degrad_j - J_IP3_coup_i;           % p.J_PLC or self.input_plc(t)
@@ -151,8 +132,6 @@ classdef SMCEC < handle
             du(idx.cGMP_i, :) = p.V_max_sGC * E_5c - V_max_pde .* cGMP_i ./ (p.K_m_pde + cGMP_i); 
             du(idx.eNOS_act_j, :) = (p.gam_eNOS * Act_eNOS_Ca  + (1 - p.gam_eNOS) * Act_eNOS_wss - p.mu2_j * eNOS_act_j); 
             du(idx.NO_j, :) = p_NO_j - c_NO_j + d_NO_j;
-            
-
             
             du = bsxfun(@times, self.enabled, du);
             

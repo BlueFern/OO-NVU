@@ -5,7 +5,7 @@
 
 %% Plot state variables
 
-figure(10);
+figure(1);
 hold on
 set(gcf,'Name', 'Neuron State Variables')
 neuron_vars = fieldnames(nv.neuron.index);
@@ -44,7 +44,7 @@ for i = 1:1:i_smcec
 end
 hold off
 
-figure(4);
+figure(5);
 hold on
 set(gcf,'Name', 'Wall Mechanics State Variables')
 wall_vars = fieldnames(nv.wall.index);
@@ -67,7 +67,7 @@ set(gcf,'Name', 'Neuron Fluxes/Algebraic Variables')
 neuron_flux_vars = fieldnames(nv.neuron.idx_out);
 i_neuron_flux = size(neuron_flux_vars, 1);
 for i = 1:1:i_neuron_flux
-    subplot(4,5,i)
+    subplot(6,5,i)
     plot(nv.T, nv.out(char(neuron_flux_vars(i))));
     xlabel('Time [s]'); ylabel(neuron_flux_vars(i));
     xlim([XLIM1 XLIM2])

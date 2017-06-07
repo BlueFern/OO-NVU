@@ -57,14 +57,14 @@ classdef NVU < handle
             % Evaluate the coupling quantities to be passed between
             % submodels as coupling
 
-            [K_p, NO_k, K_s, Na_s] = self.astrocyte.shared(t, ua);
-            [Glu, J_K_NEtoSC, J_Na_NEtoSC_k, NO_n] = self.neuron.shared(t, un, K_s, Na_s);
+            [K_p, NO_k] = self.astrocyte.shared(t, ua);
+            [Glu, J_K_NEtoSC, NO_n] = self.neuron.shared(t, un);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(t, us, K_p); 
             [R, h] = self.wall.shared(t, uw);
 
             du = zeros(size(u));
-            du(self.i_neuron, :) = self.neuron.rhs(t, un, NO_k, R, K_s, Na_s);
-            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC_k, Glu);
+            du(self.i_neuron, :) = self.neuron.rhs(t, un, NO_k, R);
+            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, Glu);
             du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i, R_cGMP2);
             du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p, NO_k);
         end
@@ -86,13 +86,13 @@ classdef NVU < handle
             us = self.U(:, self.i_smcec).';
             uw = self.U(:, self.i_wall).';
 
-            [K_p, NO_k, K_s, Na_s] = self.astrocyte.shared(self.T, ua);
-            [Glu, J_K_NEtoSC, J_Na_NEtoSC_k, NO_n] = self.neuron.shared(self.T, un, K_s, Na_s);
+            [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
+            [Glu, J_K_NEtoSC, NO_n] = self.neuron.shared(self.T, un);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      
-            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R, K_s, Na_s);
-            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC_k, Glu);
+            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, Glu);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
 
@@ -113,13 +113,13 @@ classdef NVU < handle
             us = self.U(:, self.i_smcec).';
             uw = self.U(:, self.i_wall).';
 
-            [K_p, NO_k, K_s, Na_s] = self.astrocyte.shared(self.T, ua);
-            [Glu, J_K_NEtoSC, J_Na_NEtoSC_k, NO_n] = self.neuron.shared(self.T, un, K_s, Na_s);
+            [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
+            [Glu, J_K_NEtoSC, NO_n] = self.neuron.shared(self.T, un);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      
-            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R, K_s, Na_s);
-            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC_k, Glu);
+            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, Glu);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
 

@@ -47,8 +47,7 @@ classdef WallMechanics < handle
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
             R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
 
-            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * p.P_T ./ h - ...
-                E .* (R - R_0) ./ R_0);
+            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * p.P_T ./ h - E .* (R - R_0) ./ R_0);
 
             du = bsxfun(@times, self.enabled, du);
             
