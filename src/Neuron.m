@@ -35,7 +35,7 @@ classdef Neuron < handle
  
             O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
             CBV = u(idx.CBV, :);        % BOLD CBV
-            DHG = u(idx.DHG, :);        % BOLD deoxyheomoglobin concentration
+            DHG = u(idx.DHG, :);        % BOLD deoxyhemoglobin concentration
             
             % Gating variables
             m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
@@ -132,13 +132,13 @@ classdef Neuron < handle
             
             % flux through the NaK-ATPase pump
             J_pump1_sa      = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
-            J_pump1init_sa  = (1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_sa / p.Na_init_sa)).^(-3);
+            J_pump1init_sa  = 0.0312; %(1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_sa / p.Na_init_sa)).^(-3);
             J_pump1_d       = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
-            J_pump1init_d   = (1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_d / p.Na_init_d)).^(-3);
+            J_pump1init_d   = 0.0312; %(1 + (p.K_init_e / p.K_init_e)).^(-2) .* (1 + (p.Na_init_d / p.Na_init_d)).^(-3);
             
             % Determine whether there is limited oxygen: O2switch=0 ATP is plentiful, O2switch=1 ATP is limited (oxygen-limited regime)
             O2_p            = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
-            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2_p) + p.alph * p.O2_0)).^(-1);     
+            J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
             J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
@@ -164,22 +164,22 @@ classdef Neuron < handle
             J_tot_d     = J_Na_tot_d + J_K_tot_d + J_leak_tot_d;
 
             %% Tissue oxygen 
-            P_02            = ( 2 * (1 + (p.O2_0 ./ ((1 - p.alph) * O2 + p.alph * p.O2_0))).^(-1) - (2 * (1 + (p.O2_0 / (p.alph * p.O2_0))).^(-1)) ) ./ ( (2 * (1 + (p.O2_0 / ((1 - p.alph) * p.O2_0 + p.alph * p.O2_0))).^(-1)) - (2 * (1 + (p.O2_0 / (p.alph * p.O2_0))).^(-1)) );  % P(02)
-            CBF             = p.CBF_init * (R.^4 / p.LU_R_init^4);
+            P_02            = ( 2 * (1 + (p.O2_0 ./ ((1 - p.alpha_O2) * O2 + p.alpha_O2 * p.O2_0))).^(-1) - (2 * (1 + (p.O2_0 / (p.alpha_O2 * p.O2_0))).^(-1)) ) ./ ( (2 * (1 + (p.O2_0 / ((1 - p.alpha_O2) * p.O2_0 + p.alpha_O2 * p.O2_0))).^(-1)) - (2 * (1 + (p.O2_0 / (p.alpha_O2 * p.O2_0))).^(-1)) );  % P(02)
+            CBF             = p.CBF_init * (R.^4 / p.R_init^4);
             J_O2_vascular   = CBF .* ((p.O2_b - O2) ./ (p.O2_b - p.O2_0));
-            J_O2_background = p.CBF_init * P_02 * (1 - p.gamm);
-            J_O2_pump       = p.CBF_init * P_02 * p.gamm .* ((J_pump1_sa + J_pump1_d) ./ (J_pump1init_sa + J_pump1init_d));
+            J_O2_background = p.CBF_init * P_02 * (1 - p.gamma_O2);
+            J_O2_pump       = p.CBF_init * P_02 * p.gamma_O2 .* ((J_pump1_sa + J_pump1_d) ./ (J_pump1init_sa + J_pump1init_d));
             
             %% BOLD
-            f_out           = CBV.^(1/p.d) + p.tau * (1/(p.tau_MTT + p.tau) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ));
+            f_out           = CBV.^(1/p.d) + p.tau_TAT * (1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ));
             CMRO2           = J_O2_background + J_O2_pump;
             CMRO2_init      = p.CBF_init * P_02;
-            E               = CMRO2 * p.E_0 ./ CBF;
+            OEF               = CMRO2 * p.E_0 ./ CBF;
             BOLD            = p.V_0 * ( p.a_1 * (1 - DHG) - p.a_2 * (1 - CBV) );
             
             %% NO pathway
             
-            % Glutamate input: vesicle released when the extracellular K+ is over 6 mM (Ke_switch) and starts firing
+            % Glutamate input: vesicle released when the extracellular K+ is over 5.5 mM (Ke_switch)
             Glu = self.shared(t, u);
             
             % NO pathway
@@ -224,7 +224,7 @@ classdef Neuron < handle
             du(idx.O2, :)       = J_O2_vascular - J_O2_background - J_O2_pump;
             
             % change in BOLD response
-            du(idx.CBV, :)       = 1/(p.tau_MTT + p.tau) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ); 
+            du(idx.CBV, :)       = 1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ); 
             du(idx.DHG, :)       = 1/p.tau_MTT * ( CMRO2./CMRO2_init - DHG./CBV .* f_out );
 
             % Change in activation gating variables m
@@ -266,7 +266,7 @@ classdef Neuron < handle
             	Uout(self.idx_out.d_NO_n, :) = d_NO_n;
                 Uout(self.idx_out.current, :) = self.input_current(t);
                 Uout(self.idx_out.CBF, :) = CBF;
-                Uout(self.idx_out.E, :) = E;
+                Uout(self.idx_out.OEF, :) = OEF;
                 Uout(self.idx_out.BOLD, :) = BOLD;
                 Uout(self.idx_out.CMRO2, :) = CMRO2;
                 Uout(self.idx_out.CMRO2_init, :) = CMRO2_init;
@@ -279,8 +279,6 @@ classdef Neuron < handle
                 Uout(self.idx_out.J_Kleak_d, :) = J_Kleak_d;
                 Uout(self.idx_out.J_Kpump_d, :) = J_Kpump_d;
                 Uout(self.idx_out.J_NMDA_K_d, :) = J_NMDA_K_d;
-                Uout(self.idx_out.duBuffe, :) = duBuffe;
-                Uout(self.idx_out.duBuffs, :) = duBuffs;
             	varargout = {Uout};
             end
         end
@@ -326,7 +324,7 @@ classdef Neuron < handle
    
             % Oxygen dependent ATP pump
             O2_p        = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
-            J_pump2     = 2 * (1 + p.O2_0 ./ (((1 - p.alph) * O2_p) + p.alph * p.O2_0)).^(-1); 
+            J_pump2     = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1); 
             J_pump1_sa  = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
             J_pump1_d   = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
             J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
@@ -413,7 +411,7 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.d_NO_n = 14;       
     idx.current = 15;
     idx.CBF = 16;
-    idx.E = 17;
+    idx.OEF = 17;
     idx.BOLD = 18;
     idx.CMRO2 = 19;
     idx.CMRO2_init = 20;
@@ -439,7 +437,7 @@ function params = parse_inputs(varargin)
     
     % Glutamate parameters
     parser.addParameter('Glu_max', 1846);   % [uM] (one vesicle, Santucci2008)
-    parser.addParameter('Glu_slope', 0.1);  % [mV] Slope of sigmoidal (M.E.)
+    parser.addParameter('Glu_slope', 0.1);  % [mM] Slope of sigmoidal (M.E.)
     parser.addParameter('Ke_switch', 5.5);   % [mM] Threshold past which glutamate vesicle is released (M.E.)
     
     % ECS K+ input parameters
@@ -450,13 +448,10 @@ function params = parse_inputs(varargin)
     % Elshin model constants
     parser.addParameter('Istrength', 0.025);    % [mV] Current input strength
     parser.addParameter('SC_coup', 11.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
-    
-    % ECS-SC diffusion
-    parser.addParameter('D_ecs', 0.05);          % [s^-1]
-    
+       
     % BOLD constants
     parser.addParameter('tau_MTT', 3);              % [s] Transit time
-    parser.addParameter('tau', 20);        
+    parser.addParameter('tau_TAT', 20);        
     parser.addParameter('d', 0.4); 
     parser.addParameter('a_1', 3.4);  %3.4            % Buxton
     parser.addParameter('a_2', 1); 
@@ -472,15 +467,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('startpulse', 200);    
     parser.addParameter('lengthpulse', 200);
     parser.addParameter('lengtht1', 10);
-    parser.addParameter('F_input', 2.5);        %s  
-    parser.addParameter('alpha', 2);
-    parser.addParameter('beta', 5);
-    parser.addParameter('delta_t', 10);         %s
-    parser.addParameter('k_C', 7.35e-5);        %uM m s^-1
-    parser.addParameter('Glu_min', 0);          % microM
-    parser.addParameter('theta_L_Glu', 1);      % slope of Glu input 
-    parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
-    
+        
     % Elshin neuron model
     parser.addParameter('E_Cl_sa', -70);        % Nernst potential for Cl- in soma      [mV]
     parser.addParameter('E_Cl_d', -70);         % Nernst potential for Cl- in dendrite   [mV]
@@ -490,8 +477,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('Ad', 2.6732e-4);       % Surface area of dendrite [cm2]
     parser.addParameter('Vs', 2.16e-9);         % Volume of soma [cm3]
     parser.addParameter('Vd', 5.614e-9);        % Volume of dendrite [cm3]
-    parser.addParameter('VR_sn', 0.2778);       % Percentage volume of soma in neuron Vs / (Vs + Vd)
-    parser.addParameter('VR_dn', 0.7222);       % Percentage volume of dendrite in neuron Vd / (Vs + Vd)    
     parser.addParameter('fe', 0.15);            % ECS to neuron ratio
     parser.addParameter('Cm', 7.5e-7);          % Membrance capacitance [s/ohms cm2]    *******
     parser.addParameter('Farad', 96.485);           % Faraday constant [C / mmol]
@@ -539,19 +524,18 @@ function params = parse_inputs(varargin)
     parser.addParameter('Imax', 0.013*6);  
 
     parser.addParameter('O2_0', 2e-2);          % [mM]
-    parser.addParameter('alph',  0.05);         % percentage of ATP production independent of O2
+    parser.addParameter('alpha_O2',  0.05);         % percentage of ATP production independent of O2
     parser.addParameter('D_Na', 1.33e-5);       % [cm2 / s]
     parser.addParameter('D_K', 1.96e-5);        % [cm2 / s]
-    parser.addParameter('D_Cl', 2.03e-5);       % [cm2 / s]
     
     parser.addParameter('K_init_e', 2.9); 
     parser.addParameter('Na_init_sa', 10); 
     parser.addParameter('Na_init_d', 10); 
     
-    parser.addParameter('LU_R_init', 1.9341e-5); 
+    parser.addParameter('R_init', 1.9341e-5); 
     parser.addParameter('CBF_init', 3.2e-2); 
     parser.addParameter('O2_b', 4e-2);   
-    parser.addParameter('gamm', 0.10);  
+    parser.addParameter('gamma_O2', 0.10);  
     parser.addParameter('Mg', 1.2);  
 
     % NO pathway 
@@ -586,11 +570,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('V_maxNOS', 25e-3);     % [] ; M.E.
     parser.addParameter('K_actNOS', 9.27e-2);   % [uM] ; 
     parser.addParameter('mu2_n', 0.0167);       % [s^-1] ; rate constant at which the nNOS is deactivated Comerford2008
-    
-    parser.addParameter('Q1', 1.9e5);           % [uM^-1]
-    parser.addParameter('Q2', 2.1e5);           % [uM^-1]
-    parser.addParameter('Q3', 0.4e5);           % [uM^-1]
-    parser.addParameter('Q4', 0.26e5);          % [uM^-1]
 
     parser.parse(varargin{:})
     params = parser.Results;
@@ -598,13 +577,6 @@ function params = parse_inputs(varargin)
     params.t_1 = params.t_0 + params.lengtht1;
     params.t_2 = params.t_0 + params.lengthpulse;
     params.t_3 = params.t_1 + params.lengthpulse;
-    params.gab = factorial(params.alpha + params.beta - 1);
-    params.ga = factorial(params.alpha - 1);
-    params.gb = factorial(params.beta - 1);
-    params.t_0_Glu = params.t_0;
-    params.t_2_Glu = params.t_2;
-    params.startpulse_Glu = params.startpulse;
-    params.lengthpulse_Glu = params.lengthpulse;
 end
 
 function u0 = initial_conditions(idx)
