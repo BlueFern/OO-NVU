@@ -47,7 +47,7 @@ classdef WallMechanics < handle
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
             R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
 
-            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * p.P_T ./ h - E .* (R - R_0) ./ R_0);
+            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * p.trans_p ./ h - E .* (R - R_0) ./ R_0);
 
             du = bsxfun(@times, self.enabled, du);
             
@@ -106,7 +106,7 @@ function params = parse_inputs(varargin)
     % Mechanical Equation Constants
     parser.addParameter('eta', 1e4); %Pa s
     parser.addParameter('R_0_passive', 20e-6); % m
-    parser.addParameter('P_T', 4000); % Pa
+    parser.addParameter('trans_p', 4000); % Pa  transmural pressure
     parser.addParameter('E_passive', 66e3); % Pa
     parser.addParameter('E_active', 233e3); % Pa
     parser.addParameter('alpha', 0.6); % [-]
@@ -120,8 +120,8 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     % Inital estimations of parameters from experimental data
-    u0(idx.Mp) = .25;
-    u0(idx.AMp) = .25;
-    u0(idx.AM) = .25;
-    u0(idx.R) = 24.8e-6;
+    u0(idx.Mp) = 0.0842;
+    u0(idx.AMp) = 0.0622;
+    u0(idx.AM) = 0.2746;
+    u0(idx.R) = 22.97e-6;
 end

@@ -109,7 +109,7 @@ classdef Neuron < handle
             h3beta      = 1.6e-6 ./ (1 + exp(-(((0.2 * v_d)) + 8)));
             J_NaP_d     = (m4.^2 .* h3 .* p.gNaP_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
 
-            % Na flux through NMDA channel in dendrite using GHK
+            % Na/K flux through NMDA channel in dendrite using GHK
             m5alpha     = 0.5 ./ (1 + exp((13.5 - K_e) / 1.42));
             m5beta      = 0.5 - m5alpha;
             h4alpha     = 1 ./ (2000 * (1 + exp((K_e - 6.75) / 0.71)));
@@ -164,7 +164,9 @@ classdef Neuron < handle
             J_tot_d     = J_Na_tot_d + J_K_tot_d + J_leak_tot_d;
 
             %% Tissue oxygen 
-            P_02            = ( 2 * (1 + (p.O2_0 ./ ((1 - p.alpha_O2) * O2 + p.alpha_O2 * p.O2_0))).^(-1) - (2 * (1 + (p.O2_0 / (p.alpha_O2 * p.O2_0))).^(-1)) ) ./ ( (2 * (1 + (p.O2_0 / ((1 - p.alpha_O2) * p.O2_0 + p.alpha_O2 * p.O2_0))).^(-1)) - (2 * (1 + (p.O2_0 / (p.alpha_O2 * p.O2_0))).^(-1)) );  % P(02)
+            J_pump2_0       = 0.0952;   % 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * 0) + p.alpha_O2 * p.O2_0)).^(-1);
+            J_pump2_O2_0    = 1;        % 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * p.O2_0) + p.alpha_O2 * p.O2_0)).^(-1);
+            P_02            = (J_pump2 - J_pump2_0 ) ./ ( J_pump2_O2_0 - J_pump2_0);            
             CBF             = p.CBF_init * (R.^4 / p.R_init^4);
             J_O2_vascular   = CBF .* ((p.O2_b - O2) ./ (p.O2_b - p.O2_0));
             J_O2_background = p.CBF_init * P_02 * (1 - p.gamma_O2);
@@ -174,8 +176,8 @@ classdef Neuron < handle
             f_out           = CBV.^(1/p.d) + p.tau_TAT * (1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ));
             CMRO2           = J_O2_background + J_O2_pump;
             CMRO2_init      = p.CBF_init * P_02;
-            OEF               = CMRO2 * p.E_0 ./ CBF;
-            BOLD            = p.V_0 * ( p.a_1 * (1 - DHG) - p.a_2 * (1 - CBV) );
+            OEF             = CMRO2 * p.E_0 ./ CBF;
+            %BOLD            = p.V_0 * ( p.a_1 * (1 - DHG) - p.a_2 * (1 - CBV) );
             
             %% NO pathway
             
@@ -205,18 +207,18 @@ classdef Neuron < handle
             du(idx.v_sa, :)     = 1/p.Cm * ( -J_tot_sa + 1 / (2 * p.Ra * p.dhod.^2) * (v_d - v_sa) + self.input_current(t) );
             du(idx.v_d, :)      = 1/p.Cm * (-J_tot_d + 1 / (2 * p.Ra * p.dhod.^2) * (v_sa - v_d));
 
-            %change in concentration of Na,K,Cl in the soma
+            %change in concentration of Na,K in the soma
             du(idx.Na_sa, :)    = -p.As / (p.Farad * p.Vs) * J_Na_tot_sa + p.D_Na * (p.Vd + p.Vs) ./ (2 * p.dhod.^2 * p.Vs) * (Na_d - Na_sa);
             du(idx.K_sa, :)     = -p.As / (p.Farad * p.Vs) * J_K_tot_sa + p.D_K * (p.Vd + p.Vs) ./ (2 * p.dhod.^2 * p.Vs) * (K_d - K_sa);
 
-            %change in concentration of Na,K,Cl in the dendrite
+            %change in concentration of Na,K in the dendrite
             du(idx.Na_d, :)     = -p.Ad / (p.Farad * p.Vd) * J_Na_tot_d + p.D_Na * (p.Vs + p.Vd) ./ (2 * p.dhod.^2 * p.Vd) * (Na_sa - Na_d);
             du(idx.K_d, :)      = -p.Ad / (p.Farad * p.Vd) * J_K_tot_d + p.D_K * (p.Vs + p.Vd) ./ (2 * p.dhod.^2 * p.Vd) * (K_sa - K_d);
 
             % change in buffer for K+ in the extracellular space
             du(idx.Buff_e, :)   = p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e);
 
-            % change in concentration of Na,K,Cl in the extracellular space 
+            % change in concentration of Na,K in the extracellular space 
             du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
             du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e);
            
@@ -267,7 +269,6 @@ classdef Neuron < handle
                 Uout(self.idx_out.current, :) = self.input_current(t);
                 Uout(self.idx_out.CBF, :) = CBF;
                 Uout(self.idx_out.OEF, :) = OEF;
-                Uout(self.idx_out.BOLD, :) = BOLD;
                 Uout(self.idx_out.CMRO2, :) = CMRO2;
                 Uout(self.idx_out.CMRO2_init, :) = CMRO2_init;
             	Uout(self.idx_out.J_KDR_sa, :) = J_KDR_sa;
@@ -348,7 +349,7 @@ classdef Neuron < handle
 %                     + p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse + 8 + 1/2), 1) ...
 %             ;
 
-            %current = p.Istrength * ( 0.5 * tanh(t - p.t_0) - 0.5 * tanh(t - (t_0 + p.lengthpulse)) );
+%             current = p.Istrength * ( 0.5 * tanh((t - p.t_0)/0.05) - 0.5 * tanh(t - ((p.t_0 + p.lengthpulse)/0.05)) );
         end     
         
         function f = input_ECS(self, t)
@@ -412,7 +413,6 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.current = 15;
     idx.CBF = 16;
     idx.OEF = 17;
-    idx.BOLD = 18;
     idx.CMRO2 = 19;
     idx.CMRO2_init = 20;
     idx.J_KDR_sa = 21;
@@ -423,10 +423,10 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.J_KA_d = 26;
     idx.J_Kleak_d = 27;
     idx.J_Kpump_d = 28;
-    idx.J_NMDA_K_d = 29;
-    n = numel(fieldnames(idx));
+    idx.J_NMDA_K_d = 18;
+    n = numel(fieldnames(idx));     
 end
-        
+      
 function params = parse_inputs(varargin)
     parser = inputParser();
     
@@ -582,34 +582,34 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
-    u0(idx.CBV) = 1;
-    u0(idx.DHG) = 1;
-    u0(idx.v_sa) = -70;
-    u0(idx.v_d) = -70;
-    u0(idx.K_sa) = 133.5;
-    u0(idx.Na_sa) = 9.9854;
-    u0(idx.K_d) = 133.5;
-    u0(idx.Na_d) = 9.9853;
-    u0(idx.K_e) = 3.5006;
-    u0(idx.Na_e) = 139.76;
-    u0(idx.Buff_e) = 170;
-    u0(idx.O2) = 0.022715;
-    u0(idx.m1) = 0.012869;
-    u0(idx.m2) = 0.0012175;
-    u0(idx.m3) = 0.1193;
-    u0(idx.m4) = 0.012869;
-    u0(idx.m5) = 0.00087377;
-    u0(idx.m6) = 0.0012175;
-    u0(idx.m7) = 0.1193;
-    u0(idx.m8) = 0.005;
+    u0(idx.CBV) = 1.3167;
+    u0(idx.DHG) = 0.6665;
+    u0(idx.v_sa) = -70.0337;
+    u0(idx.v_d) = -70.0195;
+    u0(idx.K_sa) = 134.1858;
+    u0(idx.Na_sa) = 9.2691;
+    u0(idx.K_d) = 134.4198;
+    u0(idx.Na_d) = 9.3203;
+    u0(idx.K_e) = 3.493;
+    u0(idx.Na_e) = 150;
+    u0(idx.Buff_e) = 165.9812;
+    u0(idx.O2) = 0.0281;
+    u0(idx.m1) = 0.01281;
+    u0(idx.m2) = 0.001209;
+    u0(idx.m3) = 0.1190;
+    u0(idx.m4) = 0.01284;
+    u0(idx.m5) = 0.000869;
+    u0(idx.m6) = 0.001213;
+    u0(idx.m7) = 0.1191;
+    u0(idx.m8) = 0.004962;
     u0(idx.h1) = 0.9718;
-    u0(idx.h2) = 0.12053;
+    u0(idx.h2) = 0.1214;
     u0(idx.h3) = 0.9718;
-    u0(idx.h4) = 0.99005;
-    u0(idx.h5) = 0.12053;
+    u0(idx.h4) = 0.9899;
+    u0(idx.h5) = 0.1210;
     u0(idx.h6) = 0.9961;
-    u0(idx.Ca_n) = 0.0001;
-    u0(idx.nNOS_act_n) = 0.3;
-    u0(idx.NO_n) = 0.1;
+    u0(idx.Ca_n) = 0.1;
+    u0(idx.nNOS_act_n) = 0.318;
+    u0(idx.NO_n) = 0.1671;
 end
 

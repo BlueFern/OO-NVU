@@ -50,7 +50,7 @@ classdef SMCEC < handle
             J_SR_leak_i = p.L_i * s_i;
             J_VOCC_i =p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
             J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* (v_i - p.v_NaCa_i);
-            J_stretch_i = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* (v_i - p.E_SAC);
+            J_stretch_i = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.trans_p_mmHg*R./h - p.sigma_0))) .* (v_i - p.E_SAC);
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
             J_NaK_i = p.F_NaK_i;
             J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
@@ -64,7 +64,7 @@ classdef SMCEC < handle
             J_ER_uptake_j = p.B_j * Ca_j.^2 ./ (p.c_b_j^2 + Ca_j.^2);  
             J_CICR_j = p.C_j * s_j.^2 ./ (p.s_c_j^2 + s_j.^2) .* Ca_j.^4 ./ (p.c_c_j^4 + Ca_j.^4);
             J_extrusion_j = p.D_j * Ca_j;
-            J_stretch_j = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.delta_p*R./h - p.sigma_0))) .* (v_j - p.E_SAC);
+            J_stretch_j = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.trans_p_mmHg*R./h - p.sigma_0))) .* (v_j - p.E_SAC);
             J_ER_leak_j = p.L_j * s_j;
             J_cation_j = p.G_cat_j * (p.E_Ca_j - v_j) * 0.5 .* (1 + tanh((log10(Ca_j) - p.m_3_cat_j) / p.m_4_cat_j));
             J_BK_Ca_j = 0.2 * (1 + tanh( ((log10(Ca_j) - p.c) .* (v_j - p.bb_j) - p.a_1_j) ./ (p.m_3b_j * (v_j + p.a_2_j*(log10(Ca_j) - p.c) - p.bb_j).^2 + p.m_4b_j)));
@@ -82,7 +82,7 @@ classdef SMCEC < handle
             
             K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
-            tau_wss = R/2 * p.delta_pl; % from Dormanns 2016
+            tau_wss = R/2 * p.delta_p_L; % from Dormanns 2016
             
             % NO pathway 
             tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
@@ -325,7 +325,7 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('G_stretch', 6.1e-3); % uM mV^-1 s^-1   (Also EC parameter)
     parser.addParameter('alpha_stretch', 7.4e-3); % mmHg^-1     (Also EC parameter)
-    parser.addParameter('delta_p', 30); % mmHg                  (Also EC parameter) 30 mmHg = 4000 Pa
+    parser.addParameter('trans_p_mmHg', 30); % mmHg                  (Also EC parameter) transmural pressure. 30 mmHg = 4000 Pa
     parser.addParameter('sigma_0', 500); % mmHg                 (Also EC parameter)
     parser.addParameter('E_SAC', -18); % mV                     (Also EC parameter)
 
@@ -350,7 +350,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('c_c_j', 0.9); %uM
     parser.addParameter('D_j', 0.24);% s^-1
 
-    % (G_stretch, alpha_stretch, delta_p, sigma0, E_SAC are included above in 
+    % (G_stretch, alpha_stretch, trans_p_mmHg, sigma0, E_SAC are included above in 
     %  SMC flux Constants)
 
     parser.addParameter('L_j', 0.025); %s^-1 
@@ -416,7 +416,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_eNOS', 4.5e-1); % [uM] ;    
     parser.addParameter('g_max', 0.06); % [uM s^-1] ;    
     parser.addParameter('alp', 2); % [-] ; zero shear open channel constant (Comerford2008); in Wiesner1997: alp = 3
-    parser.addParameter('delta_pl', 9.1e4); % 9.1e4: ME
+    parser.addParameter('delta_p_L', 9.1e4); % 9.1e4: ME
     parser.addParameter('x_ki', 25); % [um]  (M.E.)
     parser.addParameter('x_ij', 3.75); % [um]  (Kavdia2002)
 
@@ -428,22 +428,22 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
-    u0(idx.Ca_i) = 0.1649; % 0.1;
-    u0(idx.s_i) = 1.361; % 0.1;
-    u0(idx.v_i) = -50.3; % -60;
-    u0(idx.w_i) = 0.234; % 0.1;
-    u0(idx.I_i) = 0.45; % 0.1;
-    u0(idx.K_i) = 100e3; % 100e3;
-    u0(idx.NO_i) = 0.05; % 0.05;
-    u0(idx.E_b) = 1/3; % 1/3;
-    u0(idx.E_6c) = 1/3; % 1/3;
-    u0(idx.cGMP_i) = 6; % 8;
-    u0(idx.Ca_j) = 0.5628; % 0.1;
-    u0(idx.s_j) = 0.8392; % 0.1;
-    u0(idx.v_j) = -65.24; % -75;
-    u0(idx.I_j) = 1.35; % 0.1;
-    u0(idx.eNOS_act_j) = 0.7; % 0.7;
-    u0(idx.NO_j) = 0.05; % 0.05;
+    u0(idx.Ca_i) = 0.2637; % 0.1;
+    u0(idx.s_i) = 1.1686; % 0.1;
+    u0(idx.v_i) = -34.7; % -60;
+    u0(idx.w_i) = 0.2206; % 0.1;
+    u0(idx.I_i) = 0.275; % 0.1;
+    u0(idx.K_i) = 99994.8; % 100e3;
+    u0(idx.NO_i) = 0.0541; % 0.05;
+    u0(idx.E_b) = 0.4077; % 1/3;
+    u0(idx.E_6c) = 0.4396; % 1/3;
+    u0(idx.cGMP_i) = 8.2826; % 8;
+    u0(idx.Ca_j) = 0.8331; % 0.1;
+    u0(idx.s_j) = 0.6266; % 0.1;
+    u0(idx.v_j) = -68.27; % -75;
+    u0(idx.I_j) = 0.825; % 0.1;
+    u0(idx.eNOS_act_j) = 0.4479; % 0.7;
+    u0(idx.NO_j) = 0.0528; % 0.05;
 
 end
 
