@@ -22,12 +22,12 @@ clear all
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 0; XLIM2 = 70;
-FIG_NUM = 1;
+XLIM1 = 0; XLIM2 = 200;
+FIG_NUM = 2;
 
 
-NEURONAL_START      = 10;      % Start of neuronal stimulation
-NEURONAL_END        = 18;      % End of neuronal stimulation 
+NEURONAL_START      = 100;      % Start of neuronal stimulation
+NEURONAL_END        = 116;      % End of neuronal stimulation 
 CURRENT_STRENGTH    = 0.025;  % Strength of current input in mA/cm2  (0.009 for subthreshold, 0.011 for bursting, 0.015 for constant stimulation)
 
 ECS_START       = 30000;      % Start of ECS K+ input
@@ -59,25 +59,92 @@ nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 nv.simulate()
 
-% Find a point in time 50 sec before neuronal stimulation has begun (preNeuronalStimTime1)
-% and the point in time when stimulation begins (preNeuronalStimTime2) and get the values for 
-% CBF, CBV, DHG at that time, then find the midpoint between the min and max and normalise with that value. 
-% Done in this way so that it also works when the variables are oscillatory (i.e. J_PLC = 0.3)
-preNeuronalStimTime1 = floor((NEURONAL_START-5)*numTimeSteps/XLIM2);
-preNeuronalStimTime2 = floor((NEURONAL_START)*numTimeSteps/XLIM2);
-CBF = nv.out('CBF'); CBV = nv.out('CBV'); DHG = nv.out('DHG');
-CBF_0 = 0.5*( max(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) );
-CBV_0 = 0.5*( max(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) );
-DHG_0 = 0.5*( max(DHG(preNeuronalStimTime1:preNeuronalStimTime2)) + min(DHG(preNeuronalStimTime1:preNeuronalStimTime2)) );
-
-np = nv.neuron.params; % Shortcut for neuron parameters
-
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
 % ICs = (nv.U(end, :))';
 % nv.u0 = ICs;
 % nv.simulateManualICs() 
 
-% Plot figures - whatever you want
+np = nv.neuron.params; % Shortcut for neuron parameters
+
+% Find a point in time 20 sec before neuronal stimulation has begun (preNeuronalStimTime1)
+% and the point in time when stimulation begins (preNeuronalStimTime2) and get the values for 
+% CBF, CBV, DHG, CMRO2 at that time, then find the midpoint between the min and max and normalise with that value. 
+% Done in this way so that it also works when the variables are oscillatory (i.e. J_PLC = 0.3)
+preNeuronalStimTime1 = floor((NEURONAL_START-20)*numTimeSteps/XLIM2);
+preNeuronalStimTime2 = floor((NEURONAL_START)*numTimeSteps/XLIM2);
+CBF = nv.out('CBF'); CBV = (nv.out('CBV'))'; DHG = (nv.out('DHG'))'; CMRO2 = nv.out('CMRO2');
+CBF_0 = 0.5*( max(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) );
+CBV_0 = 0.5*( max(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) );
+DHG_0 = 0.5*( max(DHG(preNeuronalStimTime1:preNeuronalStimTime2)) + min(DHG(preNeuronalStimTime1:preNeuronalStimTime2)) );
+CMRO2_0 = 0.5*( max(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) );
+
+% Normalised variables
+CBF_N = CBF./CBF_0;
+CBV_N = CBV./CBV_0;
+DHG_N = DHG./DHG_0;
+CMRO2_N = CMRO2./CMRO2_0;
+
+HBT_N = CBF_N .* DHG_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
+HBO_N = (HBT_N - 1) - (DHG_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
+BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - DHG_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
+
+%% Plot hemoglobin
+
+figure(FIG_NUM);
+plot(nv.T, HBT_N, nv.T, HBO_N, nv.T, DHG_N);
+xlim([XLIM1 XLIM2]);
+legend('total HB','oxyHB','deoxyHB');
+
+%% Plot BOLD variables
+
+figure(FIG_NUM+1);
+subplot(3,3,1);
+    hold all;
+    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+    ylabel('v_{sa} [mV]');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,2);
+    hold all;
+    plot(nv.T, nv.out('current'), 'LineWidth', 1);
+    ylabel('current');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,3);
+    hold all;
+    plot(nv.T, nv.out('Na_e'), 'LineWidth', 1);
+    ylabel('Na_e [mM]');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,4);
+    hold all;
+    plot(nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
+    ylabel('\Delta CBF / CBF_0');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,5);
+    hold all;
+    plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+    ylabel('Radius [\mum]');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,6);
+    hold all;
+    plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
+    ylabel('K_s');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,7);
+    hold all;
+    plot(nv.T, CBV_N, 'LineWidth', 1);
+    ylabel('CBV');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,8);
+    hold all;
+    plot(nv.T, DHG_N, 'LineWidth', 1);
+    ylabel('DHG');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,9);
+    hold all;
+    % BOLD using normalised variables
+    plot(nv.T, BOLD_N, 'LineWidth', 1);  
+    ylabel('\Delta BOLD (%)');
+    xlim([XLIM1 XLIM2])
+ % Plot figures - whatever you want
 
 %% Plot for paper
 % figure(10);
@@ -160,96 +227,6 @@ np = nv.neuron.params; % Shortcut for neuron parameters
 %     xlabel('time (s)');
 %     rectangle('Position',[300, -0.9, 16, 0.09],'FaceColor',[0 0 0])
 %     rectangle('Position',[320, -0.9, 2, 0.09],'FaceColor',[0 0 0])
-
-%% Plot BOLD variables
-
-figure(FIG_NUM);
-subplot(3,3,1);
-    hold all;
-    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
-    ylabel('v_{sa} [mV]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,2);
-    hold all;
-    plot(nv.T, nv.out('Ca_i'), 'LineWidth', 1);
-    ylabel('SMC Ca2+');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,3);
-    hold all;
-    plot(nv.T, nv.out('Na_e'), 'LineWidth', 1);
-    ylabel('Na_e [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,4);
-    hold all;
-    plot(nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
-    ylabel('\Delta CBF / CBF_0');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,5);
-    hold all;
-    plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
-    ylabel('Radius [\mum]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,6);
-    hold all;
-    plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
-    ylabel('K_s');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,7);
-    hold all;
-    plot(nv.T, nv.out('CBV')./CBV_0, 'LineWidth', 1);
-    ylabel('CBV');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,8);
-    hold all;
-    plot(nv.T, nv.out('DHG')./DHG_0, 'LineWidth', 1);
-    ylabel('DHG');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,9);
-    hold all;
-    % BOLD using normalised variables
-    plot(nv.T, 100 * np.V_0 * ( np.a_1 * (1 - nv.out('DHG')/DHG_0) - np.a_2 * (1 - nv.out('CBV')/CBV_0) ), 'LineWidth', 1);  
-    ylabel('\Delta BOLD (%)');
-    xlim([XLIM1 XLIM2])
-    
-%     % 
-% figure(FIG_NUM + 1);
-% 
-% subplot(2,3,1)
-%     hold all;
-%     plot(nv.T, nv.out('Ca_k'), 'LineWidth', 1);
-%     ylabel('Ca_k [\muM]');
-%     xlim([XLIM1 XLIM2])
-%     xlabel('Time [s]'); 
-% subplot(2,3,2)
-%     hold all;
-%     plot(nv.T, nv.out('eet_k'), 'LineWidth', 1);
-%     ylabel('eet_k [\muM]');
-%     xlim([XLIM1 XLIM2])
-%     xlabel('Time [s]'); 
-% subplot(2,3,3)
-%     hold all;
-%     plot(nv.T, nv.out('w_k'), 'LineWidth', 1);
-%     ylabel('w_k [-]');
-%     xlim([XLIM1 XLIM2])
-%     xlabel('Time [s]'); 
-% subplot(2,3,4)
-%     hold all;
-%     plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
-%     ylabel('Radius [\mum]');
-%     xlim([XLIM1 XLIM2])
-%     xlabel('Time [s]'); 
-% subplot(2,3,5)
-%     hold all;
-%     plot(nv.T, nv.out('K_p')/1e3, 'LineWidth', 1);
-%     xlabel('Time [s]'); 
-%     ylabel('K_p [mM]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,3,6)
-%     hold all;
-%     plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1)
-%     xlabel('Time [s]'); 
-%     ylabel('Radius [\mum]');
-%     xlim([XLIM1 XLIM2])
 
 timeEnd = datetime('now');
 fprintf('End time is %s\n', char(timeEnd));
