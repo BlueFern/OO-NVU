@@ -284,11 +284,12 @@ classdef Neuron < handle
             end
         end
         
-       function [Glu, J_K_NEtoSC, NO_n] = shared(self, t, u)    %shared variables
+       function [Glu, J_K_NEtoSC, NO_n, O2] = shared(self, t, u)    %shared variables
             t = t(:).';
             p = self.params;
             idx = self.index;
             NO_n = u(idx.NO_n, :);
+            O2 = u(idx.O2, :);
             Buff_e = u(idx.Buff_e, :);  % Buffer concentration for K+ buffering in ECS, mM
             v_sa = u(idx.v_sa, :);      % membrane potential of soma/axon, mV
             v_d = u(idx.v_d, :);        % membrane potential of dendrite, mV
@@ -523,7 +524,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('gleak_d', 10*6.2961e-5);  
     parser.addParameter('Imax', 0.013*6);  
 
-    parser.addParameter('O2_0', 2e-2);          % [mM]
+    parser.addParameter('O2_0', 0.02);          % [mM]
     parser.addParameter('alpha_O2',  0.05);         % percentage of ATP production independent of O2
     parser.addParameter('D_Na', 1.33e-5);       % [cm2 / s]
     parser.addParameter('D_K', 1.96e-5);        % [cm2 / s]

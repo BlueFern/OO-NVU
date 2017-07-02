@@ -19,7 +19,7 @@ classdef SMCEC < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R, h, K_p, NO_k)
+        function [du, varargout] = rhs(self, t, u, R, h, K_p, NO_k, O2)
             % Initalise inputs and parameters
             p = self.params;
             idx = self.index;
@@ -96,8 +96,12 @@ classdef SMCEC < handle
 
             V_max_pde = p.k_pde * cGMP_i;
 
-            p_NO_j = p.NOswitch * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
-            c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
+%             p_NO_j = p.NOswitch * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
+%             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
+
+            O2_j = O2*1e3;  % Oxygen in EC taken as O2 from lumen (diffusion very fast so plausible!) instead of constant
+            p_NO_j = p.NOswitch * ( p.V_NOj_max .* eNOS_act_j .* O2_j / (p.K_mO2_j + O2_j) .* p.LArg_j / (p.K_mArg_j + p.LArg_j) );
+            c_NO_j = p.k_O2 .* NO_j.^2 .* O2_j;
             
             J_lumen = - NO_j * 4 * p.D_cNO ./ (25.^2); 
             d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 

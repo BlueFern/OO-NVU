@@ -22,12 +22,12 @@ clear all
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 0; XLIM2 = 200;
-FIG_NUM = 2;
+XLIM1 = 80; XLIM2 = 150;
+FIG_NUM = 1;
 
 
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-NEURONAL_END        = 116;      % End of neuronal stimulation 
+NEURONAL_END        = 108;      % End of neuronal stimulation 
 CURRENT_STRENGTH    = 0.025;  % Strength of current input in mA/cm2  (0.009 for subthreshold, 0.011 for bursting, 0.015 for constant stimulation)
 
 ECS_START       = 30000;      % Start of ECS K+ input
@@ -90,12 +90,18 @@ BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - DHG_N) - np.a_2 * (1 - CBV_N) );    % BO
 
 %% Plot hemoglobin
 
-figure(FIG_NUM);
-plot(nv.T, HBT_N, nv.T, HBO_N, nv.T, DHG_N);
-xlim([XLIM1 XLIM2]);
-legend('total HB','oxyHB','deoxyHB');
+% figure(FIG_NUM);
+% plot(nv.T, HBT_N, nv.T, HBO_N, nv.T, DHG_N, nv.T, CMRO2_N);
+% xlim([XLIM1 XLIM2]);
+% legend('total HB','oxyHB','deoxyHB','CMRO_2');
+% 
+% figure(FIG_NUM+2);
+% plot( nv.T, nv.out('J_KDR_sa'),  nv.T, nv.out('J_KA_sa'), nv.T, nv.out('J_Kleak_sa'), nv.T, nv.out('J_Kpump_sa'), nv.T, nv.out('J_KDR_d'), nv.T, nv.out('J_KA_d'), nv.T, nv.out('J_Kleak_d'), nv.T, nv.out('J_Kpump_d'), nv.T, nv.out('J_NMDA_K_d'));
+% xlim([XLIM1 XLIM2]);
+% legend('KDR_s','KA_s','Kleak_s','Kpump_s','KDR_d','KA_d','Kleak_d','Kpump_d','NMDA_d')
 
-%% Plot BOLD variables
+
+% Plot BOLD variables
 
 figure(FIG_NUM+1);
 subplot(3,3,1);
@@ -110,8 +116,8 @@ subplot(3,3,2);
     xlim([XLIM1 XLIM2])
 subplot(3,3,3);
     hold all;
-    plot(nv.T, nv.out('Na_e'), 'LineWidth', 1);
-    ylabel('Na_e [mM]');
+    plot(nv.T, nv.out('O2')*1e3, 'LineWidth', 1);
+    ylabel('O2 [\muM]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,4);
     hold all;
