@@ -16,19 +16,20 @@
 % Options for the ODE solver (currently |ode15s|) are provided by
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
-clear all
+%clear all
 
 
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 80; XLIM2 = 150;
+XLIM1 = 90; XLIM2 = 150;
 FIG_NUM = 1;
 
 
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-NEURONAL_END        = 108;      % End of neuronal stimulation 
-CURRENT_STRENGTH    = 0.025;  % Strength of current input in mA/cm2  (0.009 for subthreshold, 0.011 for bursting, 0.015 for constant stimulation)
+NEURONAL_END        = 116;      % End of neuronal stimulation 
+CURRENT_STRENGTH    = 0.04;  % Strength of current input in mA/cm2
+CURRENT_TYPE        = 3;      % Types of current input. 1: normal, 2: two stimulations, 3: obtained from data
 
 ECS_START       = 30000;      % Start of ECS K+ input
 ECS_END         = 32000;      % End of ECS K+ input
@@ -49,14 +50,16 @@ timeStart = datetime('now');
 estimatedTimeEnd = timeStart + minutes(estimatedMinutes); 
 fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
 
-nv = NVU(Neuron('SC_coup', 11.5, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
+dt = 0.001;
+
+nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
     Astrocyte('R_decay', 0.15, 'Rk_switch', RK_SWITCH, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
     WallMechanics('wallMech', 1.1), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
-dt = 0.001;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
+
 nv.simulate()
 
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
@@ -68,33 +71,66 @@ np = nv.neuron.params; % Shortcut for neuron parameters
 
 % Find a point in time 20 sec before neuronal stimulation has begun (preNeuronalStimTime1)
 % and the point in time when stimulation begins (preNeuronalStimTime2) and get the values for 
-% CBF, CBV, DHG, CMRO2 at that time, then find the midpoint between the min and max and normalise with that value. 
+% CBF, CBV, HBR, CMRO2 at that time, then find the midpoint between the min and max and normalise with that value. 
 % Done in this way so that it also works when the variables are oscillatory (i.e. J_PLC = 0.3)
 preNeuronalStimTime1 = floor((NEURONAL_START-20)*numTimeSteps/XLIM2);
 preNeuronalStimTime2 = floor((NEURONAL_START)*numTimeSteps/XLIM2);
-CBF = nv.out('CBF'); CBV = (nv.out('CBV'))'; DHG = (nv.out('DHG'))'; CMRO2 = nv.out('CMRO2');
+CBF = nv.out('CBF'); CBV = (nv.out('CBV'))'; HBR = (nv.out('HBR'))'; CMRO2 = nv.out('CMRO2');
 CBF_0 = 0.5*( max(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) );
 CBV_0 = 0.5*( max(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) );
-DHG_0 = 0.5*( max(DHG(preNeuronalStimTime1:preNeuronalStimTime2)) + min(DHG(preNeuronalStimTime1:preNeuronalStimTime2)) );
+HBR_0 = 0.5*( max(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) + min(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) );
 CMRO2_0 = 0.5*( max(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) );
 
 % Normalised variables
 CBF_N = CBF./CBF_0;
 CBV_N = CBV./CBV_0;
-DHG_N = DHG./DHG_0;
+HBR_N = HBR./HBR_0;
 CMRO2_N = CMRO2./CMRO2_0;
 
-HBT_N = CBF_N .* DHG_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
-HBO_N = (HBT_N - 1) - (DHG_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
-BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - DHG_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
+HBT_N = CBF_N .* HBR_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
+HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
+BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
+
+%% Plot CBF
+figure(FIG_NUM);
+hold all;
+plot(nv.T, nv.out('CBF')./CBF_0, 'k', 'LineWidth', 1);
+ylabel('CBF [-]');
+xlim([XLIM1 XLIM2])
+ylim([0.97 1.4])
+title('F. Normalised CBF');
+xlabel('time (s)');
+% p1=patch([100 116 116 100],[0.97 0.97 1.4 1.4],'k');
+% set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+% p2=patch([124 125 125 124],[0.97 0.97 1.4 1.4],'k');
+% set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% 
+% %% Plot current
+% figure(200);
+% hold all;
+% plot(nv.T, nv.out('current'));
+% ylabel('current');
 
 %% Plot hemoglobin
-
-% figure(FIG_NUM);
-% plot(nv.T, HBT_N, nv.T, HBO_N, nv.T, DHG_N, nv.T, CMRO2_N);
-% xlim([XLIM1 XLIM2]);
-% legend('total HB','oxyHB','deoxyHB','CMRO_2');
 % 
+% figure(FIG_NUM);
+% plot(nv.T, HBO_N-1, 'r', nv.T, HBR_N-1, 'b', nv.T, HBT_N-1, 'g', 'LineWidth', 2);
+% p=patch([100 104 104 100],[-0.15 -0.15 0.25 0.25],'k');
+% set(p,'FaceAlpha',0.1,'EdgeColor', 'none');
+% xlim([95 130]);
+% ylabel('\Delta Concentration');
+% xlabel('Time [s]');
+% legend('HbO','HbR','HbT');
+% 
+% figure(FIG_NUM+1);
+% plot(nv.T, BOLD_N, 'k', 'LineWidth', 2);
+% p=patch([100 104 104 100],[-0.6 -0.6 1.7 1.7],'k');
+% set(p,'FaceAlpha',0.1,'EdgeColor', 'none');
+% xlim([95 130]);
+% ylim([-0.6 1.7]);
+% ylabel('\Delta BOLD');
+% xlabel('Time [s]');
+
 % figure(FIG_NUM+2);
 % plot( nv.T, nv.out('J_KDR_sa'),  nv.T, nv.out('J_KA_sa'), nv.T, nv.out('J_Kleak_sa'), nv.T, nv.out('J_Kpump_sa'), nv.T, nv.out('J_KDR_d'), nv.T, nv.out('J_KA_d'), nv.T, nv.out('J_Kleak_d'), nv.T, nv.out('J_Kpump_d'), nv.T, nv.out('J_NMDA_K_d'));
 % xlim([XLIM1 XLIM2]);
@@ -103,7 +139,7 @@ BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - DHG_N) - np.a_2 * (1 - CBV_N) );    % BO
 
 % Plot BOLD variables
 
-figure(FIG_NUM+1);
+figure(FIG_NUM+1000);
 subplot(3,3,1);
     hold all;
     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
@@ -141,8 +177,8 @@ subplot(3,3,7);
     xlim([XLIM1 XLIM2])
 subplot(3,3,8);
     hold all;
-    plot(nv.T, DHG_N, 'LineWidth', 1);
-    ylabel('DHG');
+    plot(nv.T, HBR_N, 'LineWidth', 1);
+    ylabel('HBR');
     xlim([XLIM1 XLIM2])
 subplot(3,3,9);
     hold all;
@@ -150,7 +186,7 @@ subplot(3,3,9);
     plot(nv.T, BOLD_N, 'LineWidth', 1);  
     ylabel('\Delta BOLD (%)');
     xlim([XLIM1 XLIM2])
- % Plot figures - whatever you want
+%  % Plot figures - whatever you want
 
 %% Plot for paper
 % figure(10);
@@ -215,8 +251,8 @@ subplot(3,3,9);
 %     rectangle('Position',[320, 0.97, 2, 0.005],'FaceColor',[0 0 0])
 % subplot(4,2,7);
 %     hold all;
-%     plot(nv.T, nv.out('DHG')./DHG_0, 'k', 'LineWidth', 1);
-%     ylabel('DHG [-]');
+%     plot(nv.T, nv.out('HBR')./HBR_0, 'k', 'LineWidth', 1);
+%     ylabel('HBR [-]');
 %     xlim([XLIM1 XLIM2])
 %     ylim([0.86 1.05])
 %     title('G. Normalised deoxyhemoglobin');
@@ -225,7 +261,7 @@ subplot(3,3,9);
 %     rectangle('Position',[320, 0.86, 2, 0.008],'FaceColor',[0 0 0])
 % subplot(4,2,8);
 %     hold all;
-%     plot(nv.T, 100 * np.V_0 * ( np.a_1 * (1 - nv.out('DHG')/DHG_0) - np.a_2 * (1 - nv.out('CBV')/CBV_0) ), 'k', 'LineWidth', 1);
+%     plot(nv.T, 100 * np.V_0 * ( np.a_1 * (1 - nv.out('HBR')/HBR_0) - np.a_2 * (1 - nv.out('CBV')/CBV_0) ), 'k', 'LineWidth', 1);
 %     ylabel('\Delta BOLD (%)');
 %     xlim([XLIM1 XLIM2])
 %     ylim([-0.9 1.5])

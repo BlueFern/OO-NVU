@@ -35,7 +35,7 @@ classdef Neuron < handle
  
             O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
             CBV = u(idx.CBV, :);        % BOLD CBV
-            DHG = u(idx.DHG, :);        % BOLD deoxyhemoglobin concentration
+            HBR = u(idx.HBR, :);        % BOLD deoxyhemoglobin concentration
             
             % Gating variables
             m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
@@ -177,7 +177,7 @@ classdef Neuron < handle
             CMRO2           = J_O2_background + J_O2_pump;
             CMRO2_init      = p.CBF_init * P_02;
             OEF             = CMRO2 * p.E_0 ./ CBF;
-            %BOLD            = p.V_0 * ( p.a_1 * (1 - DHG) - p.a_2 * (1 - CBV) );
+            %BOLD            = p.V_0 * ( p.a_1 * (1 - HBR) - p.a_2 * (1 - CBV) );
             
             %% NO pathway
             
@@ -227,7 +227,7 @@ classdef Neuron < handle
             
             % change in BOLD response
             du(idx.CBV, :)       = 1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ); 
-            du(idx.DHG, :)       = 1/p.tau_MTT * ( CMRO2./CMRO2_init - DHG./CBV .* f_out );
+            du(idx.HBR, :)       = 1/p.tau_MTT * ( CMRO2./CMRO2_init - HBR./CBV .* f_out );
 
             % Change in activation gating variables m
             du(idx.m1, :)       = 1000 * ((m1alpha .* (1 - m1)) - (m1beta .* m1));
@@ -344,14 +344,37 @@ classdef Neuron < handle
        % Current input to neuron
         function current = input_current(self, t) 
             p = self.params;
-            current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse);   
             
-%             current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse) ...
-%                     + p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse + 8 + 1/2), 1) ...
-%             ;
+            if p.CurrentType == 1
+            	current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse);   
+            elseif p.CurrentType == 2
+                current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse) ...
+                        + p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse + 8 + 1/2), 1);
+            elseif p.CurrentType == 3
+                % Load experimental data and use as a scaled current input         
+                % Values from nvu_run_script, replicated here
+                dt = 0.001; XLIM2 = 150; NEURONAL_START = 100;
+                load neurovascular_data_for_tim_david.mat
+                ISI = 7;    % Index for time period between stimulations [0.6,1,2,3,4,6,8]
+                stim = 3;   % Index for length of initial stimulation [2,8,16]
+                sum_neural = zeros(size(neural_tim_vector));
+                for animal = 1:11
+                    for experiment = 1:10
+                        sum_neural = sum_neural+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
+                    end
+                end
+                mean_neural = sum_neural./110;  % Average the neural data over all animals and experiments, animals*experiments=110
+                T = 0:dt:XLIM2;
+                neural_tim_vector_shifted = neural_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
+                interp_neural = interp1(neural_tim_vector_shifted, mean_neural, T); % Interpolate so there is data for all timesteps for NVU
+                interp_neural(isnan(interp_neural))=0.02;   % Remove NaNs     
+                index_t = round(t/dt + 1);  % Find index corresponding to time t
+                current = p.Istrength * interp_neural(index_t);
+            end
+            
+            %             current = p.Istrength * ( 0.5 * tanh((t - p.t_0)/0.05) - 0.5 * tanh(t - ((p.t_0 + p.lengthpulse)/0.05)) );
 
-%             current = p.Istrength * ( 0.5 * tanh((t - p.t_0)/0.05) - 0.5 * tanh(t - ((p.t_0 + p.lengthpulse)/0.05)) );
-        end     
+       end     
         
         function f = input_ECS(self, t)
             % Input of K+ into the ECS, if you want to use set t0 and tend
@@ -370,7 +393,7 @@ end
         
 function idx = indices()    %for state variables
     idx.CBV = 1;
-    idx.DHG = 2;   
+    idx.HBR = 2;   
     idx.v_sa = 3;
     idx.v_d = 4;
     idx.K_sa = 5;
@@ -435,6 +458,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('KSwitch', 1); 
     parser.addParameter('NOswitch', 1); 
     parser.addParameter('O2switch', 1); 
+    parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data
     
     % Glutamate parameters
     parser.addParameter('Glu_max', 1846);   % [uM] (one vesicle, Santucci2008)
@@ -584,7 +608,7 @@ function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
     u0(idx.CBV) = 1.3167;
-    u0(idx.DHG) = 0.6665;
+    u0(idx.HBR) = 0.6665;
     u0(idx.v_sa) = -70.0337;
     u0(idx.v_d) = -70.0195;
     u0(idx.K_sa) = 134.1858;
