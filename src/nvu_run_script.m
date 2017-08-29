@@ -23,7 +23,7 @@
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
 XLIM1 = 90; XLIM2 = 150;
-FIG_NUM = 1;
+FIG_NUM = 2;
 
 
 NEURONAL_START      = 100;      % Start of neuronal stimulation
