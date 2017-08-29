@@ -22,7 +22,7 @@
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
 XLIM1 = 90; XLIM2 = 150;
-FIG_NUM = 6;
+FIG_NUM = 8;
 
 NEURONAL_START      = 100;      % Start of neuronal stimulation
 NEURONAL_END        = 102;      % End of neuronal stimulation 
@@ -64,6 +64,8 @@ numTimeSteps = length(nv.T);
 load neurovascular_data_for_tim_david.mat
 ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
 stim = 3;   % INDEX for length of initial stimulation [2,8,16]
+actual_ISI = info.isi_duration(ISI);
+actual_stim = info.condition_stim_duration(stim);
 sum_neural = zeros(size(neural_tim_vector));
 for animal = 1:11
     for experiment = 1:10
@@ -88,7 +90,7 @@ figure;
 plot(cbf_tim_vector, mean_cbf);
 ylabel('\Delta CBF')
 xlabel('Time [s]')
-title(['Experimental CBF with initial duration ' num2str(stim) ', ISI ' num2str(ISI)] );
+title(['Experimental CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
 
 nv.simulate()   % Run NVU
 
