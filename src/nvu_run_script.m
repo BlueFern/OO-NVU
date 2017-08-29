@@ -16,20 +16,18 @@
 % Options for the ODE solver (currently |ode15s|) are provided by
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
+
 %clear all
-
-
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
 XLIM1 = 90; XLIM2 = 150;
-FIG_NUM = 2;
-
+FIG_NUM = 6;
 
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-NEURONAL_END        = 116;      % End of neuronal stimulation 
+NEURONAL_END        = 102;      % End of neuronal stimulation 
 CURRENT_STRENGTH    = 0.04;  % Strength of current input in mA/cm2
-CURRENT_TYPE        = 3;      % Types of current input. 1: normal, 2: two stimulations, 3: obtained from data
+CURRENT_TYPE        = 3;      % Types of current input. 1: normal, 2: two stimulations, 3: obtained from input data
 
 ECS_START       = 30000;      % Start of ECS K+ input
 ECS_END         = 32000;      % End of ECS K+ input
@@ -39,40 +37,71 @@ J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for 
 GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
-RK_SWITCH       = 0;        % Make R_k variable (1) or constant (0)
+RK_SWITCH       = 0;        % Make R_k variable (1) or constant (0). No difference
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
 % Output start time and estimated finish time based on how many sec of
-% stimulation there will be and speed of computer 
+% stimulation there will be and speed of computer (need to check accuracy
+% when loading data)
 %(home: 0.38, work: 0.88)
 estimatedMinutes = (NEURONAL_END - NEURONAL_START)*0.88;
 timeStart = datetime('now');
 estimatedTimeEnd = timeStart + minutes(estimatedMinutes); 
 fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
 
-dt = 0.001;
-
+% Load initial NVU
 nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
     Astrocyte('R_decay', 0.15, 'Rk_switch', RK_SWITCH, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
     WallMechanics('wallMech', 1.1), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
+% Adjust time vector
+nv.neuron.params.dt = 0.001; dt = nv.neuron.params.dt;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
-nv.simulate()
+% Load input data from file, save to input_data and put into Neuron
+load neurovascular_data_for_tim_david.mat
+ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
+stim = 3;   % INDEX for length of initial stimulation [2,8,16]
+sum_neural = zeros(size(neural_tim_vector));
+for animal = 1:11
+    for experiment = 1:10
+        sum_neural = sum_neural+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
+    end
+end
+mean_neural = sum_neural./110;  % Average the neural data over all animals and experiments, animals*experiments=110
+neural_tim_vector_shifted = neural_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
+interp_neural = interp1(neural_tim_vector_shifted, mean_neural, nv.T); % Interpolate so there is data for all timesteps for NVU
+interp_neural(isnan(interp_neural))=0.02;   % Remove NaNs     
+nv.neuron.input_data = interp_neural;   % Replace dummy in Neuron with input data
+
+% Plot experimental CBF from data file
+sum_cbf = zeros(size(cbf_tim_vector));
+for animal = 1:11
+    for experiment = 1:10
+        sum_cbf = sum_cbf+cbf_data(:,ISI,stim,experiment,animal)';
+    end
+end
+mean_cbf = (sum_cbf./110 ) - 1;
+figure;
+plot(cbf_tim_vector, mean_cbf);
+ylabel('\Delta CBF')
+xlabel('Time [s]')
+title(['Experimental CBF with initial duration ' num2str(stim) ', ISI ' num2str(ISI)] );
+
+nv.simulate()   % Run NVU
 
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
 % ICs = (nv.U(end, :))';
 % nv.u0 = ICs;
 % nv.simulateManualICs() 
 
-np = nv.neuron.params; % Shortcut for neuron parameters
-
 % Find a point in time 20 sec before neuronal stimulation has begun (preNeuronalStimTime1)
 % and the point in time when stimulation begins (preNeuronalStimTime2) and get the values for 
 % CBF, CBV, HBR, CMRO2 at that time, then find the midpoint between the min and max and normalise with that value. 
 % Done in this way so that it also works when the variables are oscillatory (i.e. J_PLC = 0.3)
+np = nv.neuron.params; % Shortcut for neuron parameters
 preNeuronalStimTime1 = floor((NEURONAL_START-20)*numTimeSteps/XLIM2);
 preNeuronalStimTime2 = floor((NEURONAL_START)*numTimeSteps/XLIM2);
 CBF = nv.out('CBF'); CBV = (nv.out('CBV'))'; HBR = (nv.out('HBR'))'; CMRO2 = nv.out('CMRO2');
@@ -92,14 +121,14 @@ HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Ox
 BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
 
 %% Plot CBF
-figure(FIG_NUM);
-hold all;
-plot(nv.T, nv.out('CBF')./CBF_0, 'k', 'LineWidth', 1);
-ylabel('CBF [-]');
-xlim([XLIM1 XLIM2])
-ylim([0.97 1.4])
-title('F. Normalised CBF');
-xlabel('time (s)');
+% figure(FIG_NUM);
+% hold all;
+% plot(nv.T, nv.out('CBF')./CBF_0, 'k', 'LineWidth', 1);
+% ylabel('CBF [-]');
+% xlim([XLIM1 XLIM2])
+% ylim([0.97 1.4])
+% title('Normalised CBF');
+% xlabel('time (s)');
 % p1=patch([100 116 116 100],[0.97 0.97 1.4 1.4],'k');
 % set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
 % p2=patch([124 125 125 124],[0.97 0.97 1.4 1.4],'k');
@@ -137,7 +166,7 @@ xlabel('time (s)');
 % legend('KDR_s','KA_s','Kleak_s','Kpump_s','KDR_d','KA_d','Kleak_d','Kpump_d','NMDA_d')
 
 
-% Plot BOLD variables
+% Plot variables
 
 figure(FIG_NUM+1000);
 subplot(3,3,1);

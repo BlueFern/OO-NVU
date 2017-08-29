@@ -1,5 +1,6 @@
 classdef Neuron < handle
     properties
+        input_data
         params
         u0
         index
@@ -346,44 +347,35 @@ classdef Neuron < handle
             p = self.params;
             
             if p.CurrentType == 1
-            	current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse);   
+                
+            	current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse);  
+                dt = p.dt; XLIM2 = p.XLIM2;
+                T = 0:dt:XLIM2;
+                index_t = round(t/dt + 1);  % Find index corresponding to time t
+                output_percentage = 100*index_t./(length(T)); % Output to screen to show progress
+                fprintf('Percentage done: %.4f\n', output_percentage);
+                
             elseif p.CurrentType == 2
+                
                 current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse) ...
                         + p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse + 8 + 1/2), 1);
+                dt = p.dt; XLIM2 = p.XLIM2;
+                T = 0:dt:XLIM2;
+                index_t = round(t/dt + 1);  % Find index corresponding to time t
+                output_percentage = 100*index_t./(length(T)); % Output to screen to show progress
+                fprintf('Percentage done: %.4f\n', output_percentage);
+                    
             elseif p.CurrentType == 3
+                
             % Load experimental data and use as a scaled current input         
-            
-                % This is much slower, only do once to obtain small mat file
-                      % Values from nvu_run_script, replicated here
-%                     dt = 0.001; XLIM2 = 150; NEURONAL_START = 100;
-%                     load neurovascular_data_for_tim_david.mat
-%                     ISI = 7;    % Index for time period between stimulations [0.6,1,2,3,4,6,8]
-%                     stim = 2;   % Index for length of initial stimulation [2,8,16]
-%                     sum_neural = zeros(size(neural_tim_vector));
-%                     for animal = 1:11
-%                         for experiment = 1:10
-%                             sum_neural = sum_neural+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
-%                         end
-%                     end
-%                     mean_neural = sum_neural./110;  % Average the neural data over all animals and experiments, animals*experiments=110
-%                     T = 0:dt:XLIM2;
-%                     neural_tim_vector_shifted = neural_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
-%                     interp_neural = interp1(neural_tim_vector_shifted, mean_neural, T); % Interpolate so there is data for all timesteps for NVU
-%                     interp_neural(isnan(interp_neural))=0.02;   % Remove NaNs     
-%                     index_t = round(t/dt + 1);  % Find index corresponding to time t
-%                     current = p.Istrength * interp_neural(index_t);
-%                     output_percentage = 100*index_t./(length(T))
-
-                % Load data from smaller file with only needed data, ISI
-                % and stim specific (and dependent on dt, XLIM2 and
-                % NEURONAL_START, if any of these are changed then the 
-                % data in the mat file must also be changed)
-                    dt = 0.001; XLIM2 = 150; NEURONAL_START = 100;
-                    T = 0:dt:XLIM2;
-                    load data_ISI8_stim16.mat
-                    index_t = round(t/dt + 1);  % Find index corresponding to time t
-                    current = p.Istrength * interp_neural(index_t);
-                    output_percentage = 100*index_t./(length(T))
+                dt = p.dt; XLIM2 = p.XLIM2;
+                T = 0:dt:XLIM2;
+                neural_data = self.input_data;
+                index_t = round(t/dt + 1);  % Find index corresponding to time t
+                current = p.Istrength * neural_data(index_t);
+                output_percentage = 100*index_t./(length(T)); % Output to screen to show progress
+                fprintf('Percentage done: %.4f\n', output_percentage);
+                 
             end
             
             %             current = p.Istrength * ( 0.5 * tanh((t - p.t_0)/0.05) - 0.5 * tanh(t - ((p.t_0 + p.lengthpulse)/0.05)) );
@@ -610,6 +602,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_actNOS', 9.27e-2);   % [uM] ; 
     parser.addParameter('mu2_n', 0.0167);       % [s^-1] ; rate constant at which the nNOS is deactivated Comerford2008
 
+    parser.addParameter('dt', 0.001);
+    parser.addParameter('XLIM2', 150);
+    parser.addParameter('input_data', linspace(0, 1200, 1000)); % Dummy input, replaced in nvu_run_script
+        
     parser.parse(varargin{:})
     params = parser.Results;
     params.t_0 = params.startpulse;
