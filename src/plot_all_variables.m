@@ -44,7 +44,7 @@ for i = 1:1:i_smcec
 end
 hold off
 
-figure(5);
+figure(4);
 hold on
 set(gcf,'Name', 'Wall Mechanics State Variables')
 wall_vars = fieldnames(nv.wall.index);

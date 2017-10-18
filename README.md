@@ -2,15 +2,16 @@
 Object-oriented implementation of the original NVU (envy-you) model and code.
 
 
-Master branch: NVU 1.2
+Branch: NVU 2.0
 
-NVU 1.2
+NVU 2.0
 -------
-Contains the following components that were not present in NVU 1.1:
+Contains the following components:
 * Extracellular space compartment
 * Astrocytic calcium pathway with EETs
 * TRPV4 channel on the astrocytic endfoot
 * Nitric oxide pathway
+* Neuron (soma/axon and dendrite compartments) with input current
 
 Code 
 ----

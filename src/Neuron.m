@@ -281,6 +281,7 @@ classdef Neuron < handle
                 Uout(self.idx_out.J_Kleak_d, :) = J_Kleak_d;
                 Uout(self.idx_out.J_Kpump_d, :) = J_Kpump_d;
                 Uout(self.idx_out.J_NMDA_K_d, :) = J_NMDA_K_d;
+                Uout(self.idx_out.f_out, :) = f_out;
             	varargout = {Uout};
             end
         end
@@ -454,6 +455,7 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.J_Kleak_d = 27;
     idx.J_Kpump_d = 28;
     idx.J_NMDA_K_d = 18;
+    idx.f_out = 19;
     n = numel(fieldnames(idx));     
 end
       

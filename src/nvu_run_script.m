@@ -21,38 +21,46 @@
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
-XLIM1 = 90; XLIM2 = 150;
-FIG_NUM = 8;
+% Limits for plots
+XLIM1 = 90; XLIM2 = 250;
+FIG_NUM = 1;
 
+% For current type 1 use max current strength 0.022
+% For current type 1 use max current strength 0.042
+
+MAX_CURRENT_STRENGTH    = 0.022;  % Max strength of current input in mA/cm2, needs to be higher when using experimental profile (around 0.042), lower when using block input (around 0.022)
+CURRENT_TYPE        = 1;      % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data
+ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
+stim = 3;   % INDEX for length of initial stimulation [2,8,16]
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-NEURONAL_END        = 102;      % End of neuronal stimulation 
-CURRENT_STRENGTH    = 0.04;  % Strength of current input in mA/cm2
-CURRENT_TYPE        = 3;      % Types of current input. 1: normal, 2: two stimulations, 3: obtained from input data
 
-ECS_START       = 30000;      % Start of ECS K+ input
-ECS_END         = 32000;      % End of ECS K+ input
+% Used if CURRENT_STRENGTH = 1 or 2
+NEURONAL_END        = 108;      % End of neuronal stimulation (or end of the first stimulation if current type is 2)
+
+% Not currently used
+ECS_START       = 100000000;      % Start of ECS K+ input
+ECS_END         = 1000000000;      % End of ECS K+ input
 
 J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for oscillations
 
 GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
-RK_SWITCH       = 0;        % Make R_k variable (1) or constant (0). No difference
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
-% Output start time and estimated finish time based on how many sec of
-% stimulation there will be and speed of computer (need to check accuracy
-% when loading data)
-%(home: 0.38, work: 0.88)
-estimatedMinutes = (NEURONAL_END - NEURONAL_START)*0.88;
-timeStart = datetime('now');
-estimatedTimeEnd = timeStart + minutes(estimatedMinutes); 
-fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
+% % Output start time and estimated finish time based on how many sec of
+% % stimulation there will be and speed of computer (need to check accuracy
+% % when loading data)
+% %(home: 0.38, work: 0.88)
+% estimatedMinutes = (NEURONAL_END - NEURONAL_START)*0.88;
+% timeStart = datetime('now');
+% estimatedTimeEnd = timeStart + minutes(estimatedMinutes); 
+% fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
 
 % Load initial NVU
-nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
-    Astrocyte('R_decay', 0.15, 'Rk_switch', RK_SWITCH, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
-    WallMechanics('wallMech', 1.1), ...
+nv = NVU(Neuron('V_maxNOS', 1*25e-3, 'SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', MAX_CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
+    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'Rk_switch', 0), ...
+    WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
 % Adjust time vector
@@ -61,38 +69,25 @@ nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
 % Load input data from file, save to input_data and put into Neuron
-load neurovascular_data_for_tim_david.mat
-ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
-stim = 3;   % INDEX for length of initial stimulation [2,8,16]
-actual_ISI = info.isi_duration(ISI);
-actual_stim = info.condition_stim_duration(stim);
-sum_neural = zeros(size(neural_tim_vector));
-for animal = 1:11
-    for experiment = 1:10
-        sum_neural = sum_neural+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
+if nv.neuron.params.CurrentType == 3
+    load neurovascular_data_for_tim_david.mat
+    actual_ISI = info.isi_duration(ISI);
+    actual_stim = info.condition_stim_duration(stim);
+    sum_neural = zeros(size(neural_tim_vector));
+    for animal = 1:11
+        for experiment = 1:10
+            sum_neural = sum_neural+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
+        end
     end
+    mean_neural = sum_neural./110;  % Average the neural data over all animals and experiments, animals*experiments=110
+    neural_tim_vector_shifted = neural_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
+    interp_neural = interp1(neural_tim_vector_shifted, mean_neural, nv.T); % Interpolate so there is data for all timesteps for NVU
+    interp_neural(isnan(interp_neural))=0.02;   % Remove NaNs     
+    nv.neuron.input_data = interp_neural;   % Replace dummy in Neuron with input data
 end
-mean_neural = sum_neural./110;  % Average the neural data over all animals and experiments, animals*experiments=110
-neural_tim_vector_shifted = neural_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
-interp_neural = interp1(neural_tim_vector_shifted, mean_neural, nv.T); % Interpolate so there is data for all timesteps for NVU
-interp_neural(isnan(interp_neural))=0.02;   % Remove NaNs     
-nv.neuron.input_data = interp_neural;   % Replace dummy in Neuron with input data
 
-% Plot experimental CBF from data file
-sum_cbf = zeros(size(cbf_tim_vector));
-for animal = 1:11
-    for experiment = 1:10
-        sum_cbf = sum_cbf+cbf_data(:,ISI,stim,experiment,animal)';
-    end
-end
-mean_cbf = (sum_cbf./110 ) - 1;
-figure;
-plot(cbf_tim_vector, mean_cbf);
-ylabel('\Delta CBF')
-xlabel('Time [s]')
-title(['Experimental CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
-
-nv.simulate()   % Run NVU
+%% Run the simulation
+nv.simulate() 
 
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
 % ICs = (nv.U(end, :))';
@@ -121,6 +116,28 @@ CMRO2_N = CMRO2./CMRO2_0;
 HBT_N = CBF_N .* HBR_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
 HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
 BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
+
+%% Plot experimental and model CBF from data file
+sum_cbf = zeros(size(cbf_tim_vector));
+for animal = 1:11
+    for experiment = 1:10
+        sum_cbf = sum_cbf+cbf_data(:,ISI,stim,experiment,animal)';
+    end
+end
+mean_cbf = (sum_cbf./110) - 1;
+cbf_tim_vector_shifted = cbf_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
+figure;
+plot(cbf_tim_vector_shifted, mean_cbf, ':', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
+ylabel('\Delta CBF')
+xlabel('Time [s]')
+xlim([90 150])
+ylim([-0.05 0.3])
+title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
+p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
+set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
+set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% 
 
 %% Plot CBF
 % figure(FIG_NUM);
@@ -167,9 +184,50 @@ BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BO
 % xlim([XLIM1 XLIM2]);
 % legend('KDR_s','KA_s','Kleak_s','Kpump_s','KDR_d','KA_d','Kleak_d','Kpump_d','NMDA_d')
 
-
-% Plot variables
-
+figure(FIG_NUM+1);
+subplot(2,2,1);
+    hold all;
+    plot(nv.T, nv.out('nNOS_act_n'), 'LineWidth', 1);
+    ylabel('nNOS');
+    xlim([XLIM1 XLIM2])
+    xlabel('Time [s]')
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.3 0.3 0.9 0.9],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.3 0.3 0.9 0.9],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+subplot(2,2,2);
+    hold all;
+    plot(nv.T, nv.out('NO_n'), 'LineWidth', 1);
+    ylabel('NO_n');
+    xlim([XLIM1 XLIM2])
+    xlabel('Time [s]')
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.15 0.15 0.45 0.45],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.15 0.15 0.45 0.45],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+subplot(2,2,3);
+    hold all;
+    plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+    ylabel('Radius');
+    xlim([XLIM1 XLIM2])
+    xlabel('Time [s]')
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[22.5 22.5 25.5 25.5],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[22.5 22.5 25.5 25.5],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+subplot(2,2,4);
+    hold all;
+    plot(nv.T, CBF_N, 'LineWidth', 1);
+    ylabel('CBF');
+    xlim([XLIM1 XLIM2])
+    xlabel('Time [s]')
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[1 1 1.4 1.4],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[1 1 1.4 1.4],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+    
+%% Plot variables
+% 
 figure(FIG_NUM+1000);
 subplot(3,3,1);
     hold all;
@@ -217,7 +275,7 @@ subplot(3,3,9);
     plot(nv.T, BOLD_N, 'LineWidth', 1);  
     ylabel('\Delta BOLD (%)');
     xlim([XLIM1 XLIM2])
-%  % Plot figures - whatever you want
+% %  % Plot figures - whatever you want
 
 %% Plot for paper
 % figure(10);
