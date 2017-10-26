@@ -22,7 +22,7 @@
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
 % Limits for plots
-XLIM1 = 90; XLIM2 = 250;
+XLIM1 = 90; XLIM2 = 110;
 FIG_NUM = 1;
 
 % For current type 1 use max current strength 0.022
@@ -30,12 +30,14 @@ FIG_NUM = 1;
 
 MAX_CURRENT_STRENGTH    = 0.022;  % Max strength of current input in mA/cm2, needs to be higher when using experimental profile (around 0.042), lower when using block input (around 0.022)
 CURRENT_TYPE        = 1;      % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data
-ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
-stim = 3;   % INDEX for length of initial stimulation [2,8,16]
 NEURONAL_START      = 100;      % Start of neuronal stimulation
 
+% Used if CURRENT_STRENGTH = 3
+ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
+stim = 3;   % INDEX for length of initial stimulation [2,8,16]
+
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 108;      % End of neuronal stimulation (or end of the first stimulation if current type is 2)
+NEURONAL_END        = 100.5;      % End of neuronal stimulation (or end of the first stimulation if current type is 2)
 
 % Not currently used
 ECS_START       = 100000000;      % Start of ECS K+ input
@@ -118,25 +120,27 @@ HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Ox
 BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
 
 %% Plot experimental and model CBF from data file
-sum_cbf = zeros(size(cbf_tim_vector));
-for animal = 1:11
-    for experiment = 1:10
-        sum_cbf = sum_cbf+cbf_data(:,ISI,stim,experiment,animal)';
+if nv.neuron.params.CurrentType == 3
+    sum_cbf = zeros(size(cbf_tim_vector));
+    for animal = 1:11
+        for experiment = 1:10
+            sum_cbf = sum_cbf+cbf_data(:,ISI,stim,experiment,animal)';
+        end
     end
+    mean_cbf = (sum_cbf./110) - 1;
+    cbf_tim_vector_shifted = cbf_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
+    figure;
+    plot(cbf_tim_vector_shifted, mean_cbf, ':', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
+    ylabel('\Delta CBF')
+    xlabel('Time [s]')
+    xlim([90 150])
+    ylim([-0.05 0.3])
+    title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
+    p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
+    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
+    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 end
-mean_cbf = (sum_cbf./110) - 1;
-cbf_tim_vector_shifted = cbf_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
-figure;
-plot(cbf_tim_vector_shifted, mean_cbf, ':', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
-ylabel('\Delta CBF')
-xlabel('Time [s]')
-xlim([90 150])
-ylim([-0.05 0.3])
-title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
-p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
-set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
-set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 % 
 
 %% Plot CBF
@@ -184,47 +188,47 @@ set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 % xlim([XLIM1 XLIM2]);
 % legend('KDR_s','KA_s','Kleak_s','Kpump_s','KDR_d','KA_d','Kleak_d','Kpump_d','NMDA_d')
 
-figure(FIG_NUM+1);
-subplot(2,2,1);
-    hold all;
-    plot(nv.T, nv.out('nNOS_act_n'), 'LineWidth', 1);
-    ylabel('nNOS');
-    xlim([XLIM1 XLIM2])
-    xlabel('Time [s]')
-%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.3 0.3 0.9 0.9],'k');
-%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.3 0.3 0.9 0.9],'k');
-%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
-subplot(2,2,2);
-    hold all;
-    plot(nv.T, nv.out('NO_n'), 'LineWidth', 1);
-    ylabel('NO_n');
-    xlim([XLIM1 XLIM2])
-    xlabel('Time [s]')
-%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.15 0.15 0.45 0.45],'k');
-%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.15 0.15 0.45 0.45],'k');
-%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
-subplot(2,2,3);
-    hold all;
-    plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
-    ylabel('Radius');
-    xlim([XLIM1 XLIM2])
-    xlabel('Time [s]')
-%     p1=patch([100 100+actual_stim 100+actual_stim 100],[22.5 22.5 25.5 25.5],'k');
-%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[22.5 22.5 25.5 25.5],'k');
-%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
-subplot(2,2,4);
-    hold all;
-    plot(nv.T, CBF_N, 'LineWidth', 1);
-    ylabel('CBF');
-    xlim([XLIM1 XLIM2])
-    xlabel('Time [s]')
-%     p1=patch([100 100+actual_stim 100+actual_stim 100],[1 1 1.4 1.4],'k');
-%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[1 1 1.4 1.4],'k');
-%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% figure(FIG_NUM+1);
+% subplot(2,2,1);
+%     hold all;
+%     plot(nv.T, nv.out('nNOS_act_n'), 'LineWidth', 1);
+%     ylabel('nNOS');
+%     xlim([XLIM1 XLIM2])
+%     xlabel('Time [s]')
+% %     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.3 0.3 0.9 0.9],'k');
+% %     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+% %     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.3 0.3 0.9 0.9],'k');
+% %     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% subplot(2,2,2);
+%     hold all;
+%     plot(nv.T, nv.out('NO_n'), 'LineWidth', 1);
+%     ylabel('NO_n');
+%     xlim([XLIM1 XLIM2])
+%     xlabel('Time [s]')
+% %     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.15 0.15 0.45 0.45],'k');
+% %     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+% %     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.15 0.15 0.45 0.45],'k');
+% %     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% subplot(2,2,3);
+%     hold all;
+%     plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+%     ylabel('Radius');
+%     xlim([XLIM1 XLIM2])
+%     xlabel('Time [s]')
+% %     p1=patch([100 100+actual_stim 100+actual_stim 100],[22.5 22.5 25.5 25.5],'k');
+% %     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+% %     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[22.5 22.5 25.5 25.5],'k');
+% %     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% subplot(2,2,4);
+%     hold all;
+%     plot(nv.T, CBF_N, 'LineWidth', 1);
+%     ylabel('CBF');
+%     xlim([XLIM1 XLIM2])
+%     xlabel('Time [s]')
+% %     p1=patch([100 100+actual_stim 100+actual_stim 100],[1 1 1.4 1.4],'k');
+% %     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+% %     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[1 1 1.4 1.4],'k');
+% %     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
     
 %% Plot variables
 % 
