@@ -26,8 +26,7 @@ classdef Astrocyte < handle
             t = t(:).';
             p = self.params;
             idx = self.index;
-
-            R_k = u(idx.R_k, :);
+            
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
             N_Na_k = u(idx.N_Na_k, :);
@@ -54,27 +53,24 @@ classdef Astrocyte < handle
             N_Cl_s = N_Na_s + N_K_s - N_HCO3_s;
             
             % Volume-surface ratio 
-            %TODO: set as constant and remove to simplify equations
-            R_s = p.R_tot - R_k;
+            R_s = p.R_tot - p.R_k;
             
             % Scale concentrations to get actual concentrations in uM!!
             K_s = N_K_s ./ R_s;
             Na_s = N_Na_s ./ R_s;
             Cl_s = N_Cl_s ./ R_s;
             HCO3_s = N_HCO3_s ./ R_s;
-            Na_k = N_Na_k ./ R_k;
-            K_k = N_K_k ./ R_k;
-            Cl_k = N_Cl_k ./ R_k;
-            HCO3_k = N_HCO3_k ./ R_k;
+            Na_k = N_Na_k ./ p.R_k;
+            K_k = N_K_k ./ p.R_k;
+            Cl_k = N_Cl_k ./ p.R_k;
+            HCO3_k = N_HCO3_k ./ p.R_k;
             
             % Input of K+ to the SC (assuming that the SC is a small part of the ECS and everything that happens to the ECS also happens to the SC)
             J_K_NEtoSC_k = J_K_NEtoSC * 1000 .* R_s; % Convert from mM/s to uMm/s
  
             
             %% Astrocyte
-            % Volume-surface Ratio scaling ODE
-            du(idx.R_k, :) = p.Rk_switch * p.L_p * (Na_k + K_k + Cl_k + HCO3_k - Na_s - Cl_s - K_s - HCO3_s + p.X_k ./ R_k);
-            
+
             % Nernst potentials ( in V)
             E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
             E_Na_k = p.R_g * p.T / (p.z_Na * p.F) * log(Na_s ./ Na_k);
@@ -94,8 +90,8 @@ classdef Astrocyte < handle
             
             % Fluxes
             J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
-            J_BK_p = J_N_BK_k ./ (R_k * p.VR_pa); % K+ influx into the PVS (uM/s)
-            J_BK_k = J_N_BK_k ./ R_k; % K+ efflux from the AC (uM/s)
+            J_BK_p = J_N_BK_k ./ (p.R_k * p.VR_pa); % K+ influx into the PVS (uM/s)
+            J_BK_k = J_N_BK_k ./ p.R_k; % K+ efflux from the AC (uM/s)
             J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
             J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k) * p.C_correction;
             J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
@@ -152,7 +148,7 @@ classdef Astrocyte < handle
             du(idx.w_k, :)      = phi_w .* (w_inf - w_k);
             
             % Differential Equations in the Perivascular space
-            du(idx.K_p, :)      = J_N_BK_k ./ (R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay * (K_p - p.K_p_min) ;
+            du(idx.K_p, :)      = J_N_BK_k ./ (p.R_k * p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay * (K_p - p.K_p_min) ;
             du(idx.Ca_p, :)     = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
            
             % Differential Equations in the Synaptic Cleft
@@ -226,7 +222,7 @@ end
 
 function idx = indices(self)
 % Index of state variables
-    idx.R_k = 1;
+    idx.NO_k = 1;
     idx.K_p = 2;
     idx.N_Na_k = 3;
     idx.N_K_k = 4;
@@ -243,7 +239,6 @@ function idx = indices(self)
     idx.eet_k = 15;
     idx.m_k = 16;
     idx.Ca_p = 17;
-    idx.NO_k = 18;
 end
 
 function [idx, n] = output_indices(self)
@@ -341,6 +336,7 @@ function params = parse_inputs(varargin)
     % Scaling Constants
     parser.addParameter('L_p', 2.1e-9); % m uM^-1 s^-1
     parser.addParameter('X_k', 12.41e-3); % uM m
+    parser.addParameter('R_k', 6e-8); % m
     parser.addParameter('R_tot', 8.79e-8); % m
 
     % Input K+ and glutamate signal
@@ -453,7 +449,6 @@ function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
     u0 = zeros(length(fieldnames(idx)), 1);
-    u0(idx.R_k) = 0.06e-6; %0.0621e-6; 
     u0(idx.N_Na_k) = 0.0010961;
     u0(idx.N_K_k) = 0.0055247;
     u0(idx.N_HCO3_k) = 0.00054791;
