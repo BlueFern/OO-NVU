@@ -29,13 +29,13 @@ classdef Astrocyte < handle
             
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
-            N_Na_k = u(idx.N_Na_k, :);
-            N_K_k = u(idx.N_K_k, :);
-            N_Cl_k = u(idx.N_Cl_k, :);
-            N_HCO3_k = u(idx.N_HCO3_k, :);
-            N_Na_s = u(idx.N_Na_s, :);
-            N_K_s = u(idx.N_K_s, :);
-            N_HCO3_s = u(idx.N_HCO3_s, :);
+            Na_k = u(idx.Na_k, :);
+            K_k = u(idx.K_k, :);
+            Cl_k = u(idx.Cl_k, :);
+            HCO3_k = u(idx.HCO3_k, :);
+            Na_s = u(idx.Na_s, :);
+            K_s = u(idx.K_s, :);
+            HCO3_s = u(idx.HCO3_s, :);
             w_k = u(idx.w_k, :);
             I_k = u(idx.I_k, :);
             
@@ -50,20 +50,20 @@ classdef Astrocyte < handle
             %% Synaptic Cleft:
 
             % Electroneutrality condition
-            N_Cl_s = N_Na_s + N_K_s - N_HCO3_s;
+            Cl_s = Na_s + K_s - HCO3_s;
             
             % Volume-surface ratio 
             R_s = p.R_tot - p.R_k;
             
             % Scale concentrations to get actual concentrations in uM!!
-            K_s = N_K_s ./ R_s;
-            Na_s = N_Na_s ./ R_s;
-            Cl_s = N_Cl_s ./ R_s;
-            HCO3_s = N_HCO3_s ./ R_s;
-            Na_k = N_Na_k ./ p.R_k;
-            K_k = N_K_k ./ p.R_k;
-            Cl_k = N_Cl_k ./ p.R_k;
-            HCO3_k = N_HCO3_k ./ p.R_k;
+%             K_s = N_K_s ./ R_s;
+%             Na_s = N_Na_s ./ R_s;
+%             Cl_s = N_Cl_s ./ R_s;
+%             HCO3_s = N_HCO3_s ./ R_s;
+%             Na_k = N_Na_k ./ p.R_k;
+%             K_k = N_K_k ./ p.R_k;
+%             Cl_k = N_Cl_k ./ p.R_k;
+%             HCO3_k = N_HCO3_k ./ p.R_k;
             
             % Input of K+ to the SC (assuming that the SC is a small part of the ECS and everything that happens to the ECS also happens to the SC)
             J_K_NEtoSC_k = J_K_NEtoSC * 1000 .* R_s; % Convert from mM/s to uMm/s
@@ -133,10 +133,10 @@ classdef Astrocyte < handle
 
             %% Conservation Equations
             % Differential Equations in the Astrocyte
-            du(idx.N_K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_N_BK_k;
-            du(idx.N_Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
-            du(idx.N_HCO3_k, :) = 2*J_NBC_k;
-            du(idx.N_Cl_k, :)   = du(idx.N_Na_k, :) + du(idx.N_K_k, :) - du(idx.N_HCO3_k, :);
+            du(idx.K_k, :)    = 1/p.R_k * (-J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_N_BK_k);
+            du(idx.Na_k, :)   = 1/p.R_k * (-J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k);
+            du(idx.HCO3_k, :) = 1/p.R_k * (2*J_NBC_k);
+            du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :);
             
             % Differential Calcium Equations in Astrocyte
             du(idx.Ca_k, :)     = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_TRPV_k/p.r_buff);           
@@ -152,9 +152,9 @@ classdef Astrocyte < handle
             du(idx.Ca_p, :)     = (-J_TRPV_k ./ p.VR_pa) + (J_VOCC_k ./ p.VR_ps) - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
            
             % Differential Equations in the Synaptic Cleft
-            du(idx.N_K_s, :)    = J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k;
-            du(idx.N_Na_s, :)   = -du(idx.N_Na_k, :) - J_K_NEtoSC_k;
-            du(idx.N_HCO3_s, :) = -du(idx.N_HCO3_k, :);
+            du(idx.K_s, :)    = 1./R_s * (J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_K_NEtoSC_k);
+            du(idx.Na_s, :)   = 1./R_s * (J_Na_k + 3*J_NaK_k - J_NKCC1_k - J_NBC_k - J_K_NEtoSC_k);
+            du(idx.HCO3_s, :) = 1./R_s * (-2*J_NBC_k);
  
             % NO pathway:
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
@@ -224,13 +224,13 @@ function idx = indices(self)
 % Index of state variables
     idx.NO_k = 1;
     idx.K_p = 2;
-    idx.N_Na_k = 3;
-    idx.N_K_k = 4;
-    idx.N_Cl_k = 5;
-    idx.N_HCO3_k = 6;
-    idx.N_Na_s = 7;
-    idx.N_K_s = 8;
-    idx.N_HCO3_s = 9;
+    idx.Na_k = 3;
+    idx.K_k = 4;
+    idx.Cl_k = 5;
+    idx.HCO3_k = 6;
+    idx.Na_s = 7;
+    idx.K_s = 8;
+    idx.HCO3_s = 9;
     idx.w_k = 10;
     idx.I_k = 11;
     idx.Ca_k = 12;
@@ -449,13 +449,13 @@ function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
     u0 = zeros(length(fieldnames(idx)), 1);
-    u0(idx.N_Na_k) = 0.0010961;
-    u0(idx.N_K_k) = 0.0055247;
-    u0(idx.N_HCO3_k) = 0.00054791;
-    u0(idx.N_Cl_k) = 0.00046402;
-    u0(idx.N_Na_s) = 0.00420714;
-    u0(idx.N_K_s) = 7.9445e-5;
-    u0(idx.N_HCO3_s) = 4.72678e-4;
+    u0(idx.Na_k) = 18268;
+    u0(idx.K_k) = 92708;
+    u0(idx.HCO3_k) = 9131;
+    u0(idx.Cl_k) = 7733;
+    u0(idx.Na_s) = 150255;
+    u0(idx.K_s) = 2837;
+    u0(idx.HCO3_s) = 16881;
     u0(idx.K_p) = 3045.1;
     u0(idx.w_k) = 1.703e-4;
     u0(idx.Ca_k) = 0.1612; 
