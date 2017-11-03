@@ -368,7 +368,7 @@ function params = parse_inputs(varargin)
     %TRPV4
     parser.addParameter('Capmin_k', 2000); %uM
     parser.addParameter('C_astr_k', 40);%pF
-    parser.addParameter('gamma_k', 834.3);%mV/uM
+    parser.addParameter('gamma_k', 834.3);%mV/uM ***** why different from Koenigsberger? Check Joerik report!
     parser.addParameter('gam_cae_k', 200); %uM
     parser.addParameter('gam_cai_k', 0.01); %uM
      parser.addParameter('epshalf_k', 0.1); % 

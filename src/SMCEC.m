@@ -96,7 +96,7 @@ classdef SMCEC < handle
 
             V_max_pde = p.k_pde * cGMP_i;
 
-%             p_NO_j = p.NOswitch * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
+%             p_NO_j = p.NOswitcJ_NaK_ih * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
 %             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
 
             O2_j = O2*1e3;  % Oxygen in EC taken as O2 from lumen (diffusion very fast so plausible!) instead of constant

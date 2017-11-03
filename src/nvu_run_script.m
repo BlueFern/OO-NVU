@@ -22,22 +22,22 @@
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 
 % Limits for plots
-XLIM1 = 90; XLIM2 = 110;
-FIG_NUM = 1;
+XLIM1 = 90; XLIM2 = 250;
+FIG_NUM = 4;
 
-% For current type 1 use max current strength 0.022
-% For current type 1 use max current strength 0.042
+% For current type 1,2 use max current strength 0.022
+% For current type 3,4 use max current strength 0.042
 
-MAX_CURRENT_STRENGTH    = 0.022;  % Max strength of current input in mA/cm2, needs to be higher when using experimental profile (around 0.042), lower when using block input (around 0.022)
-CURRENT_TYPE        = 1;      % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data
+MAX_CURRENT_STRENGTH    = 0.042;  % Max strength of current input in mA/cm2, needs to be higher when using experimental profile (around 0.042), lower when using block input (around 0.022)
+CURRENT_TYPE        = 4;      % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 NEURONAL_START      = 100;      % Start of neuronal stimulation
 
-% Used if CURRENT_STRENGTH = 3
+% Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
 stim = 3;   % INDEX for length of initial stimulation [2,8,16]
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 100.5;      % End of neuronal stimulation (or end of the first stimulation if current type is 2)
+NEURONAL_END        = 200;      % End of neuronal stimulation (or end of the first stimulation if current type is 2)
 
 % Not currently used
 ECS_START       = 100000000;      % Start of ECS K+ input
@@ -60,8 +60,8 @@ O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-lim
 % fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
 
 % Load initial NVU
-nv = NVU(Neuron('V_maxNOS', 1*25e-3, 'SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', MAX_CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
-    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'Rk_switch', 0), ...
+nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', MAX_CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
+    Astrocyte2('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'Rk_switch', 0), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
@@ -71,22 +71,65 @@ nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
 % Load input data from file, save to input_data and put into Neuron
-if nv.neuron.params.CurrentType == 3
+if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     load neurovascular_data_for_tim_david.mat
     actual_ISI = info.isi_duration(ISI);
     actual_stim = info.condition_stim_duration(stim);
-    sum_neural = zeros(size(neural_tim_vector));
+    sum_neural_wh = zeros(size(neural_tim_vector));
     for animal = 1:11
         for experiment = 1:10
-            sum_neural = sum_neural+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
+            sum_neural_wh = sum_neural_wh+neural_data(:,ISI,stim,experiment,animal)'; % Sum all data 
         end
     end
-    mean_neural = sum_neural./110;  % Average the neural data over all animals and experiments, animals*experiments=110
+    mean_neural_wh = sum_neural_wh./110;  % Average the neural data over all animals and experiments, animals*experiments=110
     neural_tim_vector_shifted = neural_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
-    interp_neural = interp1(neural_tim_vector_shifted, mean_neural, nv.T); % Interpolate so there is data for all timesteps for NVU
-    interp_neural(isnan(interp_neural))=0.02;   % Remove NaNs     
-    nv.neuron.input_data = interp_neural;   % Replace dummy in Neuron with input data
+    interp_neural_wh = interp1(neural_tim_vector_shifted, mean_neural_wh, nv.T); % Interpolate so there is data for all timesteps for NVU
+    interp_neural_wh(isnan(interp_neural_wh))=0.02;   % Remove NaNs     
+    
+    nv.neuron.input_data = interp_neural_wh;   % Replace dummy in Neuron with input data, leave it at that for CURRENT_TYPE = 3
+    I_Wh = 1*interp_neural_wh;                   % Save as whisker pad current I_Wh
 end
+
+alpha = 1;
+beta = 2 - alpha;
+
+% Construct additional pain pathway stimulation I_LC and input total current to Neuron
+if nv.neuron.params.CurrentType == 4
+    
+    % Construct first stimulation, set to work for any start time or any
+    % stim duration (2,8,16 s)
+    time_1 = linspace(0, actual_stim, 10000);
+    I_1 = 0.000391 * time_1.^2 + 0.1;
+%     I_1 = 0.000195 * time_1.^2 + 0.1;
+    time_1 = time_1 + NEURONAL_START;
+    I_1 = interp1(time_1, I_1, nv.T);
+    I_1(isnan(I_1)) = 0;
+    
+    %Construct second stimulation
+    time_2 = linspace(0, 1, 10000);
+    I_2 = 0.1*ones(size(time_2));
+    time_2 = time_2 + NEURONAL_START + actual_stim + actual_ISI;
+    I_2 = interp1(time_2, I_2, nv.T);
+    I_2(isnan(I_2)) = 0;
+    
+    %Add together
+    I_LC = (I_1 + I_2);
+    
+    % Total current (whisker pad plus LC)
+    I_total = alpha*I_Wh + beta*I_LC;
+    nv.neuron.input_data = I_total;
+end
+
+
+figure;
+plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
+legend('I_Wh','I_LC','I_{total}')
+xlim([95 140])
+
+figure(1);
+hold on
+plot(nv.T, I_total);
+xlim([95 140])
 
 %% Run the simulation
 nv.simulate() 
@@ -240,8 +283,8 @@ subplot(3,3,1);
     xlim([XLIM1 XLIM2])
 subplot(3,3,2);
     hold all;
-    plot(nv.T, nv.out('current'), 'LineWidth', 1);
-    ylabel('current');
+    plot(nv.T, nv.out('v_k')*1e3, 'LineWidth', 1);
+    ylabel('v_k [mV]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,3);
     hold all;
@@ -362,6 +405,20 @@ subplot(3,3,9);
 %     xlabel('time (s)');
 %     rectangle('Position',[300, -0.9, 16, 0.09],'FaceColor',[0 0 0])
 %     rectangle('Position',[320, -0.9, 2, 0.09],'FaceColor',[0 0 0])
+
+%%
+% figure(FIG_NUM+10);
+% subplot(1,2,1);
+%     hold all;
+%     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+%     ylabel('v_{sa} [mV]');
+%     xlim([XLIM1 XLIM2])
+% subplot(1,2,2);
+%     hold all;
+%     plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+%     ylabel('K_e [mM]');
+%     xlim([XLIM1 XLIM2])
+
 
 timeEnd = datetime('now');
 fprintf('End time is %s\n', char(timeEnd));
