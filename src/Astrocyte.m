@@ -27,6 +27,8 @@ classdef Astrocyte < handle
             p = self.params;
             idx = self.index;
             
+            v_k = u(idx.v_k, :);
+            
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
             Na_k = u(idx.Na_k, :);
@@ -84,9 +86,9 @@ classdef Astrocyte < handle
             
             % Membrane voltage
             g_BK_k = p.G_BK_k*1e-12 / p.A_ef_k;
-            g_TRPV_k = (p.G_TRPV_k* 1e-12)/(p.A_ef_k);%mho m^-2
-            v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + g_BK_k * w_k .* E_BK_k - J_NaK_k * p.F / p.C_correction) ./ ...
-                (p.g_Na_k + p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + g_BK_k * w_k);
+%             g_TRPV_k = (p.G_TRPV_k* 1e-12)/(p.A_ef_k);%mho m^-2
+%             v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + g_BK_k * w_k .* E_BK_k - J_NaK_k * p.F / p.C_correction) ./ ...
+%                 (p.g_Na_k + p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + g_BK_k * w_k);
             
             % Fluxes
             J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
@@ -97,14 +99,15 @@ classdef Astrocyte < handle
             J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
             J_KCC1_k = p.g_KCC1_k / p.F * p.R_g * p.T / p.F .* log((K_s .* Cl_s) ./ (K_k .* Cl_k)) * p.C_correction;
             J_NKCC1_k = p.g_NKCC1_k / p.F * p.R_g * p.T / p.F .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2)) * p.C_correction;
+            J_Cl_k = p.g_Cl_k / p.F * (v_k - E_Cl_k) * p.C_correction;
             
             %% Calcium Equations
             % Flux
             J_IP3 = p.J_max * ( I_k ./ (I_k + p.K_I) .*  Ca_k ./ (Ca_k + p.K_act) .* h_k).^3 .* (1 - Ca_k ./ s_k);
             J_ER_leak = p.P_L * (1 - Ca_k ./ s_k);
             J_pump = p.V_max * Ca_k.^2 ./ (Ca_k.^2 + p.k_pump^2);
-            I_TRPV_k = p.G_TRPV_k * m_k .* (v_k-E_TRPV_k) * p.C_correction; % current TRPV
-            J_TRPV_k = -0.5 * I_TRPV_k / (p.C_astr_k * p.gamma_k); 
+            I_TRPV_k = p.G_TRPV_k * m_k .* (v_k - E_TRPV_k) * p.C_correction; % TRPV4 current
+            J_TRPV_k = - I_TRPV_k / (p.z_Ca * p.C_astr_k * p.gamma_k); % TRPV4 flux [uM/s]
 
             rho = p.rho_min + (p.rho_max - p.rho_min)/p.Glu_max * Glu;
             
@@ -132,6 +135,9 @@ classdef Astrocyte < handle
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
 
             %% Conservation Equations
+            
+            du(idx.v_k, :)    = 1/p.C_correction * p.gamma_k .* (1./p.R_k * ( -J_N_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k ) - 2*J_TRPV_k);
+            
             % Differential Equations in the Astrocyte
             du(idx.K_k, :)    = 1/p.R_k * (-J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_N_BK_k);
             du(idx.Na_k, :)   = 1/p.R_k * (-J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k);
@@ -164,7 +170,7 @@ classdef Astrocyte < handle
 
                 Uout = zeros(self.n_out, size(u, 2));
                 Uout(self.idx_out.J_K_NEtoSC, :) = J_K_NEtoSC;
-                Uout(self.idx_out.v_k, :) = v_k;
+%                 Uout(self.idx_out.v_k, :) = v_k;
                 Uout(self.idx_out.K_s, :) = K_s;
                 Uout(self.idx_out.K_p, :) = K_p;
                 Uout(self.idx_out.J_N_BK_k, :) = J_N_BK_k;
@@ -239,6 +245,7 @@ function idx = indices(self)
     idx.eet_k = 15;
     idx.m_k = 16;
     idx.Ca_p = 17;
+    idx.v_k = 18;
 end
 
 function [idx, n] = output_indices(self)
@@ -282,6 +289,8 @@ end
 
 function params = parse_inputs(varargin)
     parser = inputParser();
+    
+    parser.addParameter('gamma_i', 1970); % [mV/uM] 
 
     % ECS K+ input parameters
     parser.addParameter('ECS_input', 9); 
@@ -368,7 +377,7 @@ function params = parse_inputs(varargin)
     %TRPV4
     parser.addParameter('Capmin_k', 2000); %uM
     parser.addParameter('C_astr_k', 40);%pF
-    parser.addParameter('gamma_k', 834.3);%mV/uM ***** why different from Koenigsberger? Check Joerik report!
+    parser.addParameter('gamma_k', 834.3);%mV/uM   ***** why different from Koenigsberger? Check Joerik report! 834.3
     parser.addParameter('gam_cae_k', 200); %uM
     parser.addParameter('gam_cai_k', 0.01); %uM
      parser.addParameter('epshalf_k', 0.1); % 
@@ -466,4 +475,5 @@ function u0 = initial_conditions(idx,self)
     u0(idx.m_k) = 0.5710;
     u0(idx.Ca_p) = 1746.4;
     u0(idx.NO_k) = 0.1106;
+    u0(idx.v_k) = -0.006;
 end

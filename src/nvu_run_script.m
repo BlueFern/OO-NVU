@@ -17,34 +17,40 @@
 % specifying the |odeopts| parameter. The code works fine with default
 % tolerances.
 
-%clear all
+clear all
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
+FIG_NUM = 10;
+XLIM1 = 90;
+XLIM2 = 150; % End of simulation
 
-% Limits for plots
-XLIM1 = 90; XLIM2 = 250;
-FIG_NUM = 4;
+% For current type 1 use max current strength 0.022
+% For current type 3 use max current strength 0.042
+% For current type 4 use max current strength 0.036
 
-% For current type 1,2 use max current strength 0.022
-% For current type 3,4 use max current strength 0.042
-
-MAX_CURRENT_STRENGTH    = 0.042;  % Max strength of current input in mA/cm2, needs to be higher when using experimental profile (around 0.042), lower when using block input (around 0.022)
-CURRENT_TYPE        = 4;      % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
+CURRENT_STRENGTH    = 0.036;    % Max strength of current input in mA/cm2
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-
-% Used if CURRENT_STRENGTH = 3 or 4
-ISI = 7;    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
-stim = 3;   % INDEX for length of initial stimulation [2,8,16]
+CURRENT_TYPE        = 4;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 200;      % End of neuronal stimulation (or end of the first stimulation if current type is 2)
+NEURONAL_END        = 102;      % End of neuronal stimulation 
+
+% Used if CURRENT_STRENGTH = 3 or 4
+ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
+stim = 3;                       % INDEX for length of initial stimulation [2,8,16]
+
+% Used if CURRENT_STRENGTH = 4: scaling for the two stimulation components,
+% alpha for whisker pad and beta for locus coeruleus/pain. Default for both
+% is 1. Can make parameters in vector v if desired.
+% I_total = alpha * I_Wh + beta * I_LC
+alpha = 1;
+beta = 1;
 
 % Not currently used
 ECS_START       = 100000000;      % Start of ECS K+ input
 ECS_END         = 1000000000;      % End of ECS K+ input
 
 J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for oscillations
-
 GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
@@ -60,8 +66,8 @@ O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-lim
 % fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
 
 % Load initial NVU
-nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', MAX_CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
-    Astrocyte2('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'Rk_switch', 0), ...
+nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
+    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'Rk_switch', 0), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
@@ -70,8 +76,9 @@ nv.neuron.params.dt = 0.001; dt = nv.neuron.params.dt;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
-% Load input data from file, save to input_data and put into Neuron
+%% Load whisker stimulation input data from file, save as I_Wh and put into Neuron.m
 if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
+    
     load neurovascular_data_for_tim_david.mat
     actual_ISI = info.isi_duration(ISI);
     actual_stim = info.condition_stim_duration(stim);
@@ -87,49 +94,42 @@ if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     interp_neural_wh(isnan(interp_neural_wh))=0.02;   % Remove NaNs     
     
     nv.neuron.input_data = interp_neural_wh;   % Replace dummy in Neuron with input data, leave it at that for CURRENT_TYPE = 3
-    I_Wh = 1*interp_neural_wh;                   % Save as whisker pad current I_Wh
+    I_Wh = interp_neural_wh;                   % Save as whisker pad current I_Wh
 end
 
-alpha = 1;
-beta = 2 - alpha;
-
-% Construct additional pain pathway stimulation I_LC and input total current to Neuron
+%% Construct additional pain pathway stimulation I_LC and input total current I_total to Neuron.m
 if nv.neuron.params.CurrentType == 4
     
-    % Construct first stimulation, set to work for any start time or any
-    % stim duration (2,8,16 s)
-    time_1 = linspace(0, actual_stim, 10000);
-    I_1 = 0.000391 * time_1.^2 + 0.1;
-%     I_1 = 0.000195 * time_1.^2 + 0.1;
-    time_1 = time_1 + NEURONAL_START;
-    I_1 = interp1(time_1, I_1, nv.T);
-    I_1(isnan(I_1)) = 0;
+    % Construct first stimulation, set to work for any NEURONAL_START or any
+    % initial stimulus duration (2,8,16 s)
+    time_1 = linspace(0, actual_stim, 10000); 
+    I_1 = 0.0006 * time_1.^2 + 0.1;             % Chosen for the shape! Can be modified if needed
+    time_1 = time_1 + NEURONAL_START;           % Shift so starts at NEURONAL_START
+    I_1 = interp1(time_1, I_1, nv.T);           % Make same size as nv.T
+    I_1(isnan(I_1)) = 0;                        % Replace NaNs with zeros
     
-    %Construct second stimulation
+    % Construct second stimulation with duration 2 sec
     time_2 = linspace(0, 1, 10000);
     I_2 = 0.1*ones(size(time_2));
     time_2 = time_2 + NEURONAL_START + actual_stim + actual_ISI;
     I_2 = interp1(time_2, I_2, nv.T);
     I_2(isnan(I_2)) = 0;
     
-    %Add together
-    I_LC = (I_1 + I_2);
+    % Add together
+    I_LC = I_1 + I_2;
     
     % Total current (whisker pad plus LC)
     I_total = alpha*I_Wh + beta*I_LC;
+    
+    % Input to Neuron.m
     nv.neuron.input_data = I_total;
 end
 
 
-figure;
-plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
-legend('I_Wh','I_LC','I_{total}')
-xlim([95 140])
-
-figure(1);
-hold on
-plot(nv.T, I_total);
-xlim([95 140])
+% figure(100);
+% plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
+% legend('I_Wh','I_LC','I_{total}')
+% xlim([95 140])
 
 %% Run the simulation
 nv.simulate() 
@@ -163,7 +163,7 @@ HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Ox
 BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
 
 %% Plot experimental and model CBF from data file
-if nv.neuron.params.CurrentType == 3
+if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4 
     sum_cbf = zeros(size(cbf_tim_vector));
     for animal = 1:11
         for experiment = 1:10
@@ -177,7 +177,7 @@ if nv.neuron.params.CurrentType == 3
     ylabel('\Delta CBF')
     xlabel('Time [s]')
     xlim([90 150])
-    ylim([-0.05 0.3])
+    %ylim([-0.05 0.3])
     title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
     p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
