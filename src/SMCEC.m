@@ -432,22 +432,22 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
-    u0(idx.Ca_i) = 0.2637; % 0.1;
-    u0(idx.s_i) = 1.1686; % 0.1;
-    u0(idx.v_i) = -34.7; % -60;
-    u0(idx.w_i) = 0.2206; % 0.1;
-    u0(idx.I_i) = 0.275; % 0.1;
-    u0(idx.K_i) = 99994.8; % 100e3;
-    u0(idx.NO_i) = 0.0541; % 0.05;
-    u0(idx.E_b) = 0.4077; % 1/3;
-    u0(idx.E_6c) = 0.4396; % 1/3;
-    u0(idx.cGMP_i) = 8.2826; % 8;
-    u0(idx.Ca_j) = 0.8331; % 0.1;
-    u0(idx.s_j) = 0.6266; % 0.1;
-    u0(idx.v_j) = -68.27; % -75;
-    u0(idx.I_j) = 0.825; % 0.1;
-    u0(idx.eNOS_act_j) = 0.4479; % 0.7;
-    u0(idx.NO_j) = 0.0528; % 0.05;
+    u0(idx.Ca_i) = 0.2637; % 0.1;           [uM]
+    u0(idx.s_i) = 1.1686; % 0.1;            [uM]
+    u0(idx.v_i) = -34.7; % -60;             [mV]
+    u0(idx.w_i) = 0.2206; % 0.1;            [-]
+    u0(idx.I_i) = 0.275; % 0.1;             [uM]
+    u0(idx.K_i) = 99994.8; % 100e3;         [uM]
+    u0(idx.NO_i) = 0.0541; % 0.05;          [uM]
+    u0(idx.E_b) = 0.4077; % 1/3;            [-]
+    u0(idx.E_6c) = 0.4396; % 1/3;           [-] 
+    u0(idx.cGMP_i) = 8.2826; % 8;           [uM]
+    u0(idx.Ca_j) = 0.8331; % 0.1;           [uM]
+    u0(idx.s_j) = 0.6266; % 0.1;            [uM]
+    u0(idx.v_j) = -68.27; % -75;            [mV]
+    u0(idx.I_j) = 0.825; % 0.1;             [uM]
+    u0(idx.eNOS_act_j) = 0.4479; % 0.7;     [uM]
+    u0(idx.NO_j) = 0.0528; % 0.05;          [uM]
 
 end
 
