@@ -69,7 +69,7 @@ classdef Neuron < handle
             E_Na_d      = p.ph * log(Na_e ./ Na_d);
             E_K_d       = p.ph * log(K_e ./ K_d);
             
-            %% Ion fluxes
+            %% Ion **currents** (not fluxes!)
             % Leak fluxes of Na,K,Cl in soma and dendrite using HH
             J_Naleak_sa = p.gNaleak_sa * (v_sa - E_Na_sa);
             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
@@ -513,7 +513,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('fe', 0.15);            % ECS to neuron ratio
     parser.addParameter('Cm', 7.5e-7);          % Membrance capacitance [s/ohms cm2]    *******
     parser.addParameter('Farad', 96.485);           % Faraday constant [C / mmol]
-    parser.addParameter('ph', 26.6995);         % RT/F
+    parser.addParameter('ph', 26.6995);         % RT/Farad where Farad is [C/mmol]
     parser.addParameter('Mu', 8e-4);            % [m/s]
     parser.addParameter('Mu2', 8e-4);            % [m/s]
     parser.addParameter('B0', 500);             % Effective total buffer concentration [mM]

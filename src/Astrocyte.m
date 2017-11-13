@@ -54,18 +54,8 @@ classdef Astrocyte < handle
             % Electroneutrality condition
             Cl_s = Na_s + K_s - HCO3_s;
             
-            % Volume-surface ratio 
+            % Volume-surface ratio of SC
             R_s = p.R_tot - p.R_k;
-            
-            % Scale concentrations to get actual concentrations in uM!!
-%             K_s = N_K_s ./ R_s;
-%             Na_s = N_Na_s ./ R_s;
-%             Cl_s = N_Cl_s ./ R_s;
-%             HCO3_s = N_HCO3_s ./ R_s;
-%             Na_k = N_Na_k ./ p.R_k;
-%             K_k = N_K_k ./ p.R_k;
-%             Cl_k = N_Cl_k ./ p.R_k;
-%             HCO3_k = N_HCO3_k ./ p.R_k;
             
             % Input of K+ to the SC (assuming that the SC is a small part of the ECS and everything that happens to the ECS also happens to the SC)
             J_K_NEtoSC_k = J_K_NEtoSC * 1000 .* R_s; % Convert from mM/s to uMm/s
@@ -73,40 +63,37 @@ classdef Astrocyte < handle
             
             %% Astrocyte
 
-            % Nernst potentials ( in V)
-            E_K_k = p.R_g * p.T / (p.z_K * p.F) * log(K_s ./ K_k);
-            E_Na_k = p.R_g * p.T / (p.z_Na * p.F) * log(Na_s ./ Na_k);
-            E_Cl_k = p.R_g * p.T / (p.z_Cl * p.F) * log(Cl_s ./ Cl_k);
-            E_NBC_k = p.R_g * p.T / (p.z_NBC * p.F) * log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
-            E_BK_k = p.reverseBK + p.switchBK *(p.R_g * p.T / (p.z_K * p.F) * log(K_p ./ K_k)); % nerst potential BK, either constant or as a function of K_k and K_p. [V]
-            E_TRPV_k = p.R_g * p.T / (p.z_Ca * p.F) * log(Ca_p./Ca_k); % Nernst potential TRPV
+            % Nernst potentials (in mV)
+            E_K_k = p.ph / p.z_K * log(K_s ./ K_k);
+            E_Na_k = p.ph / p.z_Na * log(Na_s ./ Na_k);
+            E_Cl_k = p.ph / p.z_Cl * log(Cl_s ./ Cl_k);
+            E_NBC_k = p.ph / p.z_NBC * log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
+            E_BK_k = p.reverseBK + p.switchBK *(p.ph / p.z_K * log(K_p ./ K_k));            % Nerst potential BK, either constant or as a function of K_k and K_p.
+            E_TRPV_k = p.ph / p.z_Ca * log(Ca_p./Ca_k);                                     % Nernst potential TRPV
             
             % Flux through the Sodium Potassium pump
             J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
             
-            % Membrane voltage
+            % BK conductance per unit area
             g_BK_k = p.G_BK_k*1e-12 / p.A_ef_k;
-%             g_TRPV_k = (p.G_TRPV_k* 1e-12)/(p.A_ef_k);%mho m^-2
-%             v_k = (p.g_Na_k * E_Na_k + p.g_K_k * E_K_k + g_TRPV_k * m_k .* E_TRPV_k + p.g_Cl_k * E_Cl_k + p.g_NBC_k * E_NBC_k + g_BK_k * w_k .* E_BK_k - J_NaK_k * p.F / p.C_correction) ./ ...
-%                 (p.g_Na_k + p.g_K_k + p.g_Cl_k + p.g_NBC_k + g_TRPV_k * m_k + g_BK_k * w_k);
             
             % Fluxes
-            J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k) * p.C_correction; % scaled BK flux (uM m /s)
-            J_BK_p = J_N_BK_k ./ (p.R_k * p.VR_pa); % K+ influx into the PVS (uM/s)
-            J_BK_k = J_N_BK_k ./ p.R_k; % K+ efflux from the AC (uM/s)
-            J_K_k = p.g_K_k / p.F * (v_k - E_K_k) * p.C_correction;
-            J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k) * p.C_correction;
-            J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k) * p.C_correction;
-            J_KCC1_k = p.g_KCC1_k / p.F * p.R_g * p.T / p.F .* log((K_s .* Cl_s) ./ (K_k .* Cl_k)) * p.C_correction;
-            J_NKCC1_k = p.g_NKCC1_k / p.F * p.R_g * p.T / p.F .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2)) * p.C_correction;
-            J_Cl_k = p.g_Cl_k / p.F * (v_k - E_Cl_k) * p.C_correction;
+            J_N_BK_k = g_BK_k / p.F * w_k .* (v_k - E_BK_k);    % scaled BK flux (uM m /s)
+            J_BK_p = J_N_BK_k ./ (p.R_k * p.VR_pa);             % K+ influx into the PVS (uM/s)
+            J_BK_k = J_N_BK_k ./ p.R_k;                         % K+ efflux from the AC (uM/s)
+            J_K_k = p.g_K_k / p.F * (v_k - E_K_k);
+            J_Na_k = p.g_Na_k / p.F * (v_k - E_Na_k);
+            J_NBC_k = p.g_NBC_k / p.F * (v_k - E_NBC_k);
+            J_KCC1_k = p.g_KCC1_k / p.F * p.ph .* log((K_s .* Cl_s) ./ (K_k .* Cl_k));
+            J_NKCC1_k = p.g_NKCC1_k / p.F * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));
+            J_Cl_k = p.g_Cl_k / p.F * (v_k - E_Cl_k);
             
             %% Calcium Equations
             % Flux
             J_IP3 = p.J_max * ( I_k ./ (I_k + p.K_I) .*  Ca_k ./ (Ca_k + p.K_act) .* h_k).^3 .* (1 - Ca_k ./ s_k);
             J_ER_leak = p.P_L * (1 - Ca_k ./ s_k);
             J_pump = p.V_max * Ca_k.^2 ./ (Ca_k.^2 + p.k_pump^2);
-            I_TRPV_k = p.G_TRPV_k * m_k .* (v_k - E_TRPV_k) * p.C_correction; % TRPV4 current
+            I_TRPV_k = p.G_TRPV_k * m_k .* (v_k - E_TRPV_k); % TRPV4 current
             J_TRPV_k = - I_TRPV_k / (p.z_Ca * p.C_astr_k * p.gamma_k); % TRPV4 flux [uM/s]
 
             rho = p.rho_min + (p.rho_max - p.rho_min)/p.Glu_max * Glu;
@@ -136,7 +123,7 @@ classdef Astrocyte < handle
 
             %% Conservation Equations
             
-            du(idx.v_k, :)    = 1/p.C_correction * p.gamma_k .* (1./p.R_k * ( -J_N_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k ) - 2*J_TRPV_k);
+            du(idx.v_k, :)    = p.gamma_k .* (1./p.R_k * ( -J_N_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k ) - 2*J_TRPV_k);
             
             % Differential Equations in the Astrocyte
             du(idx.K_k, :)    = 1/p.R_k * (-J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_N_BK_k);
@@ -322,9 +309,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('theta_R_Glu', 1);      % slope of Glu input 
     
     parser.addParameter('G_BK_k', 225); % pS (later converted to mho m^-2)
-    parser.addParameter('v_4', 8e-3); %V
-    parser.addParameter('v_5', 15e-3); %V
-    parser.addParameter('v_6', -55e-3); %V
+    parser.addParameter('v_4', 8); %mV
+    parser.addParameter('v_5', 15); %mV
+    parser.addParameter('v_6', -55); %mV
     
     %%% Old parameters %%%
 %     parser.addParameter('G_BK_k', 4300); % pS (later converted to mho m^-2)
@@ -371,7 +358,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('k_eet', 7.2); % uM
     parser.addParameter('Ca_k_min', 0.1); % uM
     parser.addParameter('Ca_3', 0.4);
-    parser.addParameter('eet_shift', 2e-3);
+    parser.addParameter('eet_shift', 2); %mV
     parser.addParameter('K_I', 0.03); % uM
 
     %TRPV4
@@ -382,8 +369,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('gam_cai_k', 0.01); %uM
      parser.addParameter('epshalf_k', 0.1); % 
     parser.addParameter('kappa_k', 0.1);
-    parser.addParameter('v1_TRPV_k', 0.120); %V
-    parser.addParameter('v2_TRPV_k', 0.013); %V
+    parser.addParameter('v1_TRPV_k', 120); %mV
+    parser.addParameter('v2_TRPV_k', 13); %mV
     parser.addParameter('t_TRPV_k', 0.9); 
     parser.addParameter('R_0_passive_k', 20e-6); 
     parser.addParameter('Ca_decay_k', 0.5);
@@ -429,6 +416,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('B_ex', 11.35); %uM
     parser.addParameter('K_G', 8.82); %uM
     parser.addParameter('psi_w', 2.664); %s^-1
+    parser.addParameter('ph', 26.6995);         % RT/Farad where Farad is [C/mmol], also used in Neuron.m
 
     % NO Pathway
     parser.addParameter('D_cNO', 3300);         % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)

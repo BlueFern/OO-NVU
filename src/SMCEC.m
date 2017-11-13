@@ -329,7 +329,7 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('G_stretch', 6.1e-3); % uM mV^-1 s^-1   (Also EC parameter)
     parser.addParameter('alpha_stretch', 7.4e-3); % mmHg^-1     (Also EC parameter)
-    parser.addParameter('trans_p_mmHg', 30); % mmHg                  (Also EC parameter) transmural pressure. 30 mmHg = 4000 Pa
+    parser.addParameter('trans_p_mmHg', 30); % mmHg             (Also EC parameter) transmural pressure. 30 mmHg = 4000 Pa
     parser.addParameter('sigma_0', 500); % mmHg                 (Also EC parameter)
     parser.addParameter('E_SAC', -18); % mV                     (Also EC parameter)
 

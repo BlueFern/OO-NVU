@@ -20,20 +20,20 @@
 clear all
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
-FIG_NUM = 10;
+FIG_NUM = 1;
 XLIM1 = 90;
 XLIM2 = 150; % End of simulation
 
 % For current type 1 use max current strength 0.022
 % For current type 3 use max current strength 0.042
-% For current type 4 use max current strength 0.036
+% For current type 4 use max current strength 0.035
 
-CURRENT_STRENGTH    = 0.036;    % Max strength of current input in mA/cm2
+CURRENT_STRENGTH    = 0.035;    % Max strength of current input in mA/cm2
 NEURONAL_START      = 100;      % Start of neuronal stimulation
 CURRENT_TYPE        = 4;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 102;      % End of neuronal stimulation 
+NEURONAL_END        = 101;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -126,10 +126,10 @@ if nv.neuron.params.CurrentType == 4
 end
 
 
-% figure(100);
-% plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
-% legend('I_Wh','I_LC','I_{total}')
-% xlim([95 140])
+figure(101);
+plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
+legend('I_Wh','I_LC','I_{total}')
+xlim([95 140])
 
 %% Run the simulation
 nv.simulate() 
@@ -283,7 +283,7 @@ subplot(3,3,1);
     xlim([XLIM1 XLIM2])
 subplot(3,3,2);
     hold all;
-    plot(nv.T, nv.out('v_k')*1e3, 'LineWidth', 1);
+    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
     ylabel('v_k [mV]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,3);
