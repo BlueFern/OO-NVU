@@ -28,16 +28,16 @@ XLIM2 = 150; % End of simulation
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
-CURRENT_STRENGTH    = 0.035;    % Max strength of current input in mA/cm2
+CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-CURRENT_TYPE        = 4;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
+CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
 NEURONAL_END        = 101;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
-stim = 3;                       % INDEX for length of initial stimulation [2,8,16]
+stim = 1;                       % INDEX for length of initial stimulation [2,8,16]
 
 % Used if CURRENT_STRENGTH = 4: scaling for the two stimulation components,
 % alpha for whisker pad and beta for locus coeruleus/pain. Default for both
@@ -67,7 +67,7 @@ O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-lim
 
 % Load initial NVU
 nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
-    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END, 'Rk_switch', 0), ...
+    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
@@ -126,10 +126,10 @@ if nv.neuron.params.CurrentType == 4
 end
 
 
-figure(101);
-plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
-legend('I_Wh','I_LC','I_{total}')
-xlim([95 140])
+% figure(101);
+% plot(nv.T, alpha*I_Wh, nv.T, beta*I_LC, nv.T, I_total);
+% legend('I_Wh','I_LC','I_{total}')
+% xlim([95 140])
 
 %% Run the simulation
 nv.simulate() 
@@ -172,17 +172,17 @@ if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     end
     mean_cbf = (sum_cbf./110) - 1;
     cbf_tim_vector_shifted = cbf_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
-    figure;
-    plot(cbf_tim_vector_shifted, mean_cbf, ':', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
-    ylabel('\Delta CBF')
-    xlabel('Time [s]')
-    xlim([90 150])
-    %ylim([-0.05 0.3])
-    title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
-    p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
-    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
-    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     figure;
+%     plot(cbf_tim_vector_shifted, mean_cbf, ':', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
+%     ylabel('\Delta CBF')
+%     xlabel('Time [s]')
+%     xlim([90 150])
+%     %ylim([-0.05 0.3])
+%     title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 end
 % 
 
@@ -406,19 +406,40 @@ subplot(3,3,9);
 %     rectangle('Position',[300, -0.9, 16, 0.09],'FaceColor',[0 0 0])
 %     rectangle('Position',[320, -0.9, 2, 0.09],'FaceColor',[0 0 0])
 
-%%
+% % %%
 % figure(FIG_NUM+10);
-% subplot(1,2,1);
+% subplot(2,3,1);
 %     hold all;
-%     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
-%     ylabel('v_{sa} [mV]');
+%     plot(nv.T, nv.out('Ca_i'), 'LineWidth', 1);
+%     ylabel('Ca_i [\muM]');
 %     xlim([XLIM1 XLIM2])
-% subplot(1,2,2);
+% subplot(2,3,2);
 %     hold all;
-%     plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-%     ylabel('K_e [mM]');
+%     plot(nv.T, nv.out('AMp'), 'LineWidth', 1);
+%     ylabel('AMp [-]');
 %     xlim([XLIM1 XLIM2])
-
-
+% subplot(2,3,3);
+%     hold all;
+%     plot(nv.T, nv.out('AM'), 'LineWidth', 1);
+%     ylabel('AM [-]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,4);
+%     hold all;
+%     plot(nv.T, nv.out('F_r'), 'LineWidth', 1);
+%     ylabel('F_r [-]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,5);
+%     hold all;
+%     plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+%     ylabel('R [\mum]');
+%     xlim([XLIM1 XLIM2])
+% 
+% figure(FIG_NUM+11);
+%     hold all;
+%     plotyy(nv.T, -nv.out('Ca_i'), nv.T, nv.out('R')*1e6)
+%     %ylabel('Ca_i [\muM]');
+%     %xlim([XLIM1 XLIM2])
+%     
+    
 timeEnd = datetime('now');
 fprintf('End time is %s\n', char(timeEnd));

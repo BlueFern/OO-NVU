@@ -343,8 +343,8 @@ classdef Neuron < handle
             J_K_NEtoSC = p.SC_coup * dKedt;
        end
        
-       % Current input to neuron
-        function current = input_current(self, t) 
+       %% Current input to neuron
+       function current = input_current(self, t) 
             p = self.params;
             
             if p.CurrentType == 1
@@ -353,9 +353,7 @@ classdef Neuron < handle
                 dt = p.dt; XLIM2 = p.XLIM2;
                 T = 0:dt:XLIM2;
                 index_t = round(t/dt + 1);  % Find index corresponding to time t
-                output_percentage = 100*index_t./(length(T)); % Output to screen to show progress
-                fprintf('Percentage done: %.4f\n', output_percentage);
-                
+
             elseif p.CurrentType == 2
                 
                 current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse) ...
@@ -363,9 +361,7 @@ classdef Neuron < handle
                 dt = p.dt; XLIM2 = p.XLIM2;
                 T = 0:dt:XLIM2;
                 index_t = round(t/dt + 1);  % Find index corresponding to time t
-                output_percentage = 100*index_t./(length(T)); % Output to screen to show progress
-                fprintf('Percentage done: %.4f\n', output_percentage);
-                    
+
             elseif p.CurrentType == 3 || p.CurrentType == 4
                 
             % Load experimental data and use as a scaled current input         
@@ -373,14 +369,8 @@ classdef Neuron < handle
                 T = 0:dt:XLIM2;
                 neural_data = self.input_data;
                 index_t = round(t/dt + 1);  % Find index corresponding to time t
-                current = p.Istrength * neural_data(index_t);
-                output_percentage = 100*index_t./(length(T)); % Output to screen to show progress
-                fprintf('Percentage done: %.4f\n', output_percentage);
-                 
+                current = p.Istrength * neural_data(index_t);                 
             end
-            
-            %             current = p.Istrength * ( 0.5 * tanh((t - p.t_0)/0.05) - 0.5 * tanh(t - ((p.t_0 + p.lengthpulse)/0.05)) );
-
        end     
         
         function f = input_ECS(self, t)

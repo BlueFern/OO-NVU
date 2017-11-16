@@ -23,8 +23,7 @@ classdef WallMechanics < handle
             % Initalise inputs and parameters
             idx = self.index;
             p = self.params;
-            % Make the output function compute these so as to avoid
-            % duplicating equations
+
             [R, h] = self.shared(t, u);
 
             Mp = u(idx.Mp, :);

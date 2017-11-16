@@ -84,7 +84,7 @@ classdef SMCEC < handle
  
             tau_wss = R/2 * p.delta_p_L; % from Dormanns 2016
             
-            % NO pathway 
+            %% NO pathway 
             tau_ki = p.x_ki ^ 2 ./  (2 * p.D_cNO);
             tau_ij = p.x_ij ^ 2 ./  (2 * p.D_cNO);
             p_NO_i = 0;
@@ -96,10 +96,7 @@ classdef SMCEC < handle
 
             V_max_pde = p.k_pde * cGMP_i;
 
-%             p_NO_j = p.NOswitcJ_NaK_ih * ( p.V_NOj_max * eNOS_act_j * p.O2_j / (p.K_mO2_j + p.O2_j) * p.LArg_j / (p.K_mArg_j + p.LArg_j) );
-%             c_NO_j = p.k_O2 * NO_j.^2 * p.O2_j;
-
-            O2_j = O2*1e3;  % Oxygen in EC taken as O2 from lumen (diffusion very fast so plausible!) instead of constant
+            O2_j = O2*1e3;  % Oxygen in EC taken as O2 from lumen (diffusion very fast so plausible!) instead of constant, in uM
             p_NO_j = p.NOswitch * ( p.V_NOj_max .* eNOS_act_j .* O2_j / (p.K_mO2_j + O2_j) .* p.LArg_j / (p.K_mArg_j + p.LArg_j) );
             c_NO_j = p.k_O2 .* NO_j.^2 .* O2_j;
             
