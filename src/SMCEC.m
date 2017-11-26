@@ -48,7 +48,7 @@ classdef SMCEC < handle
             J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
             J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
             J_SR_leak_i = p.L_i * s_i;
-            J_VOCC_i =p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
+            J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
             J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* (v_i - p.v_NaCa_i);
             J_stretch_i = p.G_stretch ./ (1 + exp(-p.alpha_stretch*(p.trans_p_mmHg*R./h - p.sigma_0))) .* (v_i - p.E_SAC);
             J_Cl_i = p.G_Cl_i * (v_i - p.v_Cl_i);
@@ -385,11 +385,11 @@ function params = parse_inputs(varargin)
     parser.addParameter('beta_i', 0.13); %uM^2
     parser.addParameter('v_Ca3_i', -27); %mV
     parser.addParameter('R_K_i', 12); %mV
-    parser.addParameter('z_1', 4.5e-3); %mV
+    parser.addParameter('z_1', 4.5e-3); %mV uM^-1
     parser.addParameter('z_2', 112); %mV
-    parser.addParameter('z_3', 4.2e-4); %uM mV^-1 s^-1
-    parser.addParameter('z_4', 12.6); %uM mV^-1 s^-1
-    parser.addParameter('z_5', -7.4e-2); %uM mV^-1 s^-1
+    parser.addParameter('z_3', 4.2e-4);
+    parser.addParameter('z_4', 12.6);
+    parser.addParameter('z_5', -7.4e-2);
     
     % NO pathway
     parser.addParameter('D_cNO', 3300); % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)

@@ -36,7 +36,7 @@ classdef Neuron < handle
  
             O2 = u(idx.O2, :);          % Tissue oxygen concentration, mM
             CBV = u(idx.CBV, :);        % BOLD CBV
-            HBR = u(idx.HBR, :);        % BOLD deoxyhemoglobin concentration
+            HbR = u(idx.HbR, :);        % BOLD deoxyhemoglobin concentration
             
             % Gating variables
             m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
@@ -69,7 +69,7 @@ classdef Neuron < handle
             E_Na_d      = p.ph * log(Na_e ./ Na_d);
             E_K_d       = p.ph * log(K_e ./ K_d);
             
-            %% Ion **currents** (not fluxes!)
+            %% Ion fluxes
             % Leak fluxes of Na,K,Cl in soma and dendrite using HH
             J_Naleak_sa = p.gNaleak_sa * (v_sa - E_Na_sa);
             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
@@ -178,7 +178,7 @@ classdef Neuron < handle
             CMRO2           = J_O2_background + J_O2_pump;
             CMRO2_init      = p.CBF_init * P_02;
             OEF             = CMRO2 * p.E_0 ./ CBF;
-            %BOLD            = p.V_0 * ( p.a_1 * (1 - HBR) - p.a_2 * (1 - CBV) );
+            %BOLD            = p.V_0 * ( p.a_1 * (1 - HbR) - p.a_2 * (1 - CBV) );
             
             %% NO pathway
             
@@ -228,7 +228,7 @@ classdef Neuron < handle
             
             % change in BOLD response
             du(idx.CBV, :)       = 1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ); 
-            du(idx.HBR, :)       = 1/p.tau_MTT * ( CMRO2./CMRO2_init - HBR./CBV .* f_out );
+            du(idx.HbR, :)       = 1/p.tau_MTT * ( CMRO2./CMRO2_init - HbR./CBV .* f_out );
 
             % Change in activation gating variables m
             du(idx.m1, :)       = 1000 * ((m1alpha .* (1 - m1)) - (m1beta .* m1));
@@ -281,7 +281,6 @@ classdef Neuron < handle
                 Uout(self.idx_out.J_Kleak_d, :) = J_Kleak_d;
                 Uout(self.idx_out.J_Kpump_d, :) = J_Kpump_d;
                 Uout(self.idx_out.J_NMDA_K_d, :) = J_NMDA_K_d;
-                Uout(self.idx_out.f_out, :) = f_out;
             	varargout = {Uout};
             end
         end
@@ -343,25 +342,19 @@ classdef Neuron < handle
             J_K_NEtoSC = p.SC_coup * dKedt;
        end
        
-       %% Current input to neuron
+              %% Current input to neuron
        function current = input_current(self, t) 
             p = self.params;
             
             if p.CurrentType == 1
                 
             	current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse);  
-                dt = p.dt; XLIM2 = p.XLIM2;
-                T = 0:dt:XLIM2;
-                index_t = round(t/dt + 1);  % Find index corresponding to time t
 
             elseif p.CurrentType == 2
                 
                 current = p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse/2), p.lengthpulse) ...
                         + p.Istrength * rectpuls(t - (p.t_0 + p.lengthpulse + 8 + 1/2), 1);
-                dt = p.dt; XLIM2 = p.XLIM2;
-                T = 0:dt:XLIM2;
-                index_t = round(t/dt + 1);  % Find index corresponding to time t
-
+           
             elseif p.CurrentType == 3 || p.CurrentType == 4
                 
             % Load experimental data and use as a scaled current input         
@@ -371,7 +364,7 @@ classdef Neuron < handle
                 index_t = round(t/dt + 1);  % Find index corresponding to time t
                 current = p.Istrength * neural_data(index_t);                 
             end
-       end     
+       end        
         
         function f = input_ECS(self, t)
             % Input of K+ into the ECS, if you want to use set t0 and tend
@@ -390,7 +383,7 @@ end
         
 function idx = indices()    %for state variables
     idx.CBV = 1;
-    idx.HBR = 2;   
+    idx.HbR = 2;   
     idx.v_sa = 3;
     idx.v_d = 4;
     idx.K_sa = 5;
@@ -445,18 +438,19 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.J_Kleak_d = 27;
     idx.J_Kpump_d = 28;
     idx.J_NMDA_K_d = 18;
-    idx.f_out = 19;
     n = numel(fieldnames(idx));     
 end
       
 function params = parse_inputs(varargin)
     parser = inputParser();
     
+    parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data
+    
+    
     parser.addParameter('GluSwitch', 1); 
     parser.addParameter('KSwitch', 1); 
     parser.addParameter('NOswitch', 1); 
     parser.addParameter('O2switch', 1); 
-    parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data
     
     % Glutamate parameters
     parser.addParameter('Glu_max', 1846);   % [uM] (one vesicle, Santucci2008)
@@ -503,7 +497,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('fe', 0.15);            % ECS to neuron ratio
     parser.addParameter('Cm', 7.5e-7);          % Membrance capacitance [s/ohms cm2]    *******
     parser.addParameter('Farad', 96.485);           % Faraday constant [C / mmol]
-    parser.addParameter('ph', 26.6995);         % RT/Farad where Farad is [C/mmol]
+    parser.addParameter('ph', 26.6995);         % RT/F
     parser.addParameter('Mu', 8e-4);            % [m/s]
     parser.addParameter('Mu2', 8e-4);            % [m/s]
     parser.addParameter('B0', 500);             % Effective total buffer concentration [mM]
@@ -596,8 +590,8 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('dt', 0.001);
     parser.addParameter('XLIM2', 150);
-    parser.addParameter('input_data', linspace(0, 1200, 1000)); % Dummy input, replaced in nvu_run_script
-        
+    parser.addParameter('input_data', linspace(0, 1200, 1000)); 
+    
     parser.parse(varargin{:})
     params = parser.Results;
     params.t_0 = params.startpulse;
@@ -609,34 +603,34 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
 
-    u0(idx.CBV) = 1.3167;       % [-]
-    u0(idx.HBR) = 0.6665;       % [-]
-    u0(idx.v_sa) = -70.0337;    % [mV]
-    u0(idx.v_d) = -70.0195;     % [mV]
-    u0(idx.K_sa) = 134.1858;    % [mM]
-    u0(idx.Na_sa) = 9.2691;     % [mM]
-    u0(idx.K_d) = 134.4198;     % [mM]
-    u0(idx.Na_d) = 9.3203;      % [mM]
-    u0(idx.K_e) = 3.493;        % [mM]
-    u0(idx.Na_e) = 150;         % [mM]
-    u0(idx.Buff_e) = 165.9812;  % [mM]
-    u0(idx.O2) = 0.0281;        % [mM]
-    u0(idx.m1) = 0.01281;       % [-]
-    u0(idx.m2) = 0.001209;      % [-]
-    u0(idx.m3) = 0.1190;        % [-]
-    u0(idx.m4) = 0.01284;       % [-]
-    u0(idx.m5) = 0.000869;      % [-]
-    u0(idx.m6) = 0.001213;      % [-]
-    u0(idx.m7) = 0.1191;        % [-]
-    u0(idx.m8) = 0.004962;      % [-]
-    u0(idx.h1) = 0.9718;        % [-]
-    u0(idx.h2) = 0.1214;        % [-]
-    u0(idx.h3) = 0.9718;        % [-]
-    u0(idx.h4) = 0.9899;        % [-]
-    u0(idx.h5) = 0.1210;        % [-]
-    u0(idx.h6) = 0.9961;        % [-]
-    u0(idx.Ca_n) = 0.1;         % [uM]
-    u0(idx.nNOS_act_n) = 0.318; % [uM]
-    u0(idx.NO_n) = 0.1671;      % [uM]
+    u0(idx.CBV) = 1.3167;
+    u0(idx.HbR) = 0.6665;
+    u0(idx.v_sa) = -70.0337;
+    u0(idx.v_d) = -70.0195;
+    u0(idx.K_sa) = 134.1858;
+    u0(idx.Na_sa) = 9.2691;
+    u0(idx.K_d) = 134.4198;
+    u0(idx.Na_d) = 9.3203;
+    u0(idx.K_e) = 3.493;
+    u0(idx.Na_e) = 150;
+    u0(idx.Buff_e) = 165.9812;
+    u0(idx.O2) = 0.0281;
+    u0(idx.m1) = 0.01281;
+    u0(idx.m2) = 0.001209;
+    u0(idx.m3) = 0.1190;
+    u0(idx.m4) = 0.01284;
+    u0(idx.m5) = 0.000869;
+    u0(idx.m6) = 0.001213;
+    u0(idx.m7) = 0.1191;
+    u0(idx.m8) = 0.004962;
+    u0(idx.h1) = 0.9718;
+    u0(idx.h2) = 0.1214;
+    u0(idx.h3) = 0.9718;
+    u0(idx.h4) = 0.9899;
+    u0(idx.h5) = 0.1210;
+    u0(idx.h6) = 0.9961;
+    u0(idx.Ca_n) = 0.1;
+    u0(idx.nNOS_act_n) = 0.318;
+    u0(idx.NO_n) = 0.1671;
 end
 
