@@ -285,12 +285,11 @@ classdef Neuron < handle
             end
         end
         
-       function [Glu, J_K_NEtoSC, NO_n, O2] = shared(self, t, u)    %shared variables
+       function [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = shared(self, t, u)    %shared variables
             t = t(:).';
             p = self.params;
             idx = self.index;
             NO_n = u(idx.NO_n, :);
-            O2 = u(idx.O2, :);
             Buff_e = u(idx.Buff_e, :);  % Buffer concentration for K+ buffering in ECS, mM
             v_sa = u(idx.v_sa, :);      % membrane potential of soma/axon, mV
             v_d = u(idx.v_d, :);        % membrane potential of dendrite, mV
@@ -299,23 +298,32 @@ classdef Neuron < handle
             K_d = u(idx.K_d, :);        % K+ concentration of dendrite, mM
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
             K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
+            Na_e = u(idx.Na_e, :);      % Na+ concentration of ECS, mM
+            m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
+            m4 = u(idx.m4, :);          % Activation gating variable, dendrite NaP channel (Na+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
             m6 = u(idx.m6, :);          % Activation gating variable, dendrite KDR channel (K+)
             m7 = u(idx.m7, :);          % Activation gating variable, dendrite KA channel (K+)
+            m8 = u(idx.m8, :);          % Activation gating variable, soma/axon NaT channel (Na+)
+            h1 = u(idx.h1, :);          % Inactivation gating variable, soma/axon NaP channel (Na+)
             h2 = u(idx.h2, :);          % Inactivation gating variable, soma/axon KA channel (K+)
+            h3 = u(idx.h3, :);          % Inactivation gating variable, dendrite NaP channel (Na+)
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
+            h6 = u(idx.h6, :);          % Inactivation gating variable, soma/axon NaT channel (Na+)
             O2 = u(idx.O2, :);
             
             %% Glutamate function dependent on neuron membrane potential
             Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );  % based on extracellular K+ (Kager2000) - smooth
             
-            %% Fluxes for the ODE for K_e - (unfortunately) must be reproduced in this function to share with Astrocyte.m
+            %% Fluxes for the ODEs - (unfortunately) must be reproduced in this function to share with Astrocyte.m
             K = K_e;             
-            E_K_sa      = p.ph * log(K ./ K_sa);
-            E_K_d       = p.ph * log(K ./ K_d);
+            E_Na_sa     = p.ph * log(Na_e ./ Na_sa);
+            E_K_sa      = p.ph * log(K_e ./ K_sa);
+            E_Na_d      = p.ph * log(Na_e ./ Na_d);
+            E_K_d       = p.ph * log(K_e ./ K_d);
             
             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
             J_KDR_sa    =(m2.^2 .* p.gKDR_GHk * p.Farad .* v_sa .* (K_sa - (exp(-v_sa / p.ph) .* K))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
@@ -325,6 +333,13 @@ classdef Neuron < handle
             J_KDR_d     = (m6.^2 .* p.gKDR_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
             J_KA_d      = (m7.^2 .* h5 .* p.gKA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
    
+            J_NaP_sa    = (m1.^2 .* h1 .* p.gNaP_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+            J_Naleak_sa = p.gNaleak_sa * (v_sa - E_Na_sa);
+            J_NaT_sa    = (m8.^3 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+            J_NaP_d     = (m4.^2 .* h3 .* p.gNaP_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
+            J_Naleak_d  = p.gNaleak_d * (v_d - E_Na_d);
+            J_NMDA_Na_d    = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+            
             % Oxygen dependent ATP pump
             O2_p        = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
             J_pump2     = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1); 
@@ -334,12 +349,19 @@ classdef Neuron < handle
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
             J_Kpump_sa  = -2 * J_pump_sa;
             J_Kpump_d   = -2 * J_pump_d;  
+            J_Napump_sa = 3 * J_pump_sa;
+            J_Napump_d = 3 * J_pump_d;
 
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
             J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
+            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
+            J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_Na_d;
             
             dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e));
             J_K_NEtoSC = p.SC_coup * dKedt;
+            
+            dNaedt = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
+            J_Na_NEtoSC = p.SC_coup * dNaedt;
        end
        
               %% Current input to neuron

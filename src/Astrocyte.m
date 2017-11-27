@@ -21,7 +21,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, Glu)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -59,7 +59,7 @@ classdef Astrocyte < handle
             
             % Input of K+ to the SC (assuming that the SC is a small part of the ECS and everything that happens to the ECS also happens to the SC)
             J_K_NEtoSC_k = J_K_NEtoSC * 1e3; % Convert from mM/s to uM/s
- 
+            J_Na_NEtoSC_k = J_Na_NEtoSC * 1e3; % Convert from mM/s to uM/s
             
             %% Astrocyte
 
@@ -150,7 +150,7 @@ classdef Astrocyte < handle
            
             % Differential Equations in the Synaptic Cleft
             du(idx.K_s, :)    = 1./VR_sa * (J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k + J_KIR_k) + J_K_NEtoSC_k;
-            du(idx.Na_s, :)   = 1./VR_sa * (J_Na_k + 3*J_NaK_k - J_NKCC1_k - J_NBC_k) - J_K_NEtoSC_k;
+            du(idx.Na_s, :)   = 1./VR_sa * (J_Na_k + 3*J_NaK_k - J_NKCC1_k - J_NBC_k) + J_Na_NEtoSC_k;
             du(idx.HCO3_s, :) = 1./VR_sa * (-2*J_NBC_k);
  
             % NO pathway
@@ -353,8 +353,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('tau2', 2.8);
 
     % Scaling Constants
-    parser.addParameter('L_p', 2.1e-9); % m uM^-1 s^-1
-    parser.addParameter('X_k', 12.41e-3); % uM m
     parser.addParameter('R_s', 2.79e-8); % m
     parser.addParameter('R_k', 6e-8); % m
     parser.addParameter('R_tot', 8.79e-8); % m
@@ -415,7 +413,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_K_s', 1500); % uM
 
     parser.addParameter('A_ef_k', 3.7e-9); % m2
-    parser.addParameter('C_correction', 1e3); % [-]
     parser.addParameter('J_max', 2880); %uM s^-1
     parser.addParameter('K_act', 0.17); %uM
     parser.addParameter('P_L', 0.0804); %uM
@@ -433,7 +430,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('B_ex', 11.35); %uM
     parser.addParameter('K_G', 8.82); %uM
     parser.addParameter('psi_w', 2.664); %s^-1
-    parser.addParameter('ph', 26.6995);         % RT/Farad [mV] where Farad is [C/mmol], also used in Neuron.m
+    parser.addParameter('ph', 26.6995);         % RT/Farad where Farad is [C/mmol], also used in Neuron.m
 
     % NO Pathway
     parser.addParameter('D_cNO', 3300);         % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)

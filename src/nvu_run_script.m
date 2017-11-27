@@ -31,12 +31,12 @@ XLIM2 = 150; % End of simulation
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
-CURRENT_STRENGTH    = 0.035;    % Max strength of current input in mA/cm2
+CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-CURRENT_TYPE        = 4;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
+CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 105;      % End of neuronal stimulation 
+NEURONAL_END        = 101;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -44,7 +44,7 @@ stim = 1;                       % INDEX for length of initial stimulation [2,8,1
 
 % Used if CURRENT_STRENGTH = 4: scaling for the two stimulation components,
 % alpha for whisker pad and beta for locus coeruleus/pain. Default for both
-% is 1. Can make parameters in vector v if desired.
+% is 1. 
 % I_total = alpha * I_Wh + beta * I_LC
 alpha = 1;
 beta = 1;
@@ -158,17 +158,17 @@ CMRO2_N = CMRO2./CMRO2_0;
 HBT_N = CBF_N .* HBR_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
 HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
 BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
-
-figure;
-hold all
-    plot(nv.T, CBF_N, 'LineWidth', 1)
-    plot(nv.T, HBR_N, 'LineWidth', 1)
-    plot(nv.T, CMRO2_N, 'LineWidth', 1)
-    plot(nv.T, HBT_N, 'LineWidth', 1)
-    legend('CBF','HBR','CMRO2','HBT')
-    %ylabel('BOLD (%)')
-    xlabel('Time [s]')
-    xlim([90 150])
+% 
+% figure;
+% hold all
+%     plot(nv.T, CBF_N, 'LineWidth', 1)
+%     plot(nv.T, HBR_N, 'LineWidth', 1)
+%     plot(nv.T, CMRO2_N, 'LineWidth', 1)
+%     plot(nv.T, HBT_N, 'LineWidth', 1)
+%     legend('CBF','HBR','CMRO2','HBT')
+%     %ylabel('BOLD (%)')
+%     xlabel('Time [s]')
+%     xlim([90 150])
 
 %% Plot experimental and model CBF from data file
 if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4 
@@ -181,52 +181,52 @@ if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     mean_cbf = (sum_cbf./110) - 1;
     cbf_tim_vector_shifted = cbf_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
     % Plot
-    figure;
-    plot(cbf_tim_vector_shifted, mean_cbf, ':k', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, '-k', 'LineWidth', 1);
-    ylabel('\Delta CBF')
-    xlabel('Time [s]')
-    xlim([90 150])
-    ylim([-0.05 0.3])
-    legend('experiment','model')
-    %title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
-    p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
-    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
-    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     figure;
+%     plot(cbf_tim_vector_shifted, mean_cbf, ':k', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, '-k', 'LineWidth', 1);
+%     ylabel('\Delta CBF')
+%     xlabel('Time [s]')
+%     xlim([90 150])
+%     ylim([-0.05 0.3])
+%     legend('experiment','model')
+%     %title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 end
 
 %% Plot input current
-figure;
-    plot(nv.T, alpha*I_Wh, ':k', nv.T, beta*I_LC, '--k', nv.T, I_total, '-k', 'LineWidth', 1);
-    legend('I_{Wh}','I_{LC}','I_{total}')
-    xlim([XLIM1 XLIM2])
-    p1=patch([100 100+actual_stim 100+actual_stim 100],[0 0 1.2 1.2],'k');
-    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0 0 1.2 1.2],'k');
-    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% figure;
+%     plot(nv.T, alpha*I_Wh, ':k', nv.T, beta*I_LC, '--k', nv.T, I_total, '-k', 'LineWidth', 1);
+%     legend('I_{Wh}','I_{LC}','I_{total}')
+%     xlim([XLIM1 XLIM2])
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0 0 1.2 1.2],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0 0 1.2 1.2],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 
 
 %% Plot BOLD
-figure;
-    plot(nv.T, BOLD_N, 'k', 'LineWidth', 1)
-    ylabel('BOLD (%)')
-    xlabel('Time [s]')
-    xlim([90 150])
-    p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.6 -0.6 1.2 1.2],'k');
-    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.6 -0.6 1.2 1.2],'k');
-    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
-    
+% figure;
+%     plot(nv.T, BOLD_N, 'k', 'LineWidth', 1)
+%     ylabel('BOLD (%)')
+%     xlabel('Time [s]')
+%     xlim([90 150])
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.6 -0.6 1.2 1.2],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.6 -0.6 1.2 1.2],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     
 %% Plot Hemoglobin
-figure;
-    plot(nv.T, HBO_N, ':k', nv.T, HBR_N, '--k', nv.T, HBT_N, '-k', 'LineWidth', 1)
-    xlabel ('Time [s]')
-    xlim([XLIM1 XLIM2])
-    legend('HbO','HbR','HbT')
-    p1=patch([100 100+actual_stim 100+actual_stim 100],[0.9 0.9 1.2 1.2],'k');
-    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.9 0.9 1.2 1.2],'k');
-    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% figure;
+%     plot(nv.T, HBO_N, ':k', nv.T, HBR_N, '--k', nv.T, HBT_N, '-k', 'LineWidth', 1)
+%     xlabel ('Time [s]')
+%     xlim([XLIM1 XLIM2])
+%     legend('HbO','HbR','HbT')
+%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0.9 0.9 1.2 1.2],'k');
+%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0.9 0.9 1.2 1.2],'k');
+%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 
 %% Plot current input
 %     figure;
@@ -380,7 +380,7 @@ figure;
 % %  % Plot figures - whatever you want
 
 %% Plot for paper
-figure;
+figure(1);
 subplot(4,2,1);
     hold all;
     plot(nv.T, nv.out('K_s')/1e3, 'k', 'LineWidth', 1);
