@@ -127,13 +127,13 @@ classdef Astrocyte < handle
 
             %% Conservation Equations
             
-            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k - J_KIR_k - J_NaCa_k - 2*J_TRPV_k - 2*J_VOCC_k);
+            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k + 2*J_TRPV_k + flu_gap);
             
             % Differential Equations in the Astrocyte
-            du(idx.K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k - J_KIR_k;
+            du(idx.K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k - J_KIR_k + flu_gap;
             du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k - 3*J_NaCa_k;
             du(idx.HCO3_k, :) = 2*J_NBC_k;
-            du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :);
+            du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :) + 2*du(idx.Ca_k, :);
             
             % Differential Calcium Equations in Astrocyte
             du(idx.Ca_k, :)     = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_NaCa_k - J_VOCC_k + J_TRPV_k/p.r_buff);           
@@ -199,7 +199,6 @@ classdef Astrocyte < handle
             end
         end
         function [K_p, NO_k] = shared(self, ~, u)
-            p = self.params;
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
@@ -307,7 +306,7 @@ function params = parse_inputs(varargin)
     
     % Conductances - now in uM mV^-1 s^-1 so consistent with other
     % fluxes, original conductances in mho m^-2 are commented
-    % Converted by dividing by R_k and F
+    % Converted by dividing by R_k=6e-8 and F=9.65e4
     parser.addParameter('G_BK_k', 10.25)        % g_BK_k = 225 * 1e-12 / 3.7e-9 = 6.08e-2;
     parser.addParameter('G_K_k', 6907.77);      % 40
     parser.addParameter('G_Na_k', 226.94);      % 1.314
@@ -478,5 +477,5 @@ function u0 = initial_conditions(idx,self)
     u0(idx.m_k) = 0.5710;   % [-]
     u0(idx.Ca_p) = 1746.4;  % [uM]
     u0(idx.NO_k) = 0.1106;  % [uM]
-    u0(idx.v_k) = -60;      % [mV] 
+    u0(idx.v_k) = -88.9;      % [mV] 
 end

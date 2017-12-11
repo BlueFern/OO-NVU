@@ -24,19 +24,19 @@ fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 3;
-XLIM1 = 90;
-XLIM2 = 150; % End of simulation
+XLIM1 = 0;
+XLIM2 = 20; % End of simulation
 
 % For current type 1 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
-NEURONAL_START      = 100;      % Start of neuronal stimulation
+NEURONAL_START      = 10;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 101;      % End of neuronal stimulation 
+NEURONAL_END        = 12;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -149,7 +149,7 @@ CBV_0 = 0.5*( max(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBV(preN
 HBR_0 = 0.5*( max(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) + min(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) );
 CMRO2_0 = 0.5*( max(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) );
 
-% Normalised variables
+Normalised variables
 CBF_N = CBF./CBF_0;
 CBV_N = CBV./CBV_0;
 HBR_N = HBR./HBR_0;
@@ -205,6 +205,27 @@ end
 %     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0 0 1.2 1.2],'k');
 %     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 
+figure(10);
+subplot(2,2,1);
+    hold all;
+    plot(nv.T, nv.out('K_k'), 'LineWidth', 1);
+    ylabel('K_k');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,2);
+    hold all;
+    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
+    ylabel('v_k');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,3);
+    hold all;
+    plot(nv.T, nv.out('R'), 'LineWidth', 1);
+    ylabel('Radius');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,4);
+    hold all;
+    plot(nv.T, nv.out('Ca_k'), 'LineWidth', 1);
+    ylabel('Ca_k');
+    xlim([XLIM1 XLIM2])
 
 %% Plot BOLD
 % figure;
@@ -380,84 +401,84 @@ end
 % %  % Plot figures - whatever you want
 
 %% Plot for paper
-figure(1);
-subplot(4,2,1);
-    hold all;
-    plot(nv.T, nv.out('K_s')/1e3, 'k', 'LineWidth', 1);
-    ylabel('K_s [mM]');
-    xlim([XLIM1 XLIM2])
-%     ylim([-100 20])
-    title('A. SC potassium');
-    xlabel('time (s)');
-%     rectangle('Position',[300, -100, 16, 5],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, -100, 2, 5],'FaceColor',[0 0 0])
-subplot(4,2,2);
-    hold all;
-    plot(nv.T, nv.out('K_e'), 'k', 'LineWidth', 1);
-    ylabel('K_e [mM]');
-    xlim([XLIM1 XLIM2])
-    title('B. Extracellular potassium');
-    xlabel('time (s)');
-%     rectangle('Position',[300, 2, 16, 0.2],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, 2, 2, 0.2],'FaceColor',[0 0 0])
-subplot(4,2,3);
-    hold all;
-    plot(nv.T, nv.out('R')*1e6, 'k', 'LineWidth', 1);
-    ylabel('Radius [\mum]');
-%     ylim([22.4 25])
-    xlim([XLIM1 XLIM2])
-    title('C. Radius');
-    xlabel('time (s)');
-%     rectangle('Position',[300, 22.4, 16, 0.1],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, 22.4, 2, 0.1],'FaceColor',[0 0 0])
-subplot(4,2,4);
-    hold all;
-    plot(nv.T, nv.out('CMRO2'), 'k', 'LineWidth', 1);
-    ylabel('CMRO2');
-    xlim([XLIM1 XLIM2])
-%     ylim([-0.1 0.4])
-    title('D. Normalised CMRO_2');
-    xlabel('time (s)');
-%     rectangle('Position',[300, -0.1, 16, 0.02],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, -0.1, 2, 0.02],'FaceColor',[0 0 0])
-subplot(4,2,5);
-    hold all;
-    plot(nv.T, nv.out('O2'), 'k', 'LineWidth', 1);
-    ylabel('O_2 [mM]');
-    xlim([XLIM1 XLIM2])
-%     ylim([0.0265 0.03])
-    title('E. Oxygen concentration');
-    xlabel('time (s)');
-%     rectangle('Position',[300, 0.0265, 16, 0.00015],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, 0.0265, 2, 0.00015],'FaceColor',[0 0 0])
-subplot(4,2,6);
-    hold all;
-    plot(nv.T, CBV_N, 'k', 'LineWidth', 1);
-    ylabel('CBV [-]');
-    xlim([XLIM1 XLIM2])
-%     ylim([0.97 1.1])
-    title('F. Normalised CBV');
-    xlabel('time (s)');
-%     rectangle('Position',[300, 0.97, 16, 0.005],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, 0.97, 2, 0.005],'FaceColor',[0 0 0])
-subplot(4,2,7);
-    hold all;
-    plot(nv.T, HBR_N, 'k', 'LineWidth', 1);
-    ylabel('HBR [-]');
-    xlim([XLIM1 XLIM2])
-%     ylim([0.86 1.05])
-    title('G. Normalised deoxyhemoglobin');
-    xlabel('time (s)');
-%     rectangle('Position',[300, 0.86, 16, 0.008],'FaceColor',[0 0 0])
-%     rectangle('Position',[320, 0.86, 2, 0.008],'FaceColor',[0 0 0])
-subplot(4,2,8);
-    hold all;
-    plot(nv.T, BOLD_N, 'k', 'LineWidth', 1);
-    ylabel('\Delta BOLD (%)');
-    xlim([XLIM1 XLIM2])
-%     ylim([-0.9 1.5])
-    title('H. BOLD response');
-    xlabel('time (s)');
+% % % % % figure(1);
+% % % % % subplot(4,2,1);
+% % % % %     hold all;
+% % % % %     plot(nv.T, nv.out('K_s')/1e3, 'k', 'LineWidth', 1);
+% % % % %     ylabel('K_s [mM]');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % % %     ylim([-100 20])
+% % % % %     title('A. SC potassium');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, -100, 16, 5],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, -100, 2, 5],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,2);
+% % % % %     hold all;
+% % % % %     plot(nv.T, nv.out('K_e'), 'k', 'LineWidth', 1);
+% % % % %     ylabel('K_e [mM]');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % %     title('B. Extracellular potassium');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, 2, 16, 0.2],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, 2, 2, 0.2],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,3);
+% % % % %     hold all;
+% % % % %     plot(nv.T, nv.out('R')*1e6, 'k', 'LineWidth', 1);
+% % % % %     ylabel('Radius [\mum]');
+% % % % % %     ylim([22.4 25])
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % %     title('C. Radius');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, 22.4, 16, 0.1],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, 22.4, 2, 0.1],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,4);
+% % % % %     hold all;
+% % % % %     plot(nv.T, nv.out('CMRO2'), 'k', 'LineWidth', 1);
+% % % % %     ylabel('CMRO2');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % % %     ylim([-0.1 0.4])
+% % % % %     title('D. Normalised CMRO_2');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, -0.1, 16, 0.02],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, -0.1, 2, 0.02],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,5);
+% % % % %     hold all;
+% % % % %     plot(nv.T, nv.out('O2'), 'k', 'LineWidth', 1);
+% % % % %     ylabel('O_2 [mM]');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % % %     ylim([0.0265 0.03])
+% % % % %     title('E. Oxygen concentration');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, 0.0265, 16, 0.00015],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, 0.0265, 2, 0.00015],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,6);
+% % % % %     hold all;
+% % % % %     plot(nv.T, CBV_N, 'k', 'LineWidth', 1);
+% % % % %     ylabel('CBV [-]');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % % %     ylim([0.97 1.1])
+% % % % %     title('F. Normalised CBV');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, 0.97, 16, 0.005],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, 0.97, 2, 0.005],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,7);
+% % % % %     hold all;
+% % % % %     plot(nv.T, HBR_N, 'k', 'LineWidth', 1);
+% % % % %     ylabel('HBR [-]');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % % %     ylim([0.86 1.05])
+% % % % %     title('G. Normalised deoxyhemoglobin');
+% % % % %     xlabel('time (s)');
+% % % % % %     rectangle('Position',[300, 0.86, 16, 0.008],'FaceColor',[0 0 0])
+% % % % % %     rectangle('Position',[320, 0.86, 2, 0.008],'FaceColor',[0 0 0])
+% % % % % subplot(4,2,8);
+% % % % %     hold all;
+% % % % %     plot(nv.T, BOLD_N, 'k', 'LineWidth', 1);
+% % % % %     ylabel('\Delta BOLD (%)');
+% % % % %     xlim([XLIM1 XLIM2])
+% % % % % %     ylim([-0.9 1.5])
+% % % % %     title('H. BOLD response');
+% % % % %     xlabel('time (s)');
 %     rectangle('Position',[300, -0.9, 16, 0.09],'FaceColor',[0 0 0])
 %     rectangle('Position',[320, -0.9, 2, 0.09],'FaceColor',[0 0 0])
  

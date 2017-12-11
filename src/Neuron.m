@@ -361,7 +361,8 @@ classdef Neuron < handle
             J_K_NEtoSC = p.SC_coup * dKedt;
             
             dNaedt = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-            J_Na_NEtoSC = p.SC_coup * dNaedt;
+%             J_Na_NEtoSC = p.SC_coup * dNaedt;
+            J_Na_NEtoSC = -p.SC_coup * dKedt;
        end
        
               %% Current input to neuron
