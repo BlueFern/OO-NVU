@@ -32,7 +32,7 @@ XLIM2 = 130; % End of simulation
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
-NEURONAL_START      = 100;      % Start of neuronal stimulation
+NEURONAL_START      = 10000;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
@@ -56,7 +56,7 @@ TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
 % Load initial NVU
-nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
+nv = NVU(Neuron('SC_coup', 1, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
     Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
@@ -171,54 +171,62 @@ if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 end
 % 
-% figure(12);
-% subplot(2,2,1);
-%     hold all;
-%     plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-%     ylabel('K_e [mM]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,2,2);
-%     hold all;
-%     plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);
-%     ylabel('K_k [mM]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,2,3);
-%     hold all;
-%     plot(nv.T, nv.out('K_p')/1e3, 'LineWidth', 1);
-%     ylabel('K_p [mM]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,2,4);
-%     hold all;
-%     plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
-%     ylabel('R [\mum]');
-%     xlim([XLIM1 XLIM2])
-%     
-% figure(11);
-% subplot(2,2,1);
-%     hold all;
-%     plot(nv.T, nv.out('m5'), 'LineWidth', 1);
-%     ylabel('m_5 [-]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,2,2);
-%     hold all;
-%     plot(nv.T, nv.out('J_NMDA_K_d'), 'LineWidth', 1);
-%     ylabel('J_{NMDA_K} [mM/s]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,2,3);
-%     hold all;
-%     plot(nv.T, nv.out('m5alpha'), 'LineWidth', 1);
-%     ylabel('m5alpha [-]');
-%     xlim([XLIM1 XLIM2])
-% subplot(2,2,4);
-%     hold all;
-%     plot(nv.T, 0.5-nv.out('m5alpha'), 'LineWidth', 1);
-%     ylabel('m5beta [-]');
-%     xlim([XLIM1 XLIM2])
+figure(12);
+subplot(3,2,1);
+    hold all;
+    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+    ylabel('K_e [mM]');
+    xlim([XLIM1 XLIM2])
+subplot(3,2,2);
+    hold all;
+    plot(nv.T, nv.out('m5'), 'LineWidth', 1);
+    ylabel('m5 [-]');
+    xlim([XLIM1 XLIM2])
+subplot(3,2,3);
+    hold all;
+    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+    ylabel('v_{sa} [mV]');
+    xlim([XLIM1 XLIM2])   
+subplot(3,2,4);
+    hold all;
+    plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);
+    ylabel('K_k [mM]');
+    xlim([XLIM1 XLIM2])
+subplot(3,2,5);
+    hold all;
+    plot(nv.T, nv.out('K_p')/1e3, 'LineWidth', 1);
+    ylabel('K_p [mM]');
+    xlim([XLIM1 XLIM2])
+subplot(3,2,6);
+    hold all;
+    plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+    ylabel('R [\mum]');
+    xlim([XLIM1 XLIM2])
 
-figure;
-plot(nv.T, nv.out('J_pump_sa'));
-ylabel('NaK pump rate')
-xlim([XLIM1 XLIM2])
+
+    
+    
+figure(11);
+subplot(2,2,1);
+    hold all;
+    plot(nv.T, nv.out('m5'), 'LineWidth', 1);
+    ylabel('m_5 [-]');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,2);
+    hold all;
+    plot(nv.T, nv.out('J_NMDA_K_d'), 'LineWidth', 1);
+    ylabel('J_{NMDA_K} [mM/s]');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,3);
+    hold all;
+    plot(nv.T, nv.out('m5alpha'), 'LineWidth', 1);
+    ylabel('m5alpha [-]');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,4);
+    hold all;
+    plot(nv.T, 0.5-nv.out('m5alpha'), 'LineWidth', 1);
+    ylabel('m5beta [-]');
+    xlim([XLIM1 XLIM2])
 
 % % Plot BOLD
 % figure;

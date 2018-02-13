@@ -209,8 +209,8 @@ classdef Neuron < handle
             flu_diff_el_K 	= (3.6e-9 / (1.24e-4)^2) * ( ((1 * 96.485)/(8.315 * 300)) * ( average_K_e * Delta_v_e ) );
             flu_diff_el_Na = (2.4e-9 / (1.24e-4)^2) * (((1 * 96.485)/(8.315 * 300)) * ( average_Na_e * Delta_v_e ) );
             
-            flu_diff_K 	= flu_diff_Fick_K + flu_diff_el_K;
-            flu_diff_Na = flu_diff_Fick_Na + flu_diff_el_Na;
+            flu_diff_K 	= 0;%flu_diff_Fick_K + flu_diff_el_K;
+            flu_diff_Na = 0;%flu_diff_Fick_Na + flu_diff_el_Na;
             
             
       %% Conservation equations                                                         
@@ -382,7 +382,7 @@ classdef Neuron < handle
             Delta_v_e = -(8.315 * 300) / 96.485 * ( 1 * 3.6e-9 * Delta_K_e + 1 * 2.4e-9 * Delta_Na_e ) / ( 1 * 3.6e-9 * average_K_e + 1 * 2.4e-9 * average_Na_e );
             flu_diff_Fick_K = (3.6e-9 / (1.24e-4)^2) * (Delta_K_e);
             flu_diff_el_K 	= (3.6e-9 / (1.24e-4)^2) * ( ((1 * 96.485)/(8.315 * 300)) * ( average_K_e * Delta_v_e ) );
-            flu_diff_K 	= flu_diff_Fick_K + flu_diff_el_K;
+            flu_diff_K 	= 0;%flu_diff_Fick_K + flu_diff_el_K;
             
             dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + flu_diff_K + self.input_ECS(t);
             J_K_NEtoSC = p.SC_coup * dKedt;
@@ -513,12 +513,12 @@ function params = parse_inputs(varargin)
     parser.addParameter('Ke_switch', 5.5);   % [mM] Threshold past which glutamate vesicle is released (M.E.)
     
     % ECS K+ input parameters
-    parser.addParameter('ECS_input', 10); 
-    parser.addParameter('t0_ECS', 10000);
+    parser.addParameter('ECS_input', 12); 
+    parser.addParameter('t0_ECS', 100);
     parser.addParameter('ECS_length', 1.5);
     
     % Elshin model constants
-    parser.addParameter('Istrength', 0.025);    % [mV] Current input strength
+    parser.addParameter('Istrength', 0.022);    % [mV] Current input strength
     parser.addParameter('SC_coup', 11.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
        
     % BOLD constants
@@ -563,13 +563,13 @@ function params = parse_inputs(varargin)
     parser.addParameter('gNMDA_GHk', 1e-5);   
     parser.addParameter('gNaT_GHk', 10e-5); 
     
-%     parser.addParameter('gNaleak_sa', 9.5999e-6);   
-%     parser.addParameter('gKleak_sa', 3.4564e-5);
-%     parser.addParameter('gleak_sa', 10*9.5999e-6);
-%     parser.addParameter('gNaleak_d', 1.0187e-5);   
-%     parser.addParameter('gKleak_d', 3.4564e-5); 
-%     parser.addParameter('gleak_d', 10*1.0187e-5);  
-%     parser.addParameter('Imax', 0.013);  
+    parser.addParameter('gNaleak_sa', 9.5999e-6);   
+    parser.addParameter('gKleak_sa', 3.4564e-5);
+    parser.addParameter('gleak_sa', 10*9.5999e-6);
+    parser.addParameter('gNaleak_d', 1.0187e-5);   
+    parser.addParameter('gKleak_d', 3.4564e-5); 
+    parser.addParameter('gleak_d', 10*1.0187e-5);  
+    parser.addParameter('Imax', 0.013);  
 %     
 %     parser.addParameter('gNaleak_sa', 4.1333e-5);   
 %     parser.addParameter('gKleak_sa', 1.4623e-4);
@@ -579,13 +579,13 @@ function params = parse_inputs(varargin)
 %     parser.addParameter('gleak_d', 10*4.1915e-5);  
 %     parser.addParameter('Imax', 0.013*4);  
     
-    parser.addParameter('gNaleak_sa', 6.2378e-5);   
-    parser.addParameter('gKleak_sa', 2.1989e-4);
-    parser.addParameter('gleak_sa', 10*6.2378e-5);
-    parser.addParameter('gNaleak_d', 6.2961e-5);   
-    parser.addParameter('gKleak_d', 2.1987e-4); 
-    parser.addParameter('gleak_d', 10*6.2961e-5);  
-    parser.addParameter('Imax', 0.013*6);  
+%     parser.addParameter('gNaleak_sa', 6.2378e-5);   
+%     parser.addParameter('gKleak_sa', 2.1989e-4);
+%     parser.addParameter('gleak_sa', 10*6.2378e-5);
+%     parser.addParameter('gNaleak_d', 6.2961e-5);   
+%     parser.addParameter('gKleak_d', 2.1987e-4); 
+%     parser.addParameter('gleak_d', 10*6.2961e-5);  
+%     parser.addParameter('Imax', 0.013*6);  
 
     parser.addParameter('O2_0', 0.02);          % [mM]
     parser.addParameter('alpha_O2',  0.05);         % percentage of ATP production independent of O2
