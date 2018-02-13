@@ -89,7 +89,6 @@ classdef Neuron < handle
             h6alpha     = 0.128 * exp(-(0.056 * v_sa + 2.94));
             h6beta      = 4 ./ (1 + exp(-(0.2 * v_sa + 6)));
             J_NaT_sa    = (m8.^3 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-
             
             % K flux through KDR channel in soma using GHK
             m2alpha     = 0.016 * ((v_sa + 34.9) ./ (1 - exp(-((0.2 * v_sa) + 6.98))));
@@ -199,6 +198,20 @@ classdef Neuron < handle
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
             
+            % ECS electrodiffusion TEST            
+            Delta_K_e = 3.493 - K_e;
+            average_K_e = (3.493 + K_e)/2;
+            Delta_Na_e = 150 - Na_e;
+            average_Na_e = (150 + Na_e)/2;
+            Delta_v_e = -(8.315 * 300) / 96.485 * ( 1 * 3.6e-9 * Delta_K_e + 1 * 2.4e-9 * Delta_Na_e ) / ( 1 * 3.6e-9 * average_K_e + 1 * 2.4e-9 * average_Na_e );
+            flu_diff_Fick_K = (3.6e-9 / (1.24e-4)^2) * (Delta_K_e);
+            flu_diff_Fick_Na = (2.4e-9 / (1.24e-4)^2) * (Delta_Na_e);
+            flu_diff_el_K 	= (3.6e-9 / (1.24e-4)^2) * ( ((1 * 96.485)/(8.315 * 300)) * ( average_K_e * Delta_v_e ) );
+            flu_diff_el_Na = (2.4e-9 / (1.24e-4)^2) * (((1 * 96.485)/(8.315 * 300)) * ( average_Na_e * Delta_v_e ) );
+            
+            flu_diff_K 	= flu_diff_Fick_K + flu_diff_el_K;
+            flu_diff_Na = flu_diff_Fick_Na + flu_diff_el_Na;
+            
             
       %% Conservation equations                                                         
             
@@ -220,9 +233,9 @@ classdef Neuron < handle
             du(idx.Buff_e, :)   = p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e);
 
             % change in concentration of Na,K in the extracellular space 
-            du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e);
-           
+            du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd)) + flu_diff_Na;
+            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e) + flu_diff_K + self.input_ECS(t);
+            
             % change in tissue oxygen
             du(idx.O2, :)       = J_O2_vascular - J_O2_background - J_O2_pump;
             
@@ -281,6 +294,11 @@ classdef Neuron < handle
                 Uout(self.idx_out.J_Kleak_d, :) = J_Kleak_d;
                 Uout(self.idx_out.J_Kpump_d, :) = J_Kpump_d;
                 Uout(self.idx_out.J_NMDA_K_d, :) = J_NMDA_K_d;
+                Uout(self.idx_out.flu_diff_K, :) = flu_diff_K;
+                Uout(self.idx_out.flu_diff_Fick_K, :) = flu_diff_Fick_K;
+                Uout(self.idx_out.flu_diff_el_K, :) = flu_diff_el_K;
+                Uout(self.idx_out.m5alpha, :) = m5alpha;
+                Uout(self.idx_out.J_pump_sa, :) = J_pump_sa;
             	varargout = {Uout};
             end
         end
@@ -357,7 +375,16 @@ classdef Neuron < handle
             J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
             J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_Na_d;
             
-            dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e));
+            Delta_K_e = 3.493 - K_e;
+            average_K_e = (3.493 + K_e)/2;
+            Delta_Na_e = 150 - Na_e;
+            average_Na_e = (150 + Na_e)/2;
+            Delta_v_e = -(8.315 * 300) / 96.485 * ( 1 * 3.6e-9 * Delta_K_e + 1 * 2.4e-9 * Delta_Na_e ) / ( 1 * 3.6e-9 * average_K_e + 1 * 2.4e-9 * average_Na_e );
+            flu_diff_Fick_K = (3.6e-9 / (1.24e-4)^2) * (Delta_K_e);
+            flu_diff_el_K 	= (3.6e-9 / (1.24e-4)^2) * ( ((1 * 96.485)/(8.315 * 300)) * ( average_K_e * Delta_v_e ) );
+            flu_diff_K 	= flu_diff_Fick_K + flu_diff_el_K;
+            
+            dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + flu_diff_K + self.input_ECS(t);
             J_K_NEtoSC = p.SC_coup * dKedt;
             
             dNaedt = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
@@ -461,6 +488,11 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.J_Kleak_d = 27;
     idx.J_Kpump_d = 28;
     idx.J_NMDA_K_d = 18;
+    idx.flu_diff_K = 19;
+    idx.flu_diff_Fick_K = 20;
+    idx.flu_diff_el_K = 21;
+    idx.m5alpha = 22;
+    idx.J_pump_sa = 23;
     n = numel(fieldnames(idx));     
 end
       
@@ -481,9 +513,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('Ke_switch', 5.5);   % [mM] Threshold past which glutamate vesicle is released (M.E.)
     
     % ECS K+ input parameters
-    parser.addParameter('ECS_input', 9); 
+    parser.addParameter('ECS_input', 10); 
     parser.addParameter('t0_ECS', 10000);
-    parser.addParameter('ECS_length', 20);
+    parser.addParameter('ECS_length', 1.5);
     
     % Elshin model constants
     parser.addParameter('Istrength', 0.025);    % [mV] Current input strength
@@ -531,21 +563,13 @@ function params = parse_inputs(varargin)
     parser.addParameter('gNMDA_GHk', 1e-5);   
     parser.addParameter('gNaT_GHk', 10e-5); 
     
-%     parser.addParameter('gNaleak_sa', 8.3424e-5);   
-%     parser.addParameter('gKleak_sa', 2.9355e-4);
-%     parser.addParameter('gleak_sa', 10*8.3424e-5);
-%     parser.addParameter('gNaleak_d',8.4006e-5);   
-%     parser.addParameter('gKleak_d', 2.9353e-4); 
-%     parser.addParameter('gleak_d', 10*8.4006e-5);  
-%     parser.addParameter('Imax', 0.013*8);     
-    
-%     parser.addParameter('gNaleak_sa', 1.0447e-4);   
-%     parser.addParameter('gKleak_sa', 3.6721e-4);
-%     parser.addParameter('gleak_sa', 10*1.0447e-4);
-%     parser.addParameter('gNaleak_d',1.0505e-4);   
-%     parser.addParameter('gKleak_d', 3.6719e-4); 
-%     parser.addParameter('gleak_d', 10*1.0505e-4);  
-%     parser.addParameter('Imax', 0.013*8);    
+%     parser.addParameter('gNaleak_sa', 9.5999e-6);   
+%     parser.addParameter('gKleak_sa', 3.4564e-5);
+%     parser.addParameter('gleak_sa', 10*9.5999e-6);
+%     parser.addParameter('gNaleak_d', 1.0187e-5);   
+%     parser.addParameter('gKleak_d', 3.4564e-5); 
+%     parser.addParameter('gleak_d', 10*1.0187e-5);  
+%     parser.addParameter('Imax', 0.013);  
 %     
 %     parser.addParameter('gNaleak_sa', 4.1333e-5);   
 %     parser.addParameter('gKleak_sa', 1.4623e-4);

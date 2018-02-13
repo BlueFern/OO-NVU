@@ -1,7 +1,7 @@
 %% Demonstration script for new NVU model
 
 %% Version control
-% This is the latest version of the NVU model: Version 2.0
+% This is the latest version of the NVU model: Version 2.1
 % K+, NO, Astrocytic Ca2+, TRPV4, ECS, Neuron
 
 %% Construct NVU
@@ -23,20 +23,20 @@ timeStart = datetime('now');
 fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
-FIG_NUM = 3;
-XLIM1 = 0;
-XLIM2 = 20; % End of simulation
+FIG_NUM = 1;
+XLIM1 = 95;
+XLIM2 = 130; % End of simulation
 
-% For current type 1 use max current strength 0.022
+% For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
-NEURONAL_START      = 10;      % Start of neuronal stimulation
+NEURONAL_START      = 100;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 12;      % End of neuronal stimulation 
+NEURONAL_END        = 105;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -49,28 +49,15 @@ stim = 1;                       % INDEX for length of initial stimulation [2,8,1
 alpha = 1;
 beta = 1;
 
-% Not currently used
-ECS_START       = 100000000;      % Start of ECS K+ input
-ECS_END         = 1000000000;      % End of ECS K+ input
-
 J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for oscillations
 GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
-% % Output start time and estimated finish time based on how many sec of
-% % stimulation there will be and speed of computer (need to check accuracy
-% % when loading data)
-% %(home: 0.38, work: 0.88)
-% estimatedMinutes = (NEURONAL_END - NEURONAL_START)*0.88;
-% timeStart = datetime('now');
-% estimatedTimeEnd = timeStart + minutes(estimatedMinutes); 
-% fprintf('Start time is %s\nEstimated end time is %s\n', char(timeStart), char(estimatedTimeEnd));
-
 % Load initial NVU
-nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, 't0_ECS', ECS_START, 'ECS_input', 9), ...
-    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 't0_ECS', ECS_START, 'tend_ECS', ECS_END), ...
+nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
+    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
@@ -82,7 +69,7 @@ numTimeSteps = length(nv.T);
 %% Load whisker stimulation input data from file, save as I_Wh and put into Neuron.m
 if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     
-    load neurovascular_data_for_tim_david.mat
+    load Zheng2010_data.mat
     actual_ISI = info.isi_duration(ISI);
     actual_stim = info.condition_stim_duration(stim);
     sum_neural_wh = zeros(size(neural_tim_vector));
@@ -140,35 +127,24 @@ nv.simulate()
 % and the point in time when stimulation begins (preNeuronalStimTime2) and get the values for 
 % CBF, CBV, HBR, CMRO2 at that time, then find the midpoint between the min and max and normalise with that value. 
 % Done in this way so that it also works when the variables are oscillatory (i.e. J_PLC = 0.3)
-np = nv.neuron.params; % Shortcut for neuron parameters
-preNeuronalStimTime1 = floor((NEURONAL_START-20)*numTimeSteps/XLIM2);
-preNeuronalStimTime2 = floor((NEURONAL_START)*numTimeSteps/XLIM2);
-CBF = nv.out('CBF'); CBV = (nv.out('CBV'))'; HBR = (nv.out('HbR'))'; CMRO2 = nv.out('CMRO2');
-CBF_0 = 0.5*( max(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) );
-CBV_0 = 0.5*( max(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) );
-HBR_0 = 0.5*( max(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) + min(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) );
-CMRO2_0 = 0.5*( max(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) );
-
-Normalised variables
-CBF_N = CBF./CBF_0;
-CBV_N = CBV./CBV_0;
-HBR_N = HBR./HBR_0;
-CMRO2_N = CMRO2./CMRO2_0;
-
-HBT_N = CBF_N .* HBR_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
-HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
-BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
+% np = nv.neuron.params; % Shortcut for neuron parameters
+% preNeuronalStimTime1 = floor((NEURONAL_START-20)*numTimeSteps/XLIM2);
+% preNeuronalStimTime2 = floor((NEURONAL_START)*numTimeSteps/XLIM2);
+% CBF = nv.out('CBF'); CBV = (nv.out('CBV'))'; HBR = (nv.out('HbR'))'; CMRO2 = nv.out('CMRO2');
+% CBF_0 = 0.5*( max(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBF(preNeuronalStimTime1:preNeuronalStimTime2)) );
+% CBV_0 = 0.5*( max(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CBV(preNeuronalStimTime1:preNeuronalStimTime2)) );
+% HBR_0 = 0.5*( max(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) + min(HBR(preNeuronalStimTime1:preNeuronalStimTime2)) );
+% CMRO2_0 = 0.5*( max(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) + min(CMRO2(preNeuronalStimTime1:preNeuronalStimTime2)) );
 % 
-% figure;
-% hold all
-%     plot(nv.T, CBF_N, 'LineWidth', 1)
-%     plot(nv.T, HBR_N, 'LineWidth', 1)
-%     plot(nv.T, CMRO2_N, 'LineWidth', 1)
-%     plot(nv.T, HBT_N, 'LineWidth', 1)
-%     legend('CBF','HBR','CMRO2','HBT')
-%     %ylabel('BOLD (%)')
-%     xlabel('Time [s]')
-%     xlim([90 150])
+% %Normalised variables
+% CBF_N = CBF./CBF_0;
+% CBV_N = CBV./CBV_0;
+% HBR_N = HBR./HBR_0;
+% CMRO2_N = CMRO2./CMRO2_0;
+% 
+% HBT_N = CBF_N .* HBR_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
+% HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
+% BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
 
 %% Plot experimental and model CBF from data file
 if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4 
@@ -181,53 +157,70 @@ if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     mean_cbf = (sum_cbf./110) - 1;
     cbf_tim_vector_shifted = cbf_tim_vector + NEURONAL_START;    % Shift so stimulation begins at NEURONAL_START
     % Plot
-%     figure;
-%     plot(cbf_tim_vector_shifted, mean_cbf, ':k', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, '-k', 'LineWidth', 1);
-%     ylabel('\Delta CBF')
-%     xlabel('Time [s]')
-%     xlim([90 150])
-%     ylim([-0.05 0.3])
-%     legend('experiment','model')
-%     %title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
-%     p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
-%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
-%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+    figure;
+    plot(cbf_tim_vector_shifted, mean_cbf, ':k', nv.T, (nv.out('CBF')-CBF_0)./CBF_0, '-k', 'LineWidth', 1);
+    ylabel('\Delta CBF')
+    xlabel('Time [s]')
+    xlim([90 150])
+    ylim([-0.05 0.3])
+    legend('experiment','model')
+    title(['CBF with initial duration ' num2str(actual_stim) ', ISI ' num2str(actual_ISI)] );
+    p1=patch([100 100+actual_stim 100+actual_stim 100],[-0.05 -0.05 0.3 0.3],'k');
+    set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
+    p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
+    set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 end
-
-%% Plot input current
-% figure;
-%     plot(nv.T, alpha*I_Wh, ':k', nv.T, beta*I_LC, '--k', nv.T, I_total, '-k', 'LineWidth', 1);
-%     legend('I_{Wh}','I_{LC}','I_{total}')
+% 
+% figure(12);
+% subplot(2,2,1);
+%     hold all;
+%     plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+%     ylabel('K_e [mM]');
 %     xlim([XLIM1 XLIM2])
-%     p1=patch([100 100+actual_stim 100+actual_stim 100],[0 0 1.2 1.2],'k');
-%     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
-%     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[0 0 1.2 1.2],'k');
-%     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
+% subplot(2,2,2);
+%     hold all;
+%     plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);
+%     ylabel('K_k [mM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,2,3);
+%     hold all;
+%     plot(nv.T, nv.out('K_p')/1e3, 'LineWidth', 1);
+%     ylabel('K_p [mM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,2,4);
+%     hold all;
+%     plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+%     ylabel('R [\mum]');
+%     xlim([XLIM1 XLIM2])
+%     
+% figure(11);
+% subplot(2,2,1);
+%     hold all;
+%     plot(nv.T, nv.out('m5'), 'LineWidth', 1);
+%     ylabel('m_5 [-]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,2,2);
+%     hold all;
+%     plot(nv.T, nv.out('J_NMDA_K_d'), 'LineWidth', 1);
+%     ylabel('J_{NMDA_K} [mM/s]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,2,3);
+%     hold all;
+%     plot(nv.T, nv.out('m5alpha'), 'LineWidth', 1);
+%     ylabel('m5alpha [-]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,2,4);
+%     hold all;
+%     plot(nv.T, 0.5-nv.out('m5alpha'), 'LineWidth', 1);
+%     ylabel('m5beta [-]');
+%     xlim([XLIM1 XLIM2])
 
-figure(10);
-subplot(2,2,1);
-    hold all;
-    plot(nv.T, nv.out('K_k'), 'LineWidth', 1);
-    ylabel('K_k');
-    xlim([XLIM1 XLIM2])
-subplot(2,2,2);
-    hold all;
-    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
-    ylabel('v_k');
-    xlim([XLIM1 XLIM2])
-subplot(2,2,3);
-    hold all;
-    plot(nv.T, nv.out('R'), 'LineWidth', 1);
-    ylabel('Radius');
-    xlim([XLIM1 XLIM2])
-subplot(2,2,4);
-    hold all;
-    plot(nv.T, nv.out('Ca_k'), 'LineWidth', 1);
-    ylabel('Ca_k');
-    xlim([XLIM1 XLIM2])
+figure;
+plot(nv.T, nv.out('J_pump_sa'));
+ylabel('NaK pump rate')
+xlim([XLIM1 XLIM2])
 
-%% Plot BOLD
+% % Plot BOLD
 % figure;
 %     plot(nv.T, BOLD_N, 'k', 'LineWidth', 1)
 %     ylabel('BOLD (%)')

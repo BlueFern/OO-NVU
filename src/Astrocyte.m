@@ -124,19 +124,40 @@ classdef Astrocyte < handle
             p_NO_k = 0;
             c_NO_k = p.k_O2_k * NO_k.^2 * p.O2_k; % [uM/s]
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
+            
+            %% Temp gap junction for bug testing
+            flu_gap_K = 0;%( (3.1e-9 ./ (1.24e-4)^2) .* ( 92708 - K_k ) + (( 96.485 .* 1)./(8.315 * 300)) .* 0.5.*(92708+K_k).*(-88.9-v_k) );
+            
+            flu_gap_diff_Na = (3.1e-9 / (1.24e-4)^2) .* ( 18268 + 18268 + 18268 + 18268 - 4.*Na_k);
+            flu_gap_electro1_Na = ((3.1e-9 * 96.485 * 1) ./ ((1.24e-4)^2 * 8.315 * 300)) .* ( Na_k .* ( -88.9 + -88.9 + -88.9 + -88.9 - 4.*v_k ) );
+            flu_gap_Na = 0;%(flu_gap_diff_Na + flu_gap_electro1_Na);
+            
+            flu_gap_diff_Cl = (3.1e-9 / (1.24e-4)^2) .* ( 18268 + 18268 + 18268 + 18268 - 4.*Cl_k);
+            flu_gap_electro1_Cl = ((3.1e-9 * 96.485 * -1) ./ ((1.24e-4)^2 * 8.315 * 300)) .* ( Cl_k .* ( -88.9 + -88.9 + -88.9 + -88.9 - 4.*v_k ) );
+            flu_gap_Cl = 0;%(flu_gap_diff_Cl + flu_gap_electro1_Cl);
+            
+            flu_gap_diff_HCO3 = (3.1e-9 / (1.24e-4)^2) .* ( 9131 + 9131 + 9131 + 9131 - 4.*HCO3_k);
+            flu_gap_electro1_HCO3 = ((3.1e-9 * 96.485 * -1) ./ ((1.24e-4)^2 * 8.315 * 300)) .* ( HCO3_k .* ( -88.9 + -88.9 + -88.9 + -88.9 - 4.*v_k ) );
+            flu_gap_HCO3 = 0;%(flu_gap_diff_HCO3 + flu_gap_electro1_HCO3);
+            
+            flu_gap_diff_Ca = (3.1e-9 / (1.24e-4)^2) .* ( 0.1612 + 0.1612 + 0.1612 + 0.1612 - 4.*Ca_k);
+            flu_gap_electro1_Ca = ((3.1e-9 * 96.485 * 2) ./ ((1.24e-4)^2 * 8.315 * 300)) .* ( Ca_k .* ( -88.9 + -88.9 + -88.9 + -88.9 - 4.*v_k ) );
+            flu_gap_Ca = 0;%(flu_gap_diff_Ca + flu_gap_electro1_Ca);
+            
+            dvkdt = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k + 2*J_TRPV_k + flu_gap_K + flu_gap_Na - flu_gap_Cl - flu_gap_HCO3 + 2*flu_gap_Ca);
 
             %% Conservation Equations
             
-            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k + 2*J_TRPV_k + flu_gap);
+            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k + 2*J_TRPV_k + flu_gap_K + flu_gap_Na - flu_gap_Cl - flu_gap_HCO3 + 2*flu_gap_Ca);
             
             % Differential Equations in the Astrocyte
-            du(idx.K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k - J_KIR_k + flu_gap;
-            du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k - 3*J_NaCa_k;
-            du(idx.HCO3_k, :) = 2*J_NBC_k;
+            du(idx.K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k - J_KIR_k + flu_gap_K;
+            du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k - 3*J_NaCa_k + flu_gap_Na;
+            du(idx.HCO3_k, :) = 2*J_NBC_k + flu_gap_HCO3;
             du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :) + 2*du(idx.Ca_k, :);
             
             % Differential Calcium Equations in Astrocyte
-            du(idx.Ca_k, :)     = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_NaCa_k - J_VOCC_k + J_TRPV_k/p.r_buff);           
+            du(idx.Ca_k, :)     = B_cyt .* (J_IP3 - J_pump + J_ER_leak + J_NaCa_k - J_VOCC_k + J_TRPV_k/p.r_buff + flu_gap_Ca);           
             du(idx.s_k, :)      = -(B_cyt .* (J_IP3 - J_pump + J_ER_leak)) ./ (p.VR_ER_cyt);
             du(idx.h_k, :)      = p.k_on * (p.K_inh - (Ca_k + p.K_inh) .* h_k);
             du(idx.I_k, :)      = p.r_h * G - p.k_deg * I_k;
@@ -195,6 +216,8 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.J_VOCC_k, :) = J_VOCC_k;
                 Uout(self.idx_out.J_Cl_k, :) = J_Cl_k;
                 Uout(self.idx_out.G_KIR_k, :) = G_KIR_k;
+                Uout(self.idx_out.flu_gap_K, :) = flu_gap_K;
+                Uout(self.idx_out.dvkdt, :) = dvkdt;
                 varargout = {Uout};
             end
         end
@@ -278,6 +301,8 @@ function [idx, n] = output_indices(self)
     idx.J_VOCC_k = 35;
     idx.J_Cl_k = 36;
     idx.G_KIR_k = 37;
+    idx.flu_gap_K = 38;
+    idx.dvkdt = 39;
     n = numel(fieldnames(idx));
 end
 
