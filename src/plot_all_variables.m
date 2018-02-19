@@ -11,7 +11,7 @@ set(gcf,'Name', 'Neuron State Variables')
 neuron_vars = fieldnames(nv.neuron.index);
 i_neuron = size(neuron_vars, 1);
 for i = 1:1:i_neuron
-    subplot(6,6,i)
+    subplot(5,6,i)
     hold all
     plot(nv.T, nv.out(char(neuron_vars(i))));
     xlabel('Time [s]'); ylabel(neuron_vars(i));

@@ -55,7 +55,7 @@ classdef SMCEC < handle
             J_NaK_i = p.F_NaK_i;
             J_K_i   = p.G_K_i * w_i .* (v_i - p.v_K_i);
 
-            [J_KIR_i] = self.shared(t, u, K_p);
+            J_KIR_i = self.shared(t, u, K_p);
             
             J_degrad_i = p.k_d_i * I_i;
             
@@ -295,7 +295,7 @@ function params = parse_inputs(varargin)
 
     % Endothelial Cell ODE Constants
     parser.addParameter('C_m_j', 25.8); %pF
-    parser.addParameter('J_PLC', 0.18); % uMs^-1
+    parser.addParameter('J_PLC', 0.11); % uMs^-1 0.11 for steady state, 0.3 for oscillations
     parser.addParameter('J_0_j', 0.029); %constant Ca influx (EC)uMs^-1
 
     % Smooth Muscle Cell Flux Constants

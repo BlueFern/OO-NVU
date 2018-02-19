@@ -197,21 +197,7 @@ classdef Neuron < handle
             p_NO_n = p.NOswitch * ( nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) ); %[uM/s]
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
-            
-            % ECS electrodiffusion TEST            
-            Delta_K_e = 3.493 - K_e;
-            average_K_e = (3.493 + K_e)/2;
-            Delta_Na_e = 150 - Na_e;
-            average_Na_e = (150 + Na_e)/2;
-            Delta_v_e = -(8.315 * 300) / 96.485 * ( 1 * 3.6e-9 * Delta_K_e + 1 * 2.4e-9 * Delta_Na_e ) / ( 1 * 3.6e-9 * average_K_e + 1 * 2.4e-9 * average_Na_e );
-            flu_diff_Fick_K = (3.6e-9 / (1.24e-4)^2) * (Delta_K_e);
-            flu_diff_Fick_Na = (2.4e-9 / (1.24e-4)^2) * (Delta_Na_e);
-            flu_diff_el_K 	= (3.6e-9 / (1.24e-4)^2) * ( ((1 * 96.485)/(8.315 * 300)) * ( average_K_e * Delta_v_e ) );
-            flu_diff_el_Na = (2.4e-9 / (1.24e-4)^2) * (((1 * 96.485)/(8.315 * 300)) * ( average_Na_e * Delta_v_e ) );
-            
-            flu_diff_K 	= 0;%flu_diff_Fick_K + flu_diff_el_K;
-            flu_diff_Na = 0;%flu_diff_Fick_Na + flu_diff_el_Na;
-            
+           
             
       %% Conservation equations                                                         
             
@@ -233,8 +219,8 @@ classdef Neuron < handle
             du(idx.Buff_e, :)   = p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e);
 
             % change in concentration of Na,K in the extracellular space 
-            du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd)) + flu_diff_Na;
-            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e) + flu_diff_K + self.input_ECS(t);
+            du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
+            du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e) + self.input_ECS(t);
             
             % change in tissue oxygen
             du(idx.O2, :)       = J_O2_vascular - J_O2_background - J_O2_pump;
@@ -294,9 +280,6 @@ classdef Neuron < handle
                 Uout(self.idx_out.J_Kleak_d, :) = J_Kleak_d;
                 Uout(self.idx_out.J_Kpump_d, :) = J_Kpump_d;
                 Uout(self.idx_out.J_NMDA_K_d, :) = J_NMDA_K_d;
-                Uout(self.idx_out.flu_diff_K, :) = flu_diff_K;
-                Uout(self.idx_out.flu_diff_Fick_K, :) = flu_diff_Fick_K;
-                Uout(self.idx_out.flu_diff_el_K, :) = flu_diff_el_K;
                 Uout(self.idx_out.m5alpha, :) = m5alpha;
                 Uout(self.idx_out.J_pump_sa, :) = J_pump_sa;
             	varargout = {Uout};
@@ -316,21 +299,14 @@ classdef Neuron < handle
             K_d = u(idx.K_d, :);        % K+ concentration of dendrite, mM
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
             K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
-            Na_e = u(idx.Na_e, :);      % Na+ concentration of ECS, mM
-            m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
-            m4 = u(idx.m4, :);          % Activation gating variable, dendrite NaP channel (Na+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
             m6 = u(idx.m6, :);          % Activation gating variable, dendrite KDR channel (K+)
             m7 = u(idx.m7, :);          % Activation gating variable, dendrite KA channel (K+)
-            m8 = u(idx.m8, :);          % Activation gating variable, soma/axon NaT channel (Na+)
-            h1 = u(idx.h1, :);          % Inactivation gating variable, soma/axon NaP channel (Na+)
             h2 = u(idx.h2, :);          % Inactivation gating variable, soma/axon KA channel (K+)
-            h3 = u(idx.h3, :);          % Inactivation gating variable, dendrite NaP channel (Na+)
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
-            h6 = u(idx.h6, :);          % Inactivation gating variable, soma/axon NaT channel (Na+)
             O2 = u(idx.O2, :);
             
             %% Glutamate function dependent on neuron membrane potential
@@ -338,9 +314,7 @@ classdef Neuron < handle
             
             %% Fluxes for the ODEs - (unfortunately) must be reproduced in this function to share with Astrocyte.m
             K = K_e;             
-            E_Na_sa     = p.ph * log(Na_e ./ Na_sa);
             E_K_sa      = p.ph * log(K_e ./ K_sa);
-            E_Na_d      = p.ph * log(Na_e ./ Na_d);
             E_K_d       = p.ph * log(K_e ./ K_d);
             
             J_Kleak_sa  = p.gKleak_sa * (v_sa - E_K_sa);
@@ -350,14 +324,7 @@ classdef Neuron < handle
             J_NMDA_K_d  = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
             J_KDR_d     = (m6.^2 .* p.gKDR_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
             J_KA_d      = (m7.^2 .* h5 .* p.gKA_GHk * p.Farad .* v_d .* (K_d - (exp(-v_d / p.ph) .* K))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
-   
-            J_NaP_sa    = (m1.^2 .* h1 .* p.gNaP_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-            J_Naleak_sa = p.gNaleak_sa * (v_sa - E_Na_sa);
-            J_NaT_sa    = (m8.^3 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
-            J_NaP_d     = (m4.^2 .* h3 .* p.gNaP_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
-            J_Naleak_d  = p.gNaleak_d * (v_d - E_Na_d);
-            J_NMDA_Na_d    = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
-            
+
             % Oxygen dependent ATP pump
             O2_p        = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
             J_pump2     = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1); 
@@ -367,28 +334,12 @@ classdef Neuron < handle
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
             J_Kpump_sa  = -2 * J_pump_sa;
             J_Kpump_d   = -2 * J_pump_d;  
-            J_Napump_sa = 3 * J_pump_sa;
-            J_Napump_d = 3 * J_pump_d;
 
             J_K_tot_sa  = J_KDR_sa + J_KA_sa + J_Kleak_sa + J_Kpump_sa;
             J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
-            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
-            J_Na_tot_d  = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_Na_d;
             
-            Delta_K_e = 3.493 - K_e;
-            average_K_e = (3.493 + K_e)/2;
-            Delta_Na_e = 150 - Na_e;
-            average_Na_e = (150 + Na_e)/2;
-            Delta_v_e = -(8.315 * 300) / 96.485 * ( 1 * 3.6e-9 * Delta_K_e + 1 * 2.4e-9 * Delta_Na_e ) / ( 1 * 3.6e-9 * average_K_e + 1 * 2.4e-9 * average_Na_e );
-            flu_diff_Fick_K = (3.6e-9 / (1.24e-4)^2) * (Delta_K_e);
-            flu_diff_el_K 	= (3.6e-9 / (1.24e-4)^2) * ( ((1 * 96.485)/(8.315 * 300)) * ( average_K_e * Delta_v_e ) );
-            flu_diff_K 	= 0;%flu_diff_Fick_K + flu_diff_el_K;
-            
-            dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + flu_diff_K + self.input_ECS(t);
+            dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + self.input_ECS(t);
             J_K_NEtoSC = p.SC_coup * dKedt;
-            
-            dNaedt = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
-%             J_Na_NEtoSC = p.SC_coup * dNaedt;
             J_Na_NEtoSC = -p.SC_coup * dKedt;
        end
        
@@ -488,20 +439,36 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.J_Kleak_d = 27;
     idx.J_Kpump_d = 28;
     idx.J_NMDA_K_d = 18;
-    idx.flu_diff_K = 19;
-    idx.flu_diff_Fick_K = 20;
-    idx.flu_diff_el_K = 21;
-    idx.m5alpha = 22;
-    idx.J_pump_sa = 23;
+    idx.m5alpha = 29;
+    idx.J_pump_sa = 30;
     n = numel(fieldnames(idx));     
 end
       
 function params = parse_inputs(varargin)
     parser = inputParser();
+   
+        % For CSD conditions
+%     parser.addParameter('gNaleak_sa', 9.5999e-6);   
+%     parser.addParameter('gKleak_sa', 3.4564e-5);
+%     parser.addParameter('gleak_sa', 10*9.5999e-6);
+%     parser.addParameter('gNaleak_d', 1.0187e-5);   
+%     parser.addParameter('gKleak_d', 3.4564e-5); 
+%     parser.addParameter('gleak_d', 10*1.0187e-5);  
+%     parser.addParameter('Imax', 0.013);  
+     
+   % For normal conditions
+    parser.addParameter('gNaleak_sa', 6.2378e-5);   
+    parser.addParameter('gKleak_sa', 2.1989e-4);
+    parser.addParameter('gleak_sa', 10*6.2378e-5);
+    parser.addParameter('gNaleak_d', 6.2961e-5);   
+    parser.addParameter('gKleak_d', 2.1987e-4); 
+    parser.addParameter('gleak_d', 10*6.2961e-5);  
+    parser.addParameter('Imax', 0.013*6);  
     
-    parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data
     
     
+    parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data, 4: obtained from data+extra pathway
+   
     parser.addParameter('GluSwitch', 1); 
     parser.addParameter('KSwitch', 1); 
     parser.addParameter('NOswitch', 1); 
@@ -514,18 +481,18 @@ function params = parse_inputs(varargin)
     
     % ECS K+ input parameters
     parser.addParameter('ECS_input', 12); 
-    parser.addParameter('t0_ECS', 100);
+    parser.addParameter('t0_ECS', 10000);
     parser.addParameter('ECS_length', 1.5);
     
     % Elshin model constants
-    parser.addParameter('Istrength', 0.022);    % [mV] Current input strength
+    parser.addParameter('Istrength', 0.022);    % [mA/cm2] Current input strength
     parser.addParameter('SC_coup', 11.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
        
     % BOLD constants
     parser.addParameter('tau_MTT', 3);              % [s] Transit time
     parser.addParameter('tau_TAT', 20);        
     parser.addParameter('d', 0.4); 
-    parser.addParameter('a_1', 3.4);  %3.4            % Buxton
+    parser.addParameter('a_1', 3.4);             % Buxton
     parser.addParameter('a_2', 1); 
     parser.addParameter('V_0', 0.03); 
     parser.addParameter('E_0', 0.4); 
@@ -563,14 +530,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('gNMDA_GHk', 1e-5);   
     parser.addParameter('gNaT_GHk', 10e-5); 
     
-    parser.addParameter('gNaleak_sa', 9.5999e-6);   
-    parser.addParameter('gKleak_sa', 3.4564e-5);
-    parser.addParameter('gleak_sa', 10*9.5999e-6);
-    parser.addParameter('gNaleak_d', 1.0187e-5);   
-    parser.addParameter('gKleak_d', 3.4564e-5); 
-    parser.addParameter('gleak_d', 10*1.0187e-5);  
-    parser.addParameter('Imax', 0.013);  
-%     
 %     parser.addParameter('gNaleak_sa', 4.1333e-5);   
 %     parser.addParameter('gKleak_sa', 1.4623e-4);
 %     parser.addParameter('gleak_sa', 10*4.1333e-5);
@@ -578,14 +537,6 @@ function params = parse_inputs(varargin)
 %     parser.addParameter('gKleak_d', 1.4621e-4); 
 %     parser.addParameter('gleak_d', 10*4.1915e-5);  
 %     parser.addParameter('Imax', 0.013*4);  
-    
-%     parser.addParameter('gNaleak_sa', 6.2378e-5);   
-%     parser.addParameter('gKleak_sa', 2.1989e-4);
-%     parser.addParameter('gleak_sa', 10*6.2378e-5);
-%     parser.addParameter('gNaleak_d', 6.2961e-5);   
-%     parser.addParameter('gKleak_d', 2.1987e-4); 
-%     parser.addParameter('gleak_d', 10*6.2961e-5);  
-%     parser.addParameter('Imax', 0.013*6);  
 
     parser.addParameter('O2_0', 0.02);          % [mM]
     parser.addParameter('alpha_O2',  0.05);         % percentage of ATP production independent of O2

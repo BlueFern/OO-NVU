@@ -92,8 +92,8 @@ end
 function params = parse_inputs(varargin)
     parser = inputParser();
     
-    % Parameter for changing the wall mechanics rate constants
-    parser.addParameter('wallMech', 1);
+    % Parameter for changing the wall mechanics rate constants, default 1.7
+    parser.addParameter('wallMech', 1.7);
     
     % Contraction Equation Constants
     parser.addParameter('K_3', 0.4); % s^-1
