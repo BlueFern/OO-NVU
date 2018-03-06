@@ -188,7 +188,7 @@ classdef Neuron < handle
             w_NR2A = Glu ./ (p.K_mA + Glu); %[-] 
             w_NR2B = Glu ./ (p.K_mB + Glu); %[-]
           
-            I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-80 * (p.v_n + 0.02))) * (exp(2 * p.v_n * p.F / (p.R_gas * p.T))) / (1 - exp(2 * p.v_n * p.F / (p.R_gas * p.T))); %[fA]
+            I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-0.08 * (p.v_n + 20))) * (exp(2 * p.v_n / p.ph)) / (1 - exp(2 * p.v_n / p.ph)); %[fA]
             I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B); %[fA]
             
             CaM = Ca_n / p.m_c; %[uM]
@@ -248,7 +248,7 @@ classdef Neuron < handle
             du(idx.h6, :)       = 1000 * ((h6alpha .* (1 - h6)) - (h6beta .* h6));
             
             % NO pathway            
-            du(idx.Ca_n, :) = (I_Ca_tot / (2 * p.F * p.V_spine) - (p.k_ex * (Ca_n - p.Ca_rest))) / (1 + p.lambda_buf); %[uM/s]
+            du(idx.Ca_n, :) = (I_Ca_tot / (2 * p.Farad * p.V_spine) - (p.k_ex * (Ca_n - p.Ca_rest))) / (1 + p.lambda_buf); %[uM/s]
             du(idx.nNOS_act_n, :) = p.V_maxNOS * CaM ./ (p.K_actNOS + CaM) - p.mu2_n * nNOS_act_n; %[uM/s]
             du(idx.NO_n, :) = p_NO_n - c_NO_n + d_NO_n; %[uM/s]
             
@@ -339,8 +339,8 @@ classdef Neuron < handle
             J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
             
             dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + self.input_ECS(t);
-            J_K_NEtoSC = p.SC_coup * dKedt;
-            J_Na_NEtoSC = -p.SC_coup * dKedt;
+            J_K_NEtoSC = p.k_syn * dKedt;
+            J_Na_NEtoSC = -p.k_syn * dKedt;
        end
        
               %% Current input to neuron
@@ -464,9 +464,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('gKleak_d', 2.1987e-4); 
     parser.addParameter('gleak_d', 10*6.2961e-5);  
     parser.addParameter('Imax', 0.013*6);  
-    
-    
-    
+      
     parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data, 4: obtained from data+extra pathway
    
     parser.addParameter('GluSwitch', 1); 
@@ -486,26 +484,24 @@ function params = parse_inputs(varargin)
     
     % Elshin model constants
     parser.addParameter('Istrength', 0.022);    % [mA/cm2] Current input strength
-    parser.addParameter('SC_coup', 11.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
+    parser.addParameter('k_syn', 11.5);        % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris, Maximum dilation at 9.5
        
     % BOLD constants
     parser.addParameter('tau_MTT', 3);              % [s] Transit time
-    parser.addParameter('tau_TAT', 20);        
+    parser.addParameter('tau_TAT', 20);        % [s]
     parser.addParameter('d', 0.4); 
-    parser.addParameter('a_1', 3.4);             % Buxton
+    parser.addParameter('a_1', 3.4);             
     parser.addParameter('a_2', 1); 
     parser.addParameter('V_0', 0.03); 
     parser.addParameter('E_0', 0.4); 
     
     % global constants
-    parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
     parser.addParameter('R_gas', 8.315); %J mol^-1 K^-1; Gas constant
     parser.addParameter('T', 300); % K; Temperature
     
     % input 
-    parser.addParameter('startpulse', 200);    
-    parser.addParameter('lengthpulse', 200);
-    parser.addParameter('lengtht1', 10);
+    parser.addParameter('startpulse', 100);    
+    parser.addParameter('lengthpulse', 101);
         
     % Elshin neuron model
     parser.addParameter('E_Cl_sa', -70);        % Nernst potential for Cl- in soma      [mV]
@@ -547,11 +543,11 @@ function params = parse_inputs(varargin)
     parser.addParameter('Na_init_sa', 10); 
     parser.addParameter('Na_init_d', 10); 
     
-    parser.addParameter('R_init', 1.9341e-5); 
+    parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
-    parser.addParameter('O2_b', 4e-2);   
+    parser.addParameter('O2_b', 4e-2);   %mM
     parser.addParameter('gamma_O2', 0.10);  
-    parser.addParameter('Mg', 1.2);  
+    parser.addParameter('Mg', 1.2);     % mM/L
 
     % NO pathway 
     parser.addParameter('m_c', 4);              % [-] Number of Ca2+ bound per calmodulin (approximated as parameter, originally an algebraic variable that changed from 3.999 to 4)
@@ -559,8 +555,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_mA', 650);           % [uM] - fit to Santucci2008
     parser.addParameter('K_mB', 2800);          % [uM] - fit to Santucci2008
 
-    parser.addParameter('v_n', -0.04);          % [V] ; the neuronal membrane potential , assumed to be approx constant in this model
-    parser.addParameter('G_M', 46000);          % [fS]! was 46 pS! ; the conductance of the NMDA channel to Ca2+ compaired  
+    parser.addParameter('v_n', -40);          % [mV] ; the neuronal membrane potential , assumed to be approx constant in this model
+    parser.addParameter('G_M', 46);          % [pS] the conductance of the NMDA channel to Ca2+ compaired  
     parser.addParameter('P_Ca_P_M', 3.6);       % [-] ; the relative conductance of the NMDA channel to Ca2+ compared to monovalent ions
     parser.addParameter('Ca_ex', 2e3);          % [microM] ; the external calcium concentration (in Comerford+David2008: 1.5 mM!)
     parser.addParameter('M', 1.3e5);            % [microM] ; the concentration of monovalent ions in the neuron
@@ -577,12 +573,12 @@ function params = parse_inputs(varargin)
     parser.addParameter('x_nk', 25);            % [um] ;  (M.E.)
     parser.addParameter('D_cNO', 3300);         % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)
     
-    parser.addParameter('V_spine', 8e-8);       % [nL] ; volume of the neuronal dendritic spine Santucci2008
+    parser.addParameter('V_spine', 8e-5);       % [nL] ; volume of the neuronal dendritic spine Santucci2008
     parser.addParameter('k_ex', 1600);          % [s^-1] ; decay rate constant of internal calcium concentration Santucci2008
     parser.addParameter('Ca_rest', 0.1);        % [uM] ; resting calcium concentration (in Comerford+David2008: 2.830 mM; in Santucci2008P: 0.1 \muM)
     parser.addParameter('lambda_buf', 20);      % [-] ; buffer capacity Santucci2008
 
-    parser.addParameter('V_maxNOS', 25e-3);     % [] ; M.E.
+    parser.addParameter('V_maxNOS', 25e-3);     % [uM/s] ; M.E.
     parser.addParameter('K_actNOS', 9.27e-2);   % [uM] ; 
     parser.addParameter('mu2_n', 0.0167);       % [s^-1] ; rate constant at which the nNOS is deactivated Comerford2008
 
@@ -593,9 +589,7 @@ function params = parse_inputs(varargin)
     parser.parse(varargin{:})
     params = parser.Results;
     params.t_0 = params.startpulse;
-    params.t_1 = params.t_0 + params.lengtht1;
-    params.t_2 = params.t_0 + params.lengthpulse;
-    params.t_3 = params.t_1 + params.lengthpulse;
+
 end
 
 function u0 = initial_conditions(idx)

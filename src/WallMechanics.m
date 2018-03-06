@@ -44,9 +44,9 @@ classdef WallMechanics < handle
             % Mechanical Equations
             F_r = AMp + AM;
             E = p.E_passive + F_r * (p.E_active - p.E_passive);
-            R_0 = p.R_0_passive + F_r * (p.alpha - 1) * p.R_0_passive;
+            R_0 = p.R_init + F_r * (p.alpha - 1) * p.R_init;
 
-            du(idx.R, :) =  p.R_0_passive / p.eta * ( R * p.trans_p ./ h - E .* (R - R_0) ./ R_0);
+            du(idx.R, :) =  p.R_init / p.eta * ( R * p.trans_p ./ h - E .* (R - R_0) ./ R_0);
 
             du = bsxfun(@times, self.enabled, du);
             
@@ -104,7 +104,7 @@ function params = parse_inputs(varargin)
     
     % Mechanical Equation Constants
     parser.addParameter('eta', 1e4); %Pa s
-    parser.addParameter('R_0_passive', 20e-6); % m
+    parser.addParameter('R_init', 20); % m
     parser.addParameter('trans_p', 4000); % Pa  transmural pressure
     parser.addParameter('E_passive', 66e3); % Pa
     parser.addParameter('E_active', 233e3); % Pa

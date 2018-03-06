@@ -25,7 +25,7 @@ fprintf('Start time is %s\n', char(timeStart));
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
 XLIM1 = 95;
-XLIM2 = 130; % End of simulation
+XLIM2 = 150; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
@@ -56,8 +56,8 @@ TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
 % Load initial NVU
-nv = NVU(Neuron('SC_coup', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
-    Astrocyte('R_decay', 0.15, 'trpv_switch', TRPV_SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START), ...
+nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
+    Astrocyte('trpv_switch', TRPV_SWITCH), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
 
@@ -318,7 +318,7 @@ subplot(3,3,4);
     xlim([XLIM1 XLIM2])
 subplot(3,3,5);
     hold all;
-    plot(nv.T, nv.out('R')*1e6, 'LineWidth', 1);
+    plot(nv.T, nv.out('R'), 'LineWidth', 1);
     ylabel('Radius [\mum]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,6);
@@ -328,8 +328,8 @@ subplot(3,3,6);
     xlim([XLIM1 XLIM2])
 subplot(3,3,7);
     hold all;
-    plot(nv.T, nv.out('Ca_k'), 'LineWidth', 1);
-    ylabel('Ca_k [\muM]');
+    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+    ylabel('K_e [mM]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,8);
     hold all;

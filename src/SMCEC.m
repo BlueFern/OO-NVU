@@ -80,7 +80,7 @@ classdef SMCEC < handle
 
             c_w_i = 1/2 * (1 + tanh((cGMP_i - 10.75)/0.668) );
             
-            K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.beta_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
+            K_act_i = (Ca_i + c_w_i).^2 ./ ((Ca_i + c_w_i).^2 + p.alpha_act_i * exp(-(v_i - p.v_Ca3_i) / p.R_K_i)); 
  
             tau_wss = R/2 * p.delta_p_L; % from Dormanns 2016
             
@@ -194,8 +194,8 @@ classdef SMCEC < handle
             R_cGMP2 = cGMP_i.^2 ./ (cGMP_i.^2 + p.K_m_mlcp^2);
             
             v_KIR_i = p.z_1 * K_p - p.z_2;
-            g_KIR_i = exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
-            J_KIR_i = p.F_KIR_i * g_KIR_i / p.gamma_i .* (v_i - v_KIR_i);
+            G_KIR_i = p.F_KIR_i * exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
+            J_KIR_i = G_KIR_i .* (v_i - v_KIR_i);
             
             J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
         end
@@ -338,7 +338,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('G_K_i', 4.46e-3); %uM mV^-1 s^-1
     parser.addParameter('v_K_i', -94); %mV
 
-    parser.addParameter('F_KIR_i', 7.5e2); % [-]
+    parser.addParameter('F_KIR_i', 0.381); % uM mV^-1 s^-1
     parser.addParameter('k_d_i', 0.1); % s^-1
 
     % Endothelial Cell Flux Constants
@@ -358,22 +358,22 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('G_cat_j', 6.6e-4); %uM mV^-1 s^-1
     parser.addParameter('E_Ca_j', 50); %mV
-    parser.addParameter('m_3_cat_j', -0.18); %uM
-    parser.addParameter('m_4_cat_j', 0.37); %uM
+    parser.addParameter('m_3_cat_j', -0.18); 
+    parser.addParameter('m_4_cat_j', 0.37); 
 
-    parser.addParameter('G_tot_j', 6927); %p mho
-    parser.addParameter('v_K_j', -80); %m mho
+    parser.addParameter('G_tot_j', 6927); %pS
+    parser.addParameter('v_K_j', -80); %mV
 
-    parser.addParameter('c', -0.4); %uM
+    parser.addParameter('c', -0.4);
     parser.addParameter('bb_j', -80.8); %mV
-    parser.addParameter('a_1_j', 53.3); %uM mV
-    parser.addParameter('a_2_j', 53.3); % mV uM^-1
-    parser.addParameter('m_3b_j', 1.32e-3); %uM mV^-1
-    parser.addParameter('m_4b_j', 0.3); %uM mV
-    parser.addParameter('m_3s_j', -0.28); %uM
-    parser.addParameter('m_4s_j', 0.389); %uM
+    parser.addParameter('a_1_j', 53.3); %mV
+    parser.addParameter('a_2_j', 53.3); % mV 
+    parser.addParameter('m_3b_j', 1.32e-3); %mV^-1
+    parser.addParameter('m_4b_j', 0.3); %mV
+    parser.addParameter('m_3s_j', -0.28); 
+    parser.addParameter('m_4s_j', 0.389); 
 
-    parser.addParameter('G_R_j', 955); %p omh
+    parser.addParameter('G_R_j', 955); %pS
     parser.addParameter('v_rest_j', -31.1); %mV
     parser.addParameter('k_d_j', 0.1); %s^-1
 
@@ -382,32 +382,31 @@ function params = parse_inputs(varargin)
     parser.addParameter('G_coup', 0.5); %s^-1
 
     % Additional Equations Constants
-    parser.addParameter('beta_i', 0.13); %uM^2
+    parser.addParameter('alpha_act_i', 0.13); %uM^2
     parser.addParameter('v_Ca3_i', -27); %mV
     parser.addParameter('R_K_i', 12); %mV
     parser.addParameter('z_1', 4.5e-3); %mV uM^-1
     parser.addParameter('z_2', 112); %mV
-    parser.addParameter('z_3', 4.2e-4);
-    parser.addParameter('z_4', 12.6);
-    parser.addParameter('z_5', -7.4e-2);
+    parser.addParameter('z_3', 4.2e-4); %uM^-1
+    parser.addParameter('z_4', 12.6); % -
+    parser.addParameter('z_5', -7.4e-2); %mV^-1
     
     % NO pathway
     parser.addParameter('D_cNO', 3300); % [um^2 s^-1] ; Diffusion coefficient NO (Malinski1993)
-    parser.addParameter('K_mArg_j', 1.5); % [] ;
-    parser.addParameter('K_mO2_j', 7.7); % [] ; Chen2006
+    parser.addParameter('K_mArg_j', 1.5); % [uM] ;
+    parser.addParameter('K_mO2_j', 7.7); % [uM] ; Chen2006
     parser.addParameter('k_dno', 0.01); % [s^-1] ;
     parser.addParameter('K_m_mlcp', 5.5); % [uM] ;
     parser.addParameter('V_NOj_max', 1.22); % [s^-1] ; maximum catalytic rate of NO production (Chen2006) - obtained from fig 6 & equ 17 & 18
-    parser.addParameter('O2_j', 200); % [uM] ; O2 concentration in the EC (ME)
     parser.addParameter('LArg_j', 100); % [uM] ;
     parser.addParameter('k_O2', 9.6e-6); % [uM^-2 s^-1] ;
-    parser.addParameter('W_0', 1.4); % [Pa^-1] ; shear gating constant (Comerford2008)
+    parser.addParameter('W_0', 1.4); %  shear gating constant (Comerford2008)
     parser.addParameter('delta_wss', 2.86); % [Pa] ; the membrane shear modulus (Comerford2008)
     parser.addParameter('k_1', 100); % [s^{-1}] ;
     parser.addParameter('k1', 2e3); % [uM^-1 s^-1] ;
     parser.addParameter('k2', 0.1); % [s^-1] ;
     parser.addParameter('k3', 3); % [uM^-1 s^-1] ;
-    parser.addParameter('V_max_sGC', 0.8520); % [] ;
+    parser.addParameter('V_max_sGC', 0.8520); % [uM/s] ;
     parser.addParameter('k_pde', 0.0195); % [s^-1] ;
     parser.addParameter('C_4', 0.011); % [s^{-1} microM^{-2}] ;
     parser.addParameter('K_m_pde', 2); % [uM] ;
@@ -417,7 +416,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_eNOS', 4.5e-1); % [uM] ;    
     parser.addParameter('g_max', 0.06); % [uM s^-1] ;    
     parser.addParameter('alp', 2); % [-] ; zero shear open channel constant (Comerford2008); in Wiesner1997: alp = 3
-    parser.addParameter('delta_p_L', 9.1e4); % 9.1e4: ME
+    parser.addParameter('delta_p_L', 9.1e-2); % Pa/um ME
     parser.addParameter('x_ki', 25); % [um]  (M.E.)
     parser.addParameter('x_ij', 3.75); % [um]  (Kavdia2002)
 
