@@ -133,6 +133,7 @@ classdef ANLS < handle
             
             CBF = p.CBF_init * (R.^4 / p.R_init^4);
             
+            v_LAC_c = ((p.R_c_cbf * CBF) / p.V_c) .* (p.LAC_a - LAC_c); % LAC production term
             
             V_en_GLC =  p.Vm_en_GLC .* (GLCe ./ (GLCe + p.Km_en_GLC) - GLCn ./ (GLCn + p.Km_en_GLC));
             Vn_hk =  p.Vmax_n_hk .* ATPn .* (GLCn ./ (GLCn + p.Km_GLC)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aG6P_inh_hk .* ( 1.0 .* (G6Pn - p.G6P_inh_hk)))));
