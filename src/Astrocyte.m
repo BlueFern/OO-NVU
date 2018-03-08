@@ -21,7 +21,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;

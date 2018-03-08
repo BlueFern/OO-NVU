@@ -16,38 +16,35 @@ classdef ANLS < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u)
+        function [du, varargout] = rhs(self, t, u, R)
             % Initalise inputs and parameters
             idx = self.index;
             p = self.params;
-
-            [R] = self.shared(t, u);
+            t = t(:).';
             
-            
+            GLCn = u(idx.GLCn, :);            
             G6Pn = u(idx.G6Pn, :);
             F6Pn = u(idx.F6Pn, :);
+            GAPn = u(idx.GAPn, :);
+            PEPn = u(idx.PEPn, :);
+            PYRn = u(idx.PYRn, :);
+            LACn = u(idx.LACn, :);
+            NADHn = u(idx.NADHn, :);
+            ATPn = u(idx.ATPn, :);
             GLCg = u(idx.GLCg, :);
             F6Pg = u(idx.F6Pg, :);
             G6Pg = u(idx.G6Pg, :);
-            GLYg = u(idx.GLYg, :);
-            
+            GLYg = u(idx.GLYg, :);  
             GLCe = u(idx.GLCe, :);
             LACe = u(idx.LACe, :);
             GLUg = u(idx.GLUg, :);
             O2c = u(idx.O2c, :);
             GLCc = u(idx.GLCc, :);
             LACc = u(idx.LACc, :);
-            
-            LACn = u(idx.LACn, :);
             GLUn = u(idx.GLUn, :);
             GLUe = u(idx.GLUe, :);
             LACg = u(idx.LACg, :);
-            GAPn = u(idx.GAPn, :);
-            PEPn = u(idx.PEPn, :);
-            PYRn = u(idx.PYRn, :);
-            NADHn = u(idx.NADHn, :);
             O2n = u(idx.O2n, :);
-            
             GAPg = u(idx.GAPg, :);
             PEPg = u(idx.PEPg, :);
             PYRg = u(idx.PYRg, :);
@@ -56,7 +53,7 @@ classdef ANLS < handle
             PCrg = u(idx.PCrg, :);
             CO2c = u(idx.CO2c, :);
             ATPg = u(idx.ATPg, :);
-
+            PCrn = u(idx.PCrn, :);
             
             %Mp = u(idx.Mp, :);
             
@@ -106,8 +103,8 @@ classdef ANLS < handle
 %             Vn_pgk =  p.kn_pgk .* GAPn .* ADPn .* (NADn ./ NADHn);
 %             Vn_pk =  p.kn_pk .* PEPn .* ADPn;
 %             Vn_mito =  p.Vmax_n_mito .* (O2n ./ (O2n + p.Km_O2)) .* (ADPn ./ (ADPn + p.Km_ADP)) .* (PYRn ./ (PYRn + p.Km_PYR)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aATP_mito .* ( 1.0 .* (ATPn ./ ADPn -  1.0 .* p.rATP_mito)))));
-%             CRn = p.PCrn_tot - p.PCrn;
-%             Vn_ck =  p.kfn_ck .* p.PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
+%             CRn = PCrn_tot - PCrn;
+%             Vn_ck =  p.kfn_ck .* PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
 %             Vn_ATPase =  p.Vmax_n_ATPase .* (ATPn ./ (ATPn + 0.0010));
 %             u_n = power(p.qak, 2.0) +  4.0 .* p.qak .* (p.ATPtot ./ ATPn - 1.0);
 %             dAMP_dATPn = (p.qak ./ 2.0 +  p.qak .* (p.ATPtot ./ ( ATPn .* power(u_n, 1.0  ./  2)))) - (1.0 +  0.50 .* power(u_n, 1.0  ./  2));
@@ -133,7 +130,11 @@ classdef ANLS < handle
             
             CBF = p.CBF_init * (R.^4 / p.R_init^4);
             
-            v_LAC_c = ((p.R_c_cbf * CBF) / p.V_c) .* (p.LAC_a - LAC_c); % LAC production term
+                        I_pump  = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
+
+                        
+            
+
             
             V_en_GLC =  p.Vm_en_GLC .* (GLCe ./ (GLCe + p.Km_en_GLC) - GLCn ./ (GLCn + p.Km_en_GLC));
             Vn_hk =  p.Vmax_n_hk .* ATPn .* (GLCn ./ (GLCn + p.Km_GLC)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aG6P_inh_hk .* ( 1.0 .* (G6Pn - p.G6P_inh_hk)))));
@@ -168,14 +169,20 @@ classdef ANLS < handle
             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
             du(idx.GLUg, :) = Veg_GLU - Vg_gs;
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2n);
-            Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2g);
-            Fin_t = CBF0 + ( p.stim .* CBF0 .* p.deltaf .* (1.0 ./ (1.0 + exp( ( 1.0 .*  - p.sr) .* (VOI - ((p.to + p.t1) - 3.0))))) -  p.stim .* CBF0 .* p.deltaf .* (1.0 ./ (1.0 + exp( ( 1.0 .*  - p.sr) .* (VOI - (p.to + tend + p.t1 + 3.0))))));
-            Vc_O2 =  2.0 .* (Fin_t ./ p.Vc) .* (p.O2a - O2c);
+            Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2g);            
+            
+            Vc_O2 =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.O2a - O2c);
+            
+            
             du(idx.O2c, :) = Vc_O2 - ( Vcn_O2 .* (1.0 ./ p.Rcn) +  Vcg_O2 .* (1.0 ./ p.Rcg));
-            Vc_GLC =  2.0 .* (Fin_t ./ p.Vc) .* (p.GLCa - GLCc);
+            
+            
+            Vc_GLC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.GLCa - GLCc); % TODO:
+            
+            
             du(idx.GLCc, :) = Vc_GLC - ( Vce_GLC .* (1.0 ./ p.Rce) +  Vcg_GLC .* (1.0 ./ p.Rcg));
             Vgc_LAC =  p.Vmax_gc_LAC .* (LACg ./ (LACg + p.Km_gc_LAC) - LACc ./ (LACc + p.Km_gc_LAC));
-            Vc_LAC =  2.0 .* (Fin_t ./ p.Vc) .* (p.LACa - LACc);
+            Vc_LAC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.LACa - LACc);
             du(idx.LACc, :) = Vc_LAC + ( Vec_LAC .* (1.0 ./ p.Rce) +  Vgc_LAC .* (1.0 ./ p.Rcg));
 
 
@@ -197,9 +204,9 @@ classdef ANLS < handle
             du(idx.PYRn, :) = Vn_pk - (Vn_ldh + Vn_mito);
             du(idx.NADHn, :) = Vn_pgk - (Vn_ldh + Vn_mito);
             du(idx.O2n, :) = Vcn_O2 -  p.NAero .* Vn_mito;
-            CRn = p.PCrn_tot - p.PCrn;
-            Vn_ck =  p.kfn_ck .* p.PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
-            du(idx.p.PCrn, :) =  - Vn_ck;
+            CRn = p.PCrn_tot - PCrn;
+            Vn_ck =  p.kfn_ck .* PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
+            du(idx.PCrn, :) =  - Vn_ck;
             Vn_ATPase =  p.Vmax_n_ATPase .* (ATPn ./ (ATPn + 0.0010));
             u_n = power(p.qak, 2.0) +  4.0 .* p.qak .* (p.ATPtot ./ ATPn - 1.0);
             dAMP_dATPn = (p.qak ./ 2.0 +  p.qak .* (p.ATPtot ./ ( ATPn .* power(u_n, 1.0  ./  2)))) - (1.0 +  0.50 .* power(u_n, 1.0  ./  2));
@@ -217,7 +224,7 @@ classdef ANLS < handle
             Vg_ck =  p.kfg_ck .* PCrg .* ADPg -  p.krg_ck .* CRg .* ATPg;
             du(idx.PCrg, :) =  - Vg_ck;
             Vnc_CO2 =  3.0 .* Vn_mito;
-            Vc_CO2 =  2.0 .* (Fin_t ./ p.Vc) .* (CO2c - p.CO2a);
+            Vc_CO2 =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (CO2c - p.CO2a);
             Vgc_CO2 =  3.0 .* Vg_mito;
             du(idx.CO2c, :) = ( Vnc_CO2 .* (1.0 ./ p.Rcn) +  Vgc_CO2 .* (1.0 ./ p.Rcg)) - Vc_CO2;
             Vg_ATPase =  p.Vmax_g_ATPase .* (ATPg ./ (ATPg + 0.0010));
@@ -236,9 +243,11 @@ classdef ANLS < handle
             end
         end 
 
-        function [LAC_c] = shared(self, ~,u)
+        function [ATPn, ATPg] = shared(self, ~,u)
            
-            LAC_c = u(self.index.LAC_c, :);
+            ATPn = u(self.index.ATPn, :);
+            ATPg = u(self.index.ATPg, :);
+
 
         end  
         
@@ -389,6 +398,8 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
+    parser.addParameter('R_c_cbf', 0.5); 
+    
 
     parser.parse(varargin{:});
     params = parser.Results;
@@ -397,6 +408,41 @@ end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     % Inital estimations of parameters from experimental data
-    u0(idx.Mp) = 0.0842;    % [-]
+
+    u0(idx.GLCn) = 0.2633;
+    u0(idx.G6Pn) = 0.7275;
+    u0(idx.F6Pn) = 0.1091;
+    u0(idx.GAPn) = 0.0418;
+    u0(idx.PEPn) = 0.0037;
+    u0(idx.PYRn) = 0.0388;
+    u0(idx.LACn) = 0.3856;
+    u0(idx.NADHn) = 0.0319;
+    u0(idx.ATPn) = 2.2592;
+    u0(idx.PCrn) = 4.2529;
+    u0(idx.O2n) = 0.0975;
+    u0(idx.GLUn) = 3.0;
+    u0(idx.GLCg) = 0.1656;
+    u0(idx.G6Pg) = 0.7326;
+    u0(idx.F6Pg) = 0.1116;
+    u0(idx.GAPg) = 0.0698;
+    u0(idx.PEPg) = 0.0254;
+    u0(idx.PYRg) = 0.1711;
+    u0(idx.LACg) = 0.4651;
+    u0(idx.NADHg) = 0.0445;
+    u0(idx.ATPg) = 2.24;
+    u0(idx.PCrg) = 4.6817;
+    u0(idx.O2g) = 0.1589;
+    u0(idx.GLYg) = 2.5;
+    u0(idx.GLUg) = 0.0;
+    u0(idx.GLCe) = 0.3339;
+    u0(idx.LACe) = 0.3986;
+    u0(idx.GLUe) = 0.0;
+    u0(idx.O2c) = 7.4201;
+    u0(idx.GLCc) = 4.6401;
+    u0(idx.LACc) = 0.3251;
+    u0(idx.CO2c) = 2.12;
+    
+                
+
 
 end

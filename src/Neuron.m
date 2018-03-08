@@ -16,7 +16,7 @@ classdef Neuron < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, NO_k, R)
+        function [du, varargout] = rhs(self, t, u, NO_k, R, ATPn)
             t = t(:).';
             p = self.params;
             idx = self.index;
