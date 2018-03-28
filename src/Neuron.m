@@ -140,7 +140,8 @@ classdef Neuron < handle
             O2_p            = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
-            J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
 
             J_Napump_sa = 3 * J_pump_sa;
@@ -182,7 +183,7 @@ classdef Neuron < handle
             %% NO pathway
             
             % Glutamate input: vesicle released when the extracellular K+ is over 5.5 mM (Ke_switch)
-            Glu = self.shared(t, u);
+            Glu = self.shared(t, u, ATPn);
             
             % NO pathway
             w_NR2A = Glu ./ (p.K_mA + Glu); %[-] 
@@ -197,7 +198,7 @@ classdef Neuron < handle
             p_NO_n = p.NOswitch * ( nNOS_act_n * p.V_max_NO_n * p.O2_n / (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) ); %[uM/s]
             c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n; %[uM/s]
             d_NO_n = (NO_k - NO_n) ./ tau_nk; %[uM/s]
-           
+            size(d_NO_n);
             
       %% Conservation equations                                                         
             
@@ -207,6 +208,8 @@ classdef Neuron < handle
             du(idx.v_sa, :)     = 1/p.Cm * ( -J_tot_sa + 1 / (2 * p.Ra * p.dhod.^2) * (v_d - v_sa) + self.input_current(t) );
             du(idx.v_d, :)      = 1/p.Cm * (-J_tot_d + 1 / (2 * p.Ra * p.dhod.^2) * (v_sa - v_d));
 
+            size(du(idx.v_sa, :));
+            
             %change in concentration of Na,K in the soma
             du(idx.Na_sa, :)    = -p.As / (p.Farad * p.Vs) * J_Na_tot_sa + p.D_Na * (p.Vd + p.Vs) ./ (2 * p.dhod.^2 * p.Vs) * (Na_d - Na_sa);
             du(idx.K_sa, :)     = -p.As / (p.Farad * p.Vs) * J_K_tot_sa + p.D_K * (p.Vd + p.Vs) ./ (2 * p.dhod.^2 * p.Vs) * (K_d - K_sa);
@@ -282,11 +285,14 @@ classdef Neuron < handle
                 Uout(self.idx_out.J_NMDA_K_d, :) = J_NMDA_K_d;
                 Uout(self.idx_out.m5alpha, :) = m5alpha;
                 Uout(self.idx_out.J_pump_sa, :) = J_pump_sa;
+                Uout(self.idx_out.J_pump1_sa, :) = J_pump1_sa;
+
+                
             	varargout = {Uout};
             end
         end
         
-       function [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = shared(self, t, u)    %shared variables
+       function [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2, J_pump1_sa, K_e] = shared(self, t, u, ATPn)    %shared variables
             t = t(:).';
             p = self.params;
             idx = self.index;
@@ -330,7 +336,9 @@ classdef Neuron < handle
             J_pump2     = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1); 
             J_pump1_sa  = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
             J_pump1_d   = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
-            J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            
+            %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
             J_Kpump_sa  = -2 * J_pump_sa;
             J_Kpump_d   = -2 * J_pump_d;  
@@ -341,6 +349,8 @@ classdef Neuron < handle
             dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + self.input_ECS(t);
             J_K_NEtoSC = p.k_syn * dKedt;
             J_Na_NEtoSC = -p.k_syn * dKedt;
+            
+     
        end
        
               %% Current input to neuron
@@ -441,6 +451,10 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.J_NMDA_K_d = 18;
     idx.m5alpha = 29;
     idx.J_pump_sa = 30;
+    idx.J_pump1_sa = 31;
+
+    
+    
     n = numel(fieldnames(idx));     
 end
       
@@ -463,7 +477,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('gNaleak_d', 6.2961e-5);   
     parser.addParameter('gKleak_d', 2.1987e-4); 
     parser.addParameter('gleak_d', 10*6.2961e-5);  
-    parser.addParameter('Imax', 0.013*6);  
+    parser.addParameter('Imax', 0.013*6);  % mA/cm^2
       
     parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data, 4: obtained from data+extra pathway
    
@@ -539,8 +553,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('D_Na', 1.33e-5);       % [cm2 / s]
     parser.addParameter('D_K', 1.96e-5);        % [cm2 / s]
     
-    parser.addParameter('K_init_e', 2.9); 
-    parser.addParameter('Na_init_sa', 10); 
+    parser.addParameter('K_init_e', 2.9); %2.9 
+    parser.addParameter('Na_init_sa', 10); %10
     parser.addParameter('Na_init_d', 10); 
     
     parser.addParameter('R_init', 20); 
@@ -585,6 +599,12 @@ function params = parse_inputs(varargin)
     parser.addParameter('dt', 0.001);
     parser.addParameter('XLIM2', 150);
     parser.addParameter('input_data', linspace(0, 1200, 1000)); 
+    
+    
+    
+    parser.addParameter('pumpoE', 2.9); %2.9 
+    parser.addParameter('pumpoNa', 10); %10
+    parser.addParameter('ATP_init_n', 2.25); % dimless
     
     parser.parse(varargin{:})
     params = parser.Results;

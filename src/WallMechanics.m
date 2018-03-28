@@ -60,7 +60,7 @@ classdef WallMechanics < handle
             end
         end 
 
-        function [R, h] = shared(self, ~,u)
+        function [R, h] = shared(self, ~, u)
            
             R = u(self.index.R, :);
             h = 0.1 * R; 

@@ -118,6 +118,7 @@ classdef Astrocyte < handle
             c_NO_k = p.k_O2_k * NO_k.^2 * p.O2_k; % [uM/s]
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
 
+
             %% Conservation Equations
             
             du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k - 2*J_TRPV_k);
@@ -184,13 +185,18 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
                 Uout(self.idx_out.J_NaK_k, :) = J_NaK_k;
                 Uout(self.idx_out.J_Cl_k, :) = J_Cl_k;
+                
+                
+                
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k] = shared(self, ~, u)
+        function [K_p, NO_k, Na_k] = shared(self, ~, u)
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
+            Na_k = u(idx.Na_k, :);
+            
         end
         
         function names = varnames(self)
@@ -256,6 +262,7 @@ function [idx, n] = output_indices(self)
     idx.J_K_NEtoSC = 31;
     idx.J_KCC1_k = 32;
     idx.J_Cl_k = 33;
+    
     n = numel(fieldnames(idx));
 end
 
@@ -337,7 +344,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('K_p_min', 3e3);% uM
 
     % Fluxes Constants
-%     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
+    parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
     parser.addParameter('R_g', 8.315); %J mol^-1 K^-1; Gas constant
     parser.addParameter('T', 300); % K; Temperature
         
@@ -369,6 +376,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('x_ki', 25);            % [um] ;  (M.E.)
     parser.addParameter('k_O2_k', 9.6e-6);      % [uM^-2 s^-1] ;  (Kavdia2002)
     parser.addParameter('O2_k', 200);           % [uM] ;  (M.E.)
+
 
     
     parser.parse(varargin{:})

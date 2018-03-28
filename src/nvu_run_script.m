@@ -24,8 +24,8 @@ fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
-XLIM1 = 95;
-XLIM2 = 150; % End of simulation
+XLIM1 = 80;
+XLIM2 = 1000; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
@@ -36,7 +36,7 @@ NEURONAL_START      = 100;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 101;      % End of neuronal stimulation 
+NEURONAL_END        = 120;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -59,10 +59,11 @@ O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-lim
 nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
     Astrocyte('trpv_switch', TRPV_SWITCH), ...
     WallMechanics('wallMech', 1.7), ...
-    SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), ANLS(), 'odeopts', odeopts);
+    SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), ...
+    ANLS('startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START), 'odeopts', odeopts);
 
 % Adjust time vector
-nv.neuron.params.dt = 0.001; dt = nv.neuron.params.dt;
+nv.neuron.params.dt = 1; dt = nv.neuron.params.dt;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
@@ -118,6 +119,72 @@ end
 %% Run the simulation
 nv.simulate() 
 
+figure(2);
+hold all
+set(gcf,'Name', 'ANLS State Variables')
+anls_vars = fieldnames(nv.anls.index);
+i_anls = size(anls_vars, 1);
+for i = 1:1:i_anls
+    subplot(5,6,i)
+    hold all
+    plot(nv.T, nv.out(char(anls_vars(i))));
+    xlabel('Time [s]'); ylabel(anls_vars(i));
+end
+hold off
+
+figure(23);
+subplot(2,1,1)
+plot(nv.T, nv.out('Na_k'));
+xlabel('Time [s]'); ylabel('Na_k');
+subplot(2,1,2)
+plot(nv.T, nv.out('Vn_pump') ./ 2.5);
+xlabel('Time [s]'); ylabel('Vk_pump');
+% figure(24);
+% subplot(2,2,1)
+%     plot(nv.T, nv.out('Vc_O2'));
+%     xlabel('Time [s]'); ylabel('Vc_O2');
+%     xlim([20 200])
+% subplot(2,2,2)
+%     plot(nv.T, nv.out('Vc_GLC')); 
+%     xlabel('Time [s]'); ylabel('Vc_GLC');
+%     xlim([20 200])
+% subplot(2,2,3)
+%     plot(nv.T, nv.out('Vc_LAC'));
+%     xlabel('Time [s]'); ylabel('Vc_LAC');
+%     xlim([20 200])
+% subplot(2,2,4)
+%     plot(nv.T, nv.out('ttt3'));
+%     xlabel('Time [s]'); ylabel('ttt3');
+%     xlim([20 200])
+%     
+%     
+% figure(24);
+% subplot(2,2,1)
+%     plot(nv.T, nv.out('O2c'));
+%     xlabel('Time [s]'); ylabel('O2c');
+%     xlim([20 200])
+% subplot(2,2,2)
+%     plot(nv.T, nv.out('GLCc')); 
+%     xlabel('Time [s]'); ylabel('GLCc');
+%     xlim([20 200])
+% subplot(2,2,3)
+%     plot(nv.T, nv.out('LACc'));
+%     xlabel('Time [s]'); ylabel('LACc');
+%     xlim([20 200])
+% subplot(2,2,4)
+%     plot(nv.T, nv.out('ttt3'));
+%     xlabel('Time [s]'); ylabel('ttt3');
+%     xlim([20 200])
+% figure;
+% subplot(1,2,1)
+%     plot(nv.T, nv.out('K_e'));
+% subplot(1,2,2)
+%     plot(nv.T, nv.out('Na_sa'));
+% 
+
+
+
+
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
 % ICs = (nv.U(end, :))';
 % nv.u0 = ICs;
@@ -170,7 +237,17 @@ if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4
     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[-0.05 -0.05 0.3 0.3],'k');
     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
 end
-% 
+
+
+
+
+
+
+
+
+
+
+
 %% Plot BOLD
 % figure;
 %     plot(nv.T, BOLD_N, 'k', 'LineWidth', 1)

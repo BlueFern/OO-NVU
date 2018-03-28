@@ -16,7 +16,7 @@ classdef ANLS < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R)
+        function [du, varargout] = rhs(self, t, u, R, J_pump1_sa, K_e, Na_k)
             % Initalise inputs and parameters
             idx = self.index;
             p = self.params;
@@ -37,12 +37,9 @@ classdef ANLS < handle
             GLYg = u(idx.GLYg, :);  
             GLCe = u(idx.GLCe, :);
             LACe = u(idx.LACe, :);
-            GLUg = u(idx.GLUg, :);
             O2c = u(idx.O2c, :);
             GLCc = u(idx.GLCc, :);
             LACc = u(idx.LACc, :);
-            GLUn = u(idx.GLUn, :);
-            GLUe = u(idx.GLUe, :);
             LACg = u(idx.LACg, :);
             O2n = u(idx.O2n, :);
             GAPg = u(idx.GAPg, :);
@@ -51,11 +48,12 @@ classdef ANLS < handle
             NADHg = u(idx.NADHg, :);
             O2g = u(idx.O2g, :);
             PCrg = u(idx.PCrg, :);
-            CO2c = u(idx.CO2c, :);
             ATPg = u(idx.ATPg, :);
             PCrn = u(idx.PCrn, :);
             
-            %Mp = u(idx.Mp, :);
+            %GLUg = u(idx.GLUg, :);
+            %GLUn = u(idx.GLUn, :);
+            %GLUe = u(idx.GLUe, :);
             
             
             
@@ -81,8 +79,8 @@ classdef ANLS < handle
 %             Vg_pump =  (p.Sm_g ./ p.Vg) .* kpump .* ATPg .* NAg .* power(1.0 + ATPg ./ Km_pump, -1.0);
 %             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
 %             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-%             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2n);
-%             Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2g);
+%             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
+%             Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2g);
 %             Fin_t = CBF0 + ( p.stim .* CBF0 .* p.deltaf .* (1.0 ./ (1.0 + exp( ( 1.0 .*  - p.sr) .* (VOI - ((p.to + p.t1) - 3.0))))) -  p.stim .* CBF0 .* p.deltaf .* (1.0 ./ (1.0 + exp( ( 1.0 .*  - p.sr) .* (VOI - (p.to + tend + p.t1 + 3.0))))));
 %             Vc_O2 =  2.0 .* (Fin_t ./ p.Vc) .* (p.O2a - O2c);
 %             Vc_GLC =  2.0 .* (Fin_t ./ p.Vc) .* (p.GLCa - GLCc);
@@ -127,118 +125,169 @@ classdef ANLS < handle
             
             
             % CALC RATES
-            
             CBF = p.CBF_init * (R.^4 / p.R_init^4);
+            I_pump = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            Vn_pump =  6.5 * (p.As / p.Vs) * 1e2 * I_pump ./ p.F;
+            Vn_pump = Vn_pump - ((Vn_pump - 0.158) ./ 1.25);
             
-                        I_pump  = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
+            Jk_pump  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3);
+            Ik_pump = 1 * p.Imax_k * Jk_pump .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
+            Vk_pump =  0.25 * (1 / p.R_k) * Ik_pump ./ p.F; % to look like Cloutier et al. 2009
 
-                        
             
-
+            Vc_GLC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.GLCa - GLCc);
             
+            
+            Vce_GLC =  p.Vm_ce_GLC .* (GLCc ./ (GLCc + p.Km_ce_GLC) - GLCe ./ (GLCe + p.Km_ce_GLC));
+            Vcg_GLC =  p.Vm_cg_GLC .* (GLCc ./ (GLCc + p.Km_cg_GLC) - GLCg ./ (GLCg + p.Km_cg_GLC));
+            
+                             
             V_en_GLC =  p.Vm_en_GLC .* (GLCe ./ (GLCe + p.Km_en_GLC) - GLCn ./ (GLCn + p.Km_en_GLC));
             Vn_hk =  p.Vmax_n_hk .* ATPn .* (GLCn ./ (GLCn + p.Km_GLC)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aG6P_inh_hk .* ( 1.0 .* (G6Pn - p.G6P_inh_hk)))));
-            du(idx.GLCn, :) = V_en_GLC - Vn_hk;
             Vn_pgi =  p.Vmaxf_n_pgi .* (G6Pn ./ (G6Pn + p.Km_G6P)) -  p.Vmaxr_n_pgi .* (F6Pn ./ (F6Pn + p.Km_F6P_pgi));
-            du(idx.G6Pn, :) = Vn_hk - Vn_pgi;
             Vn_pfk =  p.kn_pfk .* ATPn .* (F6Pn ./ (F6Pn + p.Km_F6P_pfk)) .* power(1.0 + power(ATPn ./ p.Ki_ATP, p.nH), -1.0);
-            du(idx.F6Pn, :) = Vn_pgi - Vn_pfk;
-            Vcg_GLC =  p.Vm_cg_GLC .* (GLCc ./ (GLCc + p.Km_cg_GLC) - GLCg ./ (GLCg + p.Km_cg_GLC));
             Veg_GLC =  p.KO1 .* p.Vm_eg_GLC .* (GLCe ./ (GLCe + p.Km_eg_GLC) - GLCg ./ (GLCg + p.Km_eg_GLC));
             Vg_hk =  p.Vmax_g_hk .* ATPg .* (GLCg ./ (GLCg + p.Km_GLC)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aG6P_inh_hk .* ( 1.0 .* (G6Pg - p.G6P_inh_hk)))));
-            du(idx.GLCg, :) = (Vcg_GLC + Veg_GLC) - Vg_hk;
             Vg_pgi =  p.Vmaxf_g_pgi .* (G6Pg ./ (G6Pg + p.Km_G6P)) -  p.Vmaxr_g_pgi .* (F6Pg ./ (F6Pg + p.Km_F6P_pgi));
             Vg_pfk =  p.kg_pfk .* ATPg .* (F6Pg ./ (F6Pg + p.Km_F6P_pfk)) .* power(1.0 + power(ATPg ./ p.Ki_ATP, p.nH), -1.0);
-            du(idx.F6Pg, :) = Vg_pgi - Vg_pfk;
+
             Vg_glys =  p.Vmax_glys .* (G6Pg ./ (G6Pg + p.Km_G6P_glys)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aGLY_inh .* ( 1.0 .* (GLYg - p.GLY_inh)))));
-            unitstepSB2 = piecewise({VOI - (p.tend_GLY + p.to + p.to_GLY)>=0.0, 1.0 }, 0.0);
-            deltaVt_GLY = 1.0 +  p.stim .* ( p.delta_GLY .* p.KO3 .* (1.0 ./ (1.0 + exp( 1.0 .*  - p.sr_GLY .* (VOI - (p.to + p.to_GLY))))) .* (1.0 - unitstepSB2));
+            
+            unitstepSB2 = 0.0;
+            % For GLY
+            if t - (p.t_0 + p.lengthpulse + p.tend_GLY) >= 0.0
+                unitstepSB2 = 1.0;
+            end
+            
+            gly_switch = 0;
+            
+            if p.lengthpulse > p.tstart_GLY
+                gly_switch = 1;
+            end
+            
+            %unitstepSB2 = piecewise({t - (p.t_0 + p.lengthpulse + p.tend_GLY)>=0.0, 1.0 }, 0.0)
+            
+            deltaVt_GLY = 1.0 +  p.stim .* (p.delta_GLY .* p.KO3 .* (1.0 ./ (1.0 + exp( 1.0 .*  - p.sr_GLY .* (t - (p.t_0 + p.tstart_GLY))))) .* (1.0 - unitstepSB2)) .* gly_switch;
             Vg_glyp =  p.Vmax_glyp .* (GLYg ./ (GLYg + p.Km_GLY)) .* deltaVt_GLY;
-            du(idx.G6Pg, :) = (Vg_hk + Vg_glyp) - (Vg_pgi + Vg_glys);
-            du(idx.GLYg, :) = Vg_glys - Vg_glyp;
-            Vce_GLC =  p.Vm_ce_GLC .* (GLCc ./ (GLCc + p.Km_ce_GLC) - GLCe ./ (GLCe + p.Km_ce_GLC));
-            du(idx.GLCe, :) = Vce_GLC - ( Veg_GLC .* (1.0 ./ p.Reg) +  V_en_GLC .* (1.0 ./ p.Ren));
+               
             Vne_LAC =  p.Vmax_ne_LAC .* (LACn ./ (LACn + p.Km_ne_LAC) - LACe ./ (LACe + p.Km_ne_LAC));
             Vge_LAC =  p.Vmax_ge_LAC .* (LACg ./ (LACg + p.Km_ge_LAC) - LACe ./ (LACe + p.Km_ge_LAC));
             Vec_LAC =  p.Vm_ec_LAC .* (LACe ./ (LACe + p.Km_ec_LAC) - LACc ./ (LACc + p.Km_ec_LAC));
-            du(idx.LACe, :) = ( Vne_LAC .* (1.0 ./ p.Ren) +  Vge_LAC .* (1.0 ./ p.Reg)) - Vec_LAC;
-            Vg_leak_Na =  (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ F) .* ( (RT ./ F) .* log(NAe ./ NAg) - Vm);
-            Vg_pump =  (p.Sm_g ./ p.Vg) .* kpump .* ATPg .* NAg .* power(1.0 + ATPg ./ Km_pump, -1.0);
-            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
-            du(idx.NAg, :) = (Vg_leak_Na +  3.0 .* Veg_GLU) -  3.0 .* Vg_pump;
-            Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-            du(idx.GLUg, :) = Veg_GLU - Vg_gs;
-            Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2n);
-            Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.p.nh_O2) - O2g);            
             
+%             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
+%             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
+            
+            
+            Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
+            Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2g);            
             Vc_O2 =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.O2a - O2c);
-            
-            
-            du(idx.O2c, :) = Vc_O2 - ( Vcn_O2 .* (1.0 ./ p.Rcn) +  Vcg_O2 .* (1.0 ./ p.Rcg));
-            
-            
-            Vc_GLC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.GLCa - GLCc); % TODO:
-            
-            
-            du(idx.GLCc, :) = Vc_GLC - ( Vce_GLC .* (1.0 ./ p.Rce) +  Vcg_GLC .* (1.0 ./ p.Rcg));
+                     
             Vgc_LAC =  p.Vmax_gc_LAC .* (LACg ./ (LACg + p.Km_gc_LAC) - LACc ./ (LACc + p.Km_gc_LAC));
             Vc_LAC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.LACa - LACc);
-            du(idx.LACc, :) = Vc_LAC + ( Vec_LAC .* (1.0 ./ p.Rce) +  Vgc_LAC .* (1.0 ./ p.Rcg));
-
-
-
+            
+            NADn = p.NADH_n_tot - NADHn;
             Vn_ldh =  p.kfn_ldh .* PYRn .* NADHn -  p.krn_ldh .* LACn .* NADn;
-            du(idx.LACn, :) = Vn_ldh - Vne_LAC;
-            Vn_stim_GLU =  Vn_stim .* p.R_GLU_NA .* p.KO2 .* (GLUn ./ (GLUn + p.Km_GLU));
-            du(idx.GLUn, :) =  Vg_gs .* (1.0 ./ p.Rng) - Vn_stim_GLU;
-            du(idx.GLUe, :) =  Vn_stim_GLU .* (1.0 ./ p.Ren) -  Veg_GLU .* (1.0 ./ p.Reg);
+
+%           Vn_stim_GLU =  Vn_stim .* p.R_GLU_NA .* (GLUn ./ (GLUn + p.Km_GLU));
+            
             NADg = p.NADH_g_tot - NADHg;
             Vg_ldh =  p.kfg_ldh .* PYRg .* NADHg -  p.krg_ldh .* LACg .* NADg;
-            du(idx.LACg, :) = Vg_ldh - (Vge_LAC + Vgc_LAC);
             ADPn =  (ATPn ./ 2.0) .* ( - p.qak + power((power(p.qak, 2.0) +  4.0 .* p.qak .* (p.ATPtot ./ ATPn - 1.0)), 1.0  ./  2));
             Vn_pgk =  p.kn_pgk .* GAPn .* ADPn .* (NADn ./ NADHn);
-            du(idx.GAPn, :) =  2.0 .* Vn_pfk - Vn_pgk;
             Vn_pk =  p.kn_pk .* PEPn .* ADPn;
-            du(idx.PEPn, :) = Vn_pgk - Vn_pk;
             Vn_mito =  p.Vmax_n_mito .* (O2n ./ (O2n + p.Km_O2)) .* (ADPn ./ (ADPn + p.Km_ADP)) .* (PYRn ./ (PYRn + p.Km_PYR)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aATP_mito .* ( 1.0 .* (ATPn ./ ADPn -  1.0 .* p.rATP_mito)))));
-            du(idx.PYRn, :) = Vn_pk - (Vn_ldh + Vn_mito);
-            du(idx.NADHn, :) = Vn_pgk - (Vn_ldh + Vn_mito);
-            du(idx.O2n, :) = Vcn_O2 -  p.NAero .* Vn_mito;
             CRn = p.PCrn_tot - PCrn;
             Vn_ck =  p.kfn_ck .* PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
-            du(idx.PCrn, :) =  - Vn_ck;
             Vn_ATPase =  p.Vmax_n_ATPase .* (ATPn ./ (ATPn + 0.0010));
             u_n = power(p.qak, 2.0) +  4.0 .* p.qak .* (p.ATPtot ./ ATPn - 1.0);
             dAMP_dATPn = (p.qak ./ 2.0 +  p.qak .* (p.ATPtot ./ ( ATPn .* power(u_n, 1.0  ./  2)))) - (1.0 +  0.50 .* power(u_n, 1.0  ./  2));
-            du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump)) .* power(1.0 - dAMP_dATPn, -1.0);
             ADPg =  (ATPg ./ 2.0) .* ( - p.qak + power((power(p.qak, 2.0) +  4.0 .* p.qak .* (p.ATPtot ./ ATPg - 1.0)), 1.0  ./  2));
             Vg_pgk =  p.kg_pgk .* GAPg .* ADPg .* (NADg./NADHg);
-            du(idx.GAPg, :) =  2.0 .* Vg_pfk - Vg_pgk;
             Vg_pk =  p.kg_pk .* PEPg .* ADPg;
-            du(idx.PEPg, :) = Vg_pgk - Vg_pk;
             Vg_mito =  p.Vmax_g_mito .* (O2g ./ (O2g + p.Km_O2)).*(ADPg ./ (ADPg + p.Km_ADP)).*(PYRg ./ (PYRg + p.Km_PYR)).*(1.0 - 1.0 ./ (1.0 + exp( 1.0.* - p.aATP_mito.*(ATPg ./ ADPg -  1.0.*p.rATP_mito))));
-            du(idx.PYRg, :) = Vg_pk - (Vg_ldh + Vg_mito);
-            du(idx.NADHg, :) = Vg_pgk - (Vg_ldh + Vg_mito);
-            du(idx.O2g, :) = Vcg_O2 -  p.NAero .* Vg_mito;
+
             CRg = p.PCrg_tot - PCrg;
             Vg_ck =  p.kfg_ck .* PCrg .* ADPg -  p.krg_ck .* CRg .* ATPg;
-            du(idx.PCrg, :) =  - Vg_ck;
-            Vnc_CO2 =  3.0 .* Vn_mito;
-            Vc_CO2 =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (CO2c - p.CO2a);
-            Vgc_CO2 =  3.0 .* Vg_mito;
-            du(idx.CO2c, :) = ( Vnc_CO2 .* (1.0 ./ p.Rcn) +  Vgc_CO2 .* (1.0 ./ p.Rcg)) - Vc_CO2;
+            
             Vg_ATPase =  p.Vmax_g_ATPase .* (ATPg ./ (ATPg + 0.0010));
             u_g = power(p.qak, 2.0) +  4.0 .* p.qak .* (p.ATPtot ./ ATPg - 1.0);
             dAMP_dATPg = (p.qak ./ 2.0 +  p.qak .* (p.ATPtot ./ ( ATPg .* power(u_g, 1.0  ./  2)))) - (1.0 +  0.50 .* power(u_g, 1.0  ./  2));
-            du(idx.ATPg, :) =  ((Vg_pgk + Vg_pk +  p.nOP .* Vg_mito + Vg_ck) - (Vg_hk + Vg_pfk + Vg_ATPase + Vg_pump + Vg_gs)) .* power(1.0 - dAMP_dATPg, -1.0);
+            
+            
+            
+
+            
+            
+            
+            % Neuron
+            
+            du(idx.GLCn, :) = V_en_GLC - Vn_hk;
+            du(idx.G6Pn, :) = Vn_hk - Vn_pgi;
+            du(idx.F6Pn, :) = Vn_pgi - Vn_pfk;
+            du(idx.LACn, :) = Vn_ldh - Vne_LAC;
+            du(idx.GAPn, :) = 2.0 .* Vn_pfk - Vn_pgk;
+            du(idx.PYRn, :) = Vn_pk - (Vn_ldh + Vn_mito);
+            du(idx.NADHn, :) = Vn_pgk - (Vn_ldh + Vn_mito);
+            du(idx.O2n, :) = Vcn_O2 -  p.NAero .* Vn_mito;
+            du(idx.PEPn, :) = Vn_pgk - Vn_pk;
+            
+            
+            %Vn_pump = 0.1583 + (0.035 * rectpuls(t - 102.5, 5));
+            du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump)) .* power(1.0 - dAMP_dATPn, -1.0);
+            du(idx.PCrn, :) =  - Vn_ck;
+            % ECS
+            du(idx.GLCe, :) = Vce_GLC - (Veg_GLC .* (1.0 ./ p.Reg) +  V_en_GLC .* (1.0 ./ p.Ren));
+            du(idx.LACe, :) = ( Vne_LAC .* (1.0 ./ p.Ren) +  Vge_LAC .* (1.0 ./ p.Reg)) - Vec_LAC;      
+            % Astrocyte 
+            du(idx.GLCg, :) = (Vcg_GLC + Veg_GLC) - Vg_hk;
+            du(idx.F6Pg, :) = Vg_pgi - Vg_pfk;
+            du(idx.G6Pg, :) = (Vg_hk + Vg_glyp) - (Vg_pgi + Vg_glys);
+            du(idx.GLYg, :) = Vg_glys - Vg_glyp;
+            du(idx.PEPg, :) = Vg_pgk - Vg_pk;
+            
+            du(idx.PYRg, :) = Vg_pk - (Vg_ldh + Vg_mito);
+            du(idx.NADHg, :) = Vg_pgk - (Vg_ldh + Vg_mito);
+            du(idx.O2g, :) = Vcg_O2 -  p.NAero .* Vg_mito;
+            du(idx.PCrg, :) =  - Vg_ck;
+            du(idx.LACg, :) = Vg_ldh - (Vge_LAC + Vgc_LAC);
+            du(idx.GAPg, :) =  2.0 .* Vg_pfk - Vg_pgk;
+            
+
+            %Vk_pump = 0.0635 + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
+            
+            
+            %Vk_pump = Vn_pump ./ 2.5;
+            Vg_gs = 0 + (0.019 * rectpuls(t -(p.t_0 + ((p.lengthpulse + 35) / 2)), p.lengthpulse + 35));
+            
+            du(idx.ATPg, :) = ((Vg_pgk + Vg_pk +  p.nOP .* Vg_mito + Vg_ck) - (Vg_hk + Vg_pfk + Vg_ATPase + Vk_pump + Vg_gs)) .* power(1.0 - dAMP_dATPg, -1.0);              %todo add na/K pump for astro...
+            % Capillary
+            du(idx.O2c, :) = Vc_O2 - ( Vcn_O2 .* (1.0 ./ p.Rcn) +  Vcg_O2 .* (1.0 ./ p.Rcg));
+            du(idx.GLCc, :) = Vc_GLC - ( Vce_GLC .* (1.0 / p.Rce) +  Vcg_GLC .* (1.0 / p.Rcg));
+            du(idx.LACc, :) = Vc_LAC + ( Vec_LAC .* (1.0 ./ p.Rce) +  Vgc_LAC .* (1.0 ./ p.Rcg));
+            
+            
             
             du = bsxfun(@times, self.enabled, du);
             
             if nargout == 2
-               Uout = zeros(self.n_out, size(u, 2));
+                Uout = zeros(self.n_out, size(u, 2));
 
-               Uout(self.idx_out.M, :) = M;  
-               
+                Uout(self.idx_out.Vn_pump, :) = Vn_pump;  
+                Uout(self.idx_out.Vk_pump, :) = Vk_pump;
+                Uout(self.idx_out.deltaVt_GLY, :) = deltaVt_GLY;
+                
+                Uout(self.idx_out.V_en_GLC, :) = V_en_GLC;
+                Uout(self.idx_out.Vn_hk, :) = Vn_hk;
+                
+                
+                Uout(self.idx_out.Vc_O2, :) = Vc_O2;
+                Uout(self.idx_out.Vc_LAC, :) = Vc_LAC;
+                Uout(self.idx_out.Vc_GLC, :) = Vc_GLC;
+                Uout(self.idx_out.I_pump, :) = I_pump;
+                
+                
+                
+                
                varargout{1} = Uout;
             end
         end 
@@ -260,12 +309,48 @@ end
 
 function idx = indices()
     % Index of parameters needing inital conditions 
-    idx.Mp = 1;
+    idx.GLCn = 1;            
+    idx.G6Pn = 2;
+    idx.F6Pn = 3;
+    idx.GAPn = 4;
+    idx.PEPn = 5;
+    idx.PYRn = 6;
+    idx.LACn = 7;
+    idx.NADHn = 8;
+    idx.ATPn = 9;
+    idx.GLCg = 10;
+    idx.F6Pg = 11;
+    idx.G6Pg = 12;
+    idx.GLYg = 13;
+    idx.GLCe = 14;
+    idx.LACe = 15;
+    idx.O2c = 16;
+    idx.GLCc = 17;
+    idx.LACc = 18;
+    idx.LACg = 19;
+    idx.O2n = 20;
+    idx.GAPg = 21;
+    idx.PEPg = 22;
+    idx.PYRg = 23;
+    idx.NADHg = 24;
+    idx.O2g = 25;
+    idx.PCrg = 26;
+    idx.ATPg = 27;
+    idx.PCrn = 28;
 end
 
 function [idx, n] = output_indices()
     % Index of all other output parameters
-    idx.M = 1;
+    idx.Vn_pump = 1;
+    idx.Vk_pump = 2;
+    idx.deltaVt_GLY = 3;
+    
+    idx.V_en_GLC = 4; 
+    idx.Vn_hk = 5;
+    idx.Vc_O2 = 6;
+    idx.Vc_LAC = 7;
+    idx.Vc_GLC = 8;
+    idx.I_pump = 9;
     
     n = numel(fieldnames(idx));
 end
@@ -348,7 +433,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('krg_ck', 0.02073);
     parser.addParameter('kfg_ck', 0.0243);
     parser.addParameter('PScapg', 0.2457);
-    parser.addParameter('nh_O2', 2.7);
+
     parser.addParameter('Vc', 0.0055);
     parser.addParameter('GLCa', 4.8);
     parser.addParameter('Km_ce_GLC', 8.4568);
@@ -358,7 +443,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vm_ec_LAC', 0.0325);
     parser.addParameter('R_GLU_NA', 0.075);
     parser.addParameter('Km_GLU', 0.05);
-    parser.addParameter('KO2', 1);
     parser.addParameter('Vmax_g_gs', 0.3);
     parser.addParameter('Km_ATP', 0.01532);
     parser.addParameter('Vmax_eg_GLU', 0.0208);
@@ -370,9 +454,6 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vmax_glyp', 4.922e-5);
     parser.addParameter('Km_GLY', 1.0);
     parser.addParameter('stim', 1);
-    parser.addParameter('to', 200);
-    parser.addParameter('to_GLY', 83);
-    parser.addParameter('tend_GLY', 440);
     parser.addParameter('sr_GLY', 4);
     parser.addParameter('t1', 2);
     parser.addParameter('delta_GLY', 62);
@@ -395,54 +476,88 @@ function params = parse_inputs(varargin)
     parser.addParameter('v1_n', 0.041);
     parser.addParameter('v2_n', 2.55);
     
+
+    parser.addParameter('tstart_GLY', 25); % s after input stim starts
+    parser.addParameter('tend_GLY', 223); % s after input ends  
+    
     
     parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
-    parser.addParameter('R_c_cbf', 0.5); 
+    parser.addParameter('R_c_cbf', 0.47); 
+    parser.addParameter('ATP_init_n', 2.25); % dimless
+    parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
+    parser.addParameter('Imax', 0.013*6);  % mA/cm^2
     
-
+    % To be overwritten from run script.
+    parser.addParameter('startpulse', 100);    
+    parser.addParameter('lengthpulse', 1);
+    
+    
+    parser.addParameter('As', 1.586e-5);        % Surface area of soma [cm2]
+    parser.addParameter('Vs', 2.16e-9);         % Volume of soma [cm3]
+    
+    parser.addParameter('K_init_e', 2.9); 
+    parser.addParameter('Na_init_k', 1.85e4);
+    parser.addParameter('ATP_init_k', 2.24); 
+    parser.addParameter('Imax_k', 0.013*6); % no idea about this one TODO
+    parser.addParameter('R_k', 6e-8); % m
+    
     parser.parse(varargin{:});
     params = parser.Results;
+    params.t_0 = params.startpulse;
 
 end
 function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     % Inital estimations of parameters from experimental data
 
-    u0(idx.GLCn) = 0.2633;
-    u0(idx.G6Pn) = 0.7275;
+    u0(idx.GLCn) = 0.267;
+    u0(idx.G6Pn) = 0.7277;
     u0(idx.F6Pn) = 0.1091;
     u0(idx.GAPn) = 0.0418;
     u0(idx.PEPn) = 0.0037;
     u0(idx.PYRn) = 0.0388;
-    u0(idx.LACn) = 0.3856;
+    u0(idx.LACn) = 0.3849;
     u0(idx.NADHn) = 0.0319;
     u0(idx.ATPn) = 2.2592;
     u0(idx.PCrn) = 4.2529;
     u0(idx.O2n) = 0.0975;
-    u0(idx.GLUn) = 3.0;
-    u0(idx.GLCg) = 0.1656;
-    u0(idx.G6Pg) = 0.7326;
+    u0(idx.GLCe) = 0.33785;
+    u0(idx.LACe) = 0.3978;
+    u0(idx.GLCg) = 0.1697;
+    u0(idx.G6Pg) = 0.7337;
     u0(idx.F6Pg) = 0.1116;
     u0(idx.GAPg) = 0.0698;
     u0(idx.PEPg) = 0.0254;
     u0(idx.PYRg) = 0.1711;
     u0(idx.LACg) = 0.4651;
     u0(idx.NADHg) = 0.0445;
-    u0(idx.ATPg) = 2.24;
+    u0(idx.ATPg) = 2.2412;
     u0(idx.PCrg) = 4.6817;
     u0(idx.O2g) = 0.1589;
     u0(idx.GLYg) = 2.5;
-    u0(idx.GLUg) = 0.0;
-    u0(idx.GLCe) = 0.3339;
-    u0(idx.LACe) = 0.3986;
-    u0(idx.GLUe) = 0.0;
-    u0(idx.O2c) = 7.4201;
-    u0(idx.GLCc) = 4.6401;
-    u0(idx.LACc) = 0.3251;
-    u0(idx.CO2c) = 2.12;
-    
-                
+    u0(idx.O2c) = 7.4886;
+    u0(idx.GLCc) = 4.6519;
+    u0(idx.LACc) = 0.3243;
 
 
 end
+% 
+% % Compute result of a piecewise function
+% function x = piecewise(cases, default)
+%     set = [0];
+%     for i = 1:2:length(cases)
+%         if (length(cases{i + 1}) == 1)
+%             x(cases{i} & ~set,:) = cases{i + 1};
+%         else
+%             x(cases{i} & ~set,:) = cases{i + 1}(cases{i} & ~set);
+%         end
+%         set = set | cases{i};
+%         if(set), break, end
+%     end
+%     if (length(default) == 1)
+%         x(~set,:) = default;
+%     else
+%         x(~set,:) = default(~set);
+%     end
+% end
