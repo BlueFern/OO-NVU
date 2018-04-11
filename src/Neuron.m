@@ -140,8 +140,8 @@ classdef Neuron < handle
             O2_p            = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
-            %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
-            J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            %J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
 
             J_Napump_sa = 3 * J_pump_sa;
@@ -286,6 +286,7 @@ classdef Neuron < handle
                 Uout(self.idx_out.m5alpha, :) = m5alpha;
                 Uout(self.idx_out.J_pump_sa, :) = J_pump_sa;
                 Uout(self.idx_out.J_pump1_sa, :) = J_pump1_sa;
+                Uout(self.idx_out.J_pump2, :) = J_pump2;
 
                 
             	varargout = {Uout};
@@ -452,7 +453,7 @@ function [idx, n] = output_indices()    %for variables in nargout loop
     idx.m5alpha = 29;
     idx.J_pump_sa = 30;
     idx.J_pump1_sa = 31;
-
+    idx.J_pump2 = 32;
     
     
     n = numel(fieldnames(idx));     
@@ -461,7 +462,7 @@ end
 function params = parse_inputs(varargin)
     parser = inputParser();
    
-        % For CSD conditions
+        %For CSD conditions
 %     parser.addParameter('gNaleak_sa', 9.5999e-6);   
 %     parser.addParameter('gKleak_sa', 3.4564e-5);
 %     parser.addParameter('gleak_sa', 10*9.5999e-6);
@@ -470,7 +471,7 @@ function params = parse_inputs(varargin)
 %     parser.addParameter('gleak_d', 10*1.0187e-5);  
 %     parser.addParameter('Imax', 0.013);  
      
-   % For normal conditions
+%    % For normal conditions
     parser.addParameter('gNaleak_sa', 6.2378e-5);   
     parser.addParameter('gKleak_sa', 2.1989e-4);
     parser.addParameter('gleak_sa', 10*6.2378e-5);
@@ -493,7 +494,7 @@ function params = parse_inputs(varargin)
     
     % ECS K+ input parameters
     parser.addParameter('ECS_input', 12); 
-    parser.addParameter('t0_ECS', 10000);
+    parser.addParameter('t0_ECS', 100000000);
     parser.addParameter('ECS_length', 1.5);
     
     % Elshin model constants

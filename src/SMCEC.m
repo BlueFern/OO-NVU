@@ -203,8 +203,8 @@ classdef SMCEC < handle
         function jplc = input_plc(self, t)
             % The PLC input (stable to oscillatory)
             PLC_min = 0.18; PLC_max = 0.4; 
-            t_up = 300; 
-            t_down = 800;
+            t_up = 30000000000; 
+            t_down = 80000000000;
             jplc = PLC_min + (PLC_max - PLC_min) * (0.5 * tanh((t - t_up) / 0.05) - 0.5 * tanh((t - t_down) / 0.05));
             jplc = jplc(:).';
         end

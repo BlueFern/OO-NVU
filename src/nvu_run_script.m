@@ -24,19 +24,19 @@ fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
-XLIM1 = 80;
-XLIM2 = 1000; % End of simulation
+XLIM1 = 0;
+XLIM2 = 3000; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
-CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
-NEURONAL_START      = 100;      % Start of neuronal stimulation
+CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2     %%%%%%%%%%%%%%%%% 0.006 or 0.022
+NEURONAL_START      = 91000;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 120;      % End of neuronal stimulation 
+NEURONAL_END        = 91001;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -61,6 +61,8 @@ nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), ...
     ANLS('startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START), 'odeopts', odeopts);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 11.5 goes to 1 (k_syn)
 
 % Adjust time vector
 nv.neuron.params.dt = 1; dt = nv.neuron.params.dt;
@@ -119,6 +121,7 @@ end
 %% Run the simulation
 nv.simulate() 
 
+
 figure(2);
 hold all
 set(gcf,'Name', 'ANLS State Variables')
@@ -128,53 +131,184 @@ for i = 1:1:i_anls
     subplot(5,6,i)
     hold all
     plot(nv.T, nv.out(char(anls_vars(i))));
-    xlabel('Time [s]'); ylabel(anls_vars(i));
+    xlabel('Time [s]'); ylabel(strcat(anls_vars(i), ' [mM]'));
+    xlim([XLIM1 XLIM2])
+    
 end
 hold off
+% 
+% figure(23);
+% set(gcf,'Name', 'ATPn fluxes')
+% subplot(3,3,1)
+% hold all
+% plot(nv.T, ((1 - nv.out('dAMP_dATPn'))).^-1);
+% xlabel('Time [s]'); ylabel('dAMP_dATPn term');
+% subplot(3,3,2)
+% hold all
+% plot(nv.T, nv.out('Vn_pk'));
+% xlabel('Time [s]'); ylabel('Vn_pk');
+% subplot(3,3,3)
+% hold all
+% plot(nv.T, nv.out('ATPn'));
+% xlabel('Time [s]'); ylabel('ATPn');
+% subplot(3,3,4)
+% hold all
+% plot(nv.T, nv.out('Vn_pgk'));
+% xlabel('Time [s]'); ylabel('Vn_pgk');
+% subplot(3,3,5)
+% hold all
+% plot(nv.T, nv.out('Vn_mito'));
+% xlabel('Time [s]'); ylabel('Vn_mito');
+% subplot(3,3,6)
+% hold all
+% plot(nv.T, nv.out('Vn_ck'));
+% xlabel('Time [s]'); ylabel('Vn_ck');
+% subplot(3,3,7)
+% hold all
+% plot(nv.T, nv.out('Vn_hk'));
+% xlabel('Time [s]'); ylabel('Vn_hk');
+% subplot(3,3,8)
+% hold all
+% plot(nv.T, nv.out('Vn_pfk'));
+% xlabel('Time [s]'); ylabel('Vn_pfk');
+% subplot(3,3,9)
+% hold all
+% plot(nv.T, nv.out('Vn_ATPase'));
+% xlabel('Time [s]'); ylabel('Vn_ATPase');
 
-figure(23);
-subplot(2,1,1)
-plot(nv.T, nv.out('Na_k'));
-xlabel('Time [s]'); ylabel('Na_k');
-subplot(2,1,2)
-plot(nv.T, nv.out('Vn_pump') ./ 2.5);
-xlabel('Time [s]'); ylabel('Vk_pump');
+
 % figure(24);
+% set(gcf,'Name', 'Vn mito fluxes')
+% subplot(2,2,1)
+% hold all
+% plot(nv.T, nv.out('PYRn'));
+% xlabel('Time [s]'); ylabel('PYRn');
+% subplot(2,2,2)
+% hold all
+% plot(nv.T, nv.out('Vn_mito'));
+% xlabel('Time [s]'); ylabel('Vn_mito');
+% subplot(2,2,3)
+% hold all
+% plot(nv.T, nv.out('O2n'));
+% xlabel('Time [s]'); ylabel('O2n');
+% subplot(2,2,4)
+% hold all
+% plot(nv.T, nv.out('ADPn'));
+% xlabel('Time [s]'); ylabel('ADPn');
+% 
+% figure(233);
+% subplot(3,1,1)
+% hold all
+% plot(nv.T, nv.out('Vn_ldh'));
+% xlabel('Time [s]'); ylabel('Vn_ldh');
+% subplot(3,1,2)
+% hold all
+% plot(nv.T, nv.out('Vn_pk'));
+% xlabel('Time [s]'); ylabel('Vn_pk');
+% subplot(3,1,3)
+% hold all
+% plot(nv.T, nv.out('PYRn'));
+% xlabel('Time [s]'); ylabel('PYRn');
+% 
+% 
+% 
+% 
+% 
+% figure(235);
+% set(gcf,'Name', 'Vn mito terms')
+% subplot(2,2,1)
+% hold all
+% plot(nv.T, (nv.out('PYRn') ./ (nv.out('PYRn') + 0.0632)));
+% xlabel('Time [s]'); ylabel('PYRn term');
+% subplot(2,2,2)
+% hold all
+% plot(nv.T, (nv.out('O2n') ./ (nv.out('O2n') + 0.0029658)));
+% xlabel('Time [s]'); ylabel('O2n term');
+% subplot(2,2,3)
+% hold all
+% plot(nv.T, (nv.out('ADPn') ./ (nv.out('ADPn') + 0.00107)));
+% xlabel('Time [s]'); ylabel('ADPn term');
+% subplot(2,2,4)
+% hold all
+% plot(nv.T, ((1 - nv.out('dAMP_dATPn'))).^-1);
+% xlabel('Time [s]'); ylabel('O2n damp term');
+
+
+
+% anls_vars = fieldnames(nv.anls.index);
+% i_anls = size(anls_vars, 1);
+% for i = 1:1:i_anls
+%     h = figure(100+i);
+%     hold all
+%     plot(nv.T, nv.out(char(anls_vars(i))));
+%     xlabel('Time [s]'); ylabel(strcat(anls_vars(i), ' [mM]'));
+%     xlim([XLIM1 XLIM2])
+%     
+%     set(h,'Units','Inches');
+%     pos = get(h,'Position');
+%     set(h,'PaperPositionMode','Auto','PaperUnits','Inches','PaperSize',[pos(3), pos(4)])
+% 
+% 
+%     print(h, '-dpdf', strcat('/home/s/SD_PhD/thesis/images/anls/test_results/ours/',char(anls_vars(i)),'.pdf'), '-r0')
+% end
+% hold off
+
+
+figure(2313);
+subplot(3,1,1)
+hold all
+plot(nv.T, nv.out('J_pump_sa'));
+xlabel('Time [s]'); ylabel('J_pump_sa');
+subplot(3,1,2)
+hold all
+plot(nv.T, nv.out('I_pump'));
+xlabel('Time [s]'); ylabel('I_pump');
+subplot(3,1,3)
+hold all
+plot(nv.T, nv.out('Vk_pump'));
+xlabel('Time [s]'); ylabel('Vk_pump');
+% 
+% figure(24);
+% plot(nv.T, nv.out('Vn_pump'));
+% xlabel('Time [s]'); ylabel('Vn_pump');
+
+% figure(1241);
 % subplot(2,2,1)
 %     plot(nv.T, nv.out('Vc_O2'));
 %     xlabel('Time [s]'); ylabel('Vc_O2');
-%     xlim([20 200])
+%     xlim([20 XLIM2])
 % subplot(2,2,2)
 %     plot(nv.T, nv.out('Vc_GLC')); 
 %     xlabel('Time [s]'); ylabel('Vc_GLC');
-%     xlim([20 200])
+%     xlim([20 XLIM2])
 % subplot(2,2,3)
 %     plot(nv.T, nv.out('Vc_LAC'));
 %     xlabel('Time [s]'); ylabel('Vc_LAC');
-%     xlim([20 200])
+%     xlim([20 XLIM2])
 % subplot(2,2,4)
 %     plot(nv.T, nv.out('ttt3'));
 %     xlabel('Time [s]'); ylabel('ttt3');
-%     xlim([20 200])
+%     xlim([20 XLIM2])
 %     
 %     
-% figure(24);
+% figure(2224);
 % subplot(2,2,1)
 %     plot(nv.T, nv.out('O2c'));
 %     xlabel('Time [s]'); ylabel('O2c');
-%     xlim([20 200])
+%     xlim([20 10000])
 % subplot(2,2,2)
 %     plot(nv.T, nv.out('GLCc')); 
 %     xlabel('Time [s]'); ylabel('GLCc');
-%     xlim([20 200])
+%     xlim([20 10000])
 % subplot(2,2,3)
 %     plot(nv.T, nv.out('LACc'));
 %     xlabel('Time [s]'); ylabel('LACc');
-%     xlim([20 200])
+%     xlim([20 10000])
 % subplot(2,2,4)
-%     plot(nv.T, nv.out('ttt3'));
-%     xlabel('Time [s]'); ylabel('ttt3');
-%     xlim([20 200])
+%     plot(nv.T, nv.out('CBF'));
+%     xlabel('Time [s]'); ylabel('CBF');
+%     xlim([20 10000])
+
 % figure;
 % subplot(1,2,1)
 %     plot(nv.T, nv.out('K_e'));
@@ -372,7 +506,8 @@ end
     
 %% Plot some variables
 % % 
-figure(FIG_NUM);
+
+figure(12341234);
 subplot(3,3,1);
     hold all;
     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
@@ -390,8 +525,8 @@ subplot(3,3,3);
     xlim([XLIM1 XLIM2])
 subplot(3,3,4);
     hold all;
-    plot(nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
-    ylabel('\Delta CBF / CBF_0');
+    plot(nv.T, nv.out('CBF'), 'LineWidth', 1);
+    ylabel('CBF');
     xlim([XLIM1 XLIM2])
 subplot(3,3,5);
     hold all;
@@ -416,8 +551,8 @@ subplot(3,3,8);
 subplot(3,3,9);
     hold all;
     % BOLD using normalised variables
-    plot(nv.T, BOLD_N, 'LineWidth', 1);  
-    ylabel('\Delta BOLD (%)');
+    plot(nv.T, nv.out('K_p'), 'LineWidth', 1);  
+    ylabel('kp');
     xlim([XLIM1 XLIM2])
 % %  % Plot figures - whatever you want
 

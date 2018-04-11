@@ -122,5 +122,5 @@ function u0 = initial_conditions(idx)
     u0(idx.Mp) = 0.0842;    % [-]
     u0(idx.AMp) = 0.0622;   % [-]
     u0(idx.AM) = 0.2746;    % [-]
-    u0(idx.R) = 22.97e-6;   % [um]
+    u0(idx.R) = 22.97;   % [um]
 end
