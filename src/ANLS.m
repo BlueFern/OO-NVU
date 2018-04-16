@@ -125,17 +125,30 @@ classdef ANLS < handle
             
             
             % CALC RATES
-            CBF = p.CBF_init * (R.^4 / p.R_init^4);
+            CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
+            
             I_pump = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             Vn_pump =  6.5 * (p.As / p.Vs) * 1e2 * I_pump ./ p.F;
-            Vn_pump = Vn_pump - ((Vn_pump - 0.158) ./ 1.25); % first /1.25 then 1.5 now *.5
+            %Vn_pump = 0.158;
+%             xx = ((Vn_pump - 0.158) ./ 1.25); % first /1.25 then 1.5 now *.5
+%             
+%             if xx > 0.0
+%                 Vn_pump = Vn_pump - xx;
+%             end
+            
+            
+            %J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
+            
             
             Jk_pump  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3);
-            Ik_pump = 1 * p.Imax_k * Jk_pump;% .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
-            Vk_pump =  0.25 * (1 / p.R_k) * Ik_pump ./ p.F; % to look like Cloutier et al. 2009
+            Ik_pump1 = 0.5 * p.Imax_k * Jk_pump;
+            
+            Ik_pump = Ik_pump1 .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1)); %not being used
+            
+            Vk_pump =  0.25 * (1 / p.R_k) * Ik_pump1 ./ p.F; % to look like Cloutier et al. 2009
 
             
-            Vc_GLC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.GLCa - GLCc);
+            
             
             
             Vce_GLC =  p.Vm_ce_GLC .* (GLCc ./ (GLCc + p.Km_ce_GLC) - GLCe ./ (GLCe + p.Km_ce_GLC));
@@ -171,6 +184,9 @@ classdef ANLS < handle
             Vg_glyp =  p.Vmax_glyp .* (GLYg ./ (GLYg + p.Km_GLY)) .* deltaVt_GLY;
                
             Vne_LAC =  p.Vmax_ne_LAC .* (LACn ./ (LACn + p.Km_ne_LAC) - LACe ./ (LACe + p.Km_ne_LAC));
+%             if Vne_LAC < 0.0 % no lac shuttling
+%                 Vne_LAC = 0.0;
+%             end
             Vge_LAC =  p.Vmax_ge_LAC .* (LACg ./ (LACg + p.Km_ge_LAC) - LACe ./ (LACe + p.Km_ge_LAC));
             Vec_LAC =  p.Vm_ec_LAC .* (LACe ./ (LACe + p.Km_ec_LAC) - LACc ./ (LACc + p.Km_ec_LAC));
             
@@ -180,11 +196,9 @@ classdef ANLS < handle
             
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
             Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2g);            
-            Vc_O2 =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.O2a - O2c);
-                     
+                                 
             Vgc_LAC =  p.Vmax_gc_LAC .* (LACg ./ (LACg + p.Km_gc_LAC) - LACc ./ (LACc + p.Km_gc_LAC));
-            Vc_LAC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.LACa - LACc);
-            
+
             NADn = p.NADH_n_tot - NADHn;
             Vn_ldh =  p.kfn_ldh .* PYRn .* NADHn -  p.krn_ldh .* LACn .* NADn;
 
@@ -196,6 +210,7 @@ classdef ANLS < handle
             Vn_pgk =  p.kn_pgk .* GAPn .* ADPn .* (NADn ./ NADHn);
             Vn_pk =  p.kn_pk .* PEPn .* ADPn;
             Vn_mito =  p.Vmax_n_mito .* (O2n ./ (O2n + p.Km_O2)) .* (ADPn ./ (ADPn + p.Km_ADP)) .* (PYRn ./ (PYRn + p.Km_PYR)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aATP_mito .* ( 1.0 .* (ATPn ./ ADPn -  1.0 .* p.rATP_mito)))));
+%             Vn_mito = 0.0122;
             CRn = p.PCrn_tot - PCrn;
             Vn_ck =  p.kfn_ck .* PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
             Vn_ATPase =  p.Vmax_n_ATPase .* (ATPn ./ (ATPn + 0.0010));
@@ -214,10 +229,15 @@ classdef ANLS < handle
             dAMP_dATPg = (p.qak ./ 2.0 +  p.qak .* (p.ATPtot ./ ( ATPg .* power(u_g, 1.0  ./  2)))) - (1.0 +  0.50 .* power(u_g, 1.0  ./  2));
             
             
-            
+%             Vc_O2 =  4;
+%             Vc_LAC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.LACa - LACc);
+%             Vc_GLC =  4.64;
 
+            % normal
             
-            
+            Vc_O2 =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.O2a - O2c);
+            Vc_LAC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.LACa - LACc);
+            Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.GLCa - GLCc);
             
             % Neuron
             
@@ -232,7 +252,9 @@ classdef ANLS < handle
             du(idx.PEPn, :) = Vn_pgk - Vn_pk;
             
 
-            %Vn_pump = 0.1583 + (0.035 * rectpuls(t - 102.5, 5));
+            %Vn_pump = 0.1483;% + (0.035 * rectpuls(t - 102.5, 5));
+            %Vn_pump = 0.1583;
+            
             du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump)) .* power(1.0 - dAMP_dATPn, -1.0);
             du(idx.PCrn, :) =  - Vn_ck;
             % ECS
@@ -253,7 +275,7 @@ classdef ANLS < handle
             du(idx.GAPg, :) =  2.0 .* Vg_pfk - Vg_pgk;
             
 
-            %Vk_pump = 0.0635 + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
+            %Vk_pump = 0.0634;% + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
             
             
             %Vk_pump = Vn_pump ./ 2.5;
@@ -300,7 +322,12 @@ classdef ANLS < handle
                 Uout(self.idx_out.Vn_ldh, :) = Vn_ldh; 
                 
                 Uout(self.idx_out.Vg_gs, :) = Vg_gs; 
+                Uout(self.idx_out.Ik_pump1, :) = Ik_pump1; 
+                Uout(self.idx_out.Ik_pump, :) = Ik_pump; 
                 
+                Uout(self.idx_out.CBF2, :) = CBF2; 
+                
+                Uout(self.idx_out.Vg_hk, :) = Vg_hk;
                 
                varargout{1} = Uout;
             end
@@ -381,6 +408,10 @@ function [idx, n] = output_indices()
     idx.Vn_ldh = 19;
     
     idx.Vg_gs = 20;
+    idx.Ik_pump1 = 21;
+    idx.Ik_pump = 22;
+    idx.CBF2 = 23;
+    idx.Vg_hk = 24;
     n = numel(fieldnames(idx));
 end
 
@@ -424,10 +455,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vmax_n_mito', 0.05557);
     parser.addParameter('Km_O2', 0.0029658);%0.0029658
     parser.addParameter('Km_ADP', 0.00107);
-    parser.addParameter('Km_PYR', 0.0632);
+    parser.addParameter('Km_PYR', 0.0632); %0.0632
     parser.addParameter('rATP_mito', 20.0);
     parser.addParameter('aATP_mito', 5.0);
-    parser.addParameter('Vmax_ne_LAC', 0.1978);
+    parser.addParameter('Vmax_ne_LAC', 0.1978); %0.1978
     parser.addParameter('Km_ne_LAC', 0.09314);
     parser.addParameter('Vmax_n_ATPase', 0.04889);
     parser.addParameter('krn_ck', 0.015);
@@ -440,10 +471,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('Sm_g', 10500);
     parser.addParameter('Vg', 0.25);
     parser.addParameter('Km_eg_GLC', 3.53);
-    parser.addParameter('Vm_eg_GLC', 0.038089);
     parser.addParameter('KO1', 1.0);
     parser.addParameter('Km_cg_GLC', 9.92);
-    parser.addParameter('Vm_cg_GLC', 0.0098394);
+    
     parser.addParameter('Vmax_g_hk', 0.050461);
     parser.addParameter('Vmaxf_g_pgi', 0.5);
     parser.addParameter('Vmaxr_g_pgi', 0.45);
@@ -465,13 +495,19 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vc', 0.0055);
  
     parser.addParameter('Km_ce_GLC', 8.4568);
+    
+%     parser.addParameter('Vm_cg_GLC', 0.00);
+%     parser.addParameter('Vm_eg_GLC', 0.00);
+%     parser.addParameter('Vm_ce_GLC', 0.0);
+    parser.addParameter('Vm_cg_GLC', 0.0098394);
+    parser.addParameter('Vm_eg_GLC', 0.038089);
     parser.addParameter('Vm_ce_GLC', 0.0489);
     
     % hypoxic/hyperglycemic conditions
     parser.addParameter('GLCa', 4.8);
     parser.addParameter('LACa', 0.313);
     parser.addParameter('CO2a', 1.2);
-    parser.addParameter('O2a', 4.34);
+    parser.addParameter('O2a', 8.34);
     
 %     % Normal conditions
 %     parser.addParameter('GLCa', 4.8);
@@ -542,6 +578,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('Imax_k', 0.013*6); % no idea about this one TODO
     parser.addParameter('R_k', 6e-8); % m
     
+    
+    parser.addParameter('K_Na_k', 10000); % uM
+    
     parser.parse(varargin{:});
     params = parser.Results;
     params.t_0 = params.startpulse;
@@ -579,6 +618,7 @@ function u0 = initial_conditions(idx)
     u0(idx.O2c) = 7.4886;
     u0(idx.GLCc) = 4.6519;
     u0(idx.LACc) = 0.3348;
+    
 
 
 end

@@ -140,8 +140,8 @@ classdef Neuron < handle
             O2_p            = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
-            J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
-            %J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
 
             J_Napump_sa = 3 * J_pump_sa;
@@ -306,6 +306,7 @@ classdef Neuron < handle
             K_d = u(idx.K_d, :);        % K+ concentration of dendrite, mM
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
             K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
+            
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
