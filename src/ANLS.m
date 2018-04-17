@@ -126,8 +126,7 @@ classdef ANLS < handle
             
             % CALC RATES
             CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
-            
-            I_pump = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            I_pump = 2.28 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             Vn_pump =  6.5 * (p.As / p.Vs) * 1e2 * I_pump ./ p.F;
             %Vn_pump = 0.158;
 %             xx = ((Vn_pump - 0.158) ./ 1.25); % first /1.25 then 1.5 now *.5
@@ -255,7 +254,7 @@ classdef ANLS < handle
             %Vn_pump = 0.1483;% + (0.035 * rectpuls(t - 102.5, 5));
             %Vn_pump = 0.1583;
             
-            du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump)) .* power(1.0 - dAMP_dATPn, -1.0);
+            du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump));
             du(idx.PCrn, :) =  - Vn_ck;
             % ECS
             du(idx.GLCe, :) = Vce_GLC - (Veg_GLC .* (1.0 ./ p.Reg) +  V_en_GLC .* (1.0 ./ p.Ren));
@@ -507,7 +506,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('GLCa', 4.8);
     parser.addParameter('LACa', 0.313);
     parser.addParameter('CO2a', 1.2);
-    parser.addParameter('O2a', 8.34);
+    parser.addParameter('O2a', 4.34);
     
 %     % Normal conditions
 %     parser.addParameter('GLCa', 4.8);
@@ -560,7 +559,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
     parser.addParameter('R_c_cbf', 0.47); %0.47
-    parser.addParameter('ATP_init_n', 2.25); % dimless
+    parser.addParameter('ATP_init_n', 2.2595); % dimless
     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
     parser.addParameter('Imax', 0.013*6);  % mA/cm^2
     

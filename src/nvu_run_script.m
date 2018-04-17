@@ -144,86 +144,92 @@ xlim([XLIM1 XLIM2])
 hold off
 
 figure(2313);
-subplot(2,1,1)
-hold all
-plot(nv.T, nv.out('Vn_pump'));
-xlabel('Time [s]'); ylabel('Vn_pump');
-subplot(2,1,2)
-hold all
-plot(nv.T, nv.out('Vk_pump'));
-xlabel('Time [s]'); ylabel('Vk_pump');
-
-
-figure(24);
-set(gcf,'Name', 'Vn mito fluxes')
 subplot(2,2,1)
 hold all
-plot(nv.T, nv.out('PYRn'));
-xlabel('Time [s]'); ylabel('PYRn');
+plot(nv.T, power(1.0 - nv.out('dAMP_dATPn'), -1.0));
+xlabel('Time [s]'); ylabel('dAMP_dATPn shit');
 subplot(2,2,2)
 hold all
-plot(nv.T, nv.out('Vn_mito'));
-xlabel('Time [s]'); ylabel('Vn_mito');
+plot(nv.T, nv.out('J_pump_sa'));
+xlabel('Time [s]'); ylabel('J_pump_sa');
 subplot(2,2,3)
 hold all
-plot(nv.T, nv.out('O2n'));
-xlabel('Time [s]'); ylabel('O2n');
+plot(nv.T, nv.out('J_pump1_sa'));
+xlabel('Time [s]'); ylabel('J_pump1_sa');
 subplot(2,2,4)
 hold all
-plot(nv.T, nv.out('ADPn'));
-xlabel('Time [s]'); ylabel('ADPn');
-
-
-figure(23);
-set(gcf,'Name', 'ATPn fluxes')
-subplot(3,3,1)
-hold all
-plot(nv.T, ((1 - nv.out('dAMP_dATPn'))).^-1);
-xlabel('Time [s]'); ylabel('dAMP_dATPn term');
-subplot(3,3,2)
-hold all
-plot(nv.T, nv.out('Vn_pk'));
-xlabel('Time [s]'); ylabel('Vn_pk');
-subplot(3,3,3)
-hold all
-plot(nv.T, nv.out('ATPn'));
-xlabel('Time [s]'); ylabel('ATPn');
-subplot(3,3,4)
-hold all
-plot(nv.T, nv.out('Vn_pgk'));
-xlabel('Time [s]'); ylabel('Vn_pgk');
-subplot(3,3,5)
-hold all
-plot(nv.T, nv.out('Vn_mito'));
-xlabel('Time [s]'); ylabel('Vn_mito');
-subplot(3,3,6)
-hold all
-plot(nv.T, nv.out('Vn_ck'));
-xlabel('Time [s]'); ylabel('Vn_ck');
-subplot(3,3,7)
-hold all
-plot(nv.T, nv.out('Vn_hk'));
-xlabel('Time [s]'); ylabel('Vn_hk');
-subplot(3,3,8)
-hold all
-plot(nv.T, nv.out('Vn_pfk'));
-xlabel('Time [s]'); ylabel('Vn_pfk');
-subplot(3,3,9)
-hold all
-plot(nv.T, nv.out('Vn_ATPase'));
-xlabel('Time [s]'); ylabel('Vn_ATPase');
-
-
-figure(2342343);
-set(gcf,'Name', 'ATPn fluxes')
-subplot(2,2,1)
-hold all
-plot(nv.T, nv.out('Vn_ldh'));
-xlabel('Time [s]'); ylabel('Vn_ldh');
-subplot(2,2,2)
-hold all
-plot(nv.T, nv.out('Vn_ldh'));
-xlabel('Time [s]'); ylabel('Vn_ldh');
+plot(nv.T, nv.out('I_pump'));
+xlabel('Time [s]'); ylabel('I_pump');
+% figure(24);
+% set(gcf,'Name', 'Vn mito fluxes')
+% subplot(2,2,1)
+% hold all
+% plot(nv.T, nv.out('PYRn'));
+% xlabel('Time [s]'); ylabel('PYRn');
+% subplot(2,2,2)
+% hold all
+% plot(nv.T, nv.out('Vn_mito'));
+% xlabel('Time [s]'); ylabel('Vn_mito');
+% subplot(2,2,3)
+% hold all
+% plot(nv.T, nv.out('O2n'));
+% xlabel('Time [s]'); ylabel('O2n');
+% subplot(2,2,4)
+% hold all
+% plot(nv.T, nv.out('ADPn'));
+% xlabel('Time [s]'); ylabel('ADPn');
+% 
+% 
+% figure(23);
+% set(gcf,'Name', 'ATPn fluxes')
+% subplot(3,3,1)
+% hold all
+% plot(nv.T, ((1 - nv.out('dAMP_dATPn'))).^-1);
+% xlabel('Time [s]'); ylabel('dAMP_dATPn term');
+% subplot(3,3,2)
+% hold all
+% plot(nv.T, nv.out('Vn_pk'));
+% xlabel('Time [s]'); ylabel('Vn_pk');
+% subplot(3,3,3)
+% hold all
+% plot(nv.T, nv.out('ATPn'));
+% xlabel('Time [s]'); ylabel('ATPn');
+% subplot(3,3,4)
+% hold all
+% plot(nv.T, nv.out('Vn_pgk'));
+% xlabel('Time [s]'); ylabel('Vn_pgk');
+% subplot(3,3,5)
+% hold all
+% plot(nv.T, nv.out('Vn_mito'));
+% xlabel('Time [s]'); ylabel('Vn_mito');
+% subplot(3,3,6)
+% hold all
+% plot(nv.T, nv.out('Vn_ck'));
+% xlabel('Time [s]'); ylabel('Vn_ck');
+% subplot(3,3,7)
+% hold all
+% plot(nv.T, nv.out('Vn_hk'));
+% xlabel('Time [s]'); ylabel('Vn_hk');
+% subplot(3,3,8)
+% hold all
+% plot(nv.T, nv.out('Vn_pfk'));
+% xlabel('Time [s]'); ylabel('Vn_pfk');
+% subplot(3,3,9)
+% hold all
+% plot(nv.T, nv.out('Vn_ATPase'));
+% xlabel('Time [s]'); ylabel('Vn_ATPase');
+% 
+% 
+% figure(2342343);
+% set(gcf,'Name', 'ATPn fluxes')
+% subplot(2,2,1)
+% hold all
+% plot(nv.T, nv.out('Vn_ldh'));
+% xlabel('Time [s]'); ylabel('Vn_ldh');
+% subplot(2,2,2)
+% hold all
+% plot(nv.T, nv.out('Vn_ldh'));
+% xlabel('Time [s]'); ylabel('Vn_ldh');
 
 
 

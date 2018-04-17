@@ -141,7 +141,7 @@ classdef Neuron < handle
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
             %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
-            J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            J_pump_sa   = 2.27 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
 
             J_Napump_sa = 3 * J_pump_sa;
@@ -340,7 +340,7 @@ classdef Neuron < handle
             J_pump1_d   = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
             
             %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
-            J_pump_sa   = 2.31 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            J_pump_sa   = 2.27 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
             J_Kpump_sa  = -2 * J_pump_sa;
             J_Kpump_d   = -2 * J_pump_d;  
@@ -606,7 +606,7 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('pumpoE', 2.9); %2.9 
     parser.addParameter('pumpoNa', 10); %10
-    parser.addParameter('ATP_init_n', 2.25); % dimless
+    parser.addParameter('ATP_init_n', 2.2595); % dimless
     
     parser.parse(varargin{:})
     params = parser.Results;
