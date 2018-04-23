@@ -126,10 +126,17 @@ classdef ANLS < handle
             
             % CALC RATES
             CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
+            CBF2 = 0.05523;
+
             I_pump = 2.28 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
-            Vn_pump =  6.5 * (p.As / p.Vs) * 1e2 * I_pump ./ p.F;
-            %Vn_pump = 0.158;
-%             xx = ((Vn_pump - 0.158) ./ 1.25); % first /1.25 then 1.5 now *.5
+            Vn_pump =  6.5 .* (p.As / p.Vs) * 1e2 * I_pump ./ p.F; %0.1489
+            
+            Vn_pump = Vn_pump + 0.004;
+%             if t < 50
+%                 Vn_pump = 0.1486;
+%             end
+
+%             xx = ((Vn_pump - 0.158) ./ 1.25); % first /1.25 then 1.5 now   *.5            1.03
 %             
 %             if xx > 0.0
 %                 Vn_pump = Vn_pump - xx;
@@ -274,7 +281,7 @@ classdef ANLS < handle
             du(idx.GAPg, :) =  2.0 .* Vg_pfk - Vg_pgk;
             
 
-            %Vk_pump = 0.0634;% + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
+            Vk_pump = 0.0634;% + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
             
             
             %Vk_pump = Vn_pump ./ 2.5;
@@ -501,18 +508,12 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vm_cg_GLC', 0.0098394);
     parser.addParameter('Vm_eg_GLC', 0.038089);
     parser.addParameter('Vm_ce_GLC', 0.0489);
-    
-    % hypoxic/hyperglycemic conditions
+        
+
     parser.addParameter('GLCa', 4.8);
     parser.addParameter('LACa', 0.313);
     parser.addParameter('CO2a', 1.2);
-    parser.addParameter('O2a', 4.34);
-    
-%     % Normal conditions
-%     parser.addParameter('GLCa', 4.8);
-%     parser.addParameter('LACa', 0.313);
-%     parser.addParameter('CO2a', 1.2);
-%     parser.addParameter('O2a', 8.34);
+    parser.addParameter('O2a', 4.34); %8.34
     
     parser.addParameter('Km_ec_LAC', 0.764818);
     parser.addParameter('Vm_ec_LAC', 0.0325);
@@ -558,8 +559,8 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
-    parser.addParameter('R_c_cbf', 0.47); %0.47
-    parser.addParameter('ATP_init_n', 2.2595); % dimless
+    parser.addParameter('R_c_cbf', 0.43); %0.47
+    parser.addParameter('ATP_init_n', 2.2595); % dimless 
     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
     parser.addParameter('Imax', 0.013*6);  % mA/cm^2
     
@@ -589,34 +590,66 @@ function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     % Inital estimations of parameters from experimental data
 
-    u0(idx.GLCn) = 0.267;
-    u0(idx.G6Pn) = 0.7277;
-    u0(idx.F6Pn) = 0.1091;
-    u0(idx.GAPn) = 0.0418;
-    u0(idx.PEPn) = 0.0037;
-    u0(idx.PYRn) = 0.0388;
-    u0(idx.LACn) = 0.482; 
-    u0(idx.NADHn) = 0.0319;
-    u0(idx.ATPn) = 2.2592;
-    u0(idx.PCrn) = 4.2529;
-    u0(idx.O2n) = 0.0975;
-    u0(idx.GLCe) = 0.33785;
-    u0(idx.LACe) = 0.4899;
-    u0(idx.GLCg) = 0.1697;
-    u0(idx.G6Pg) = 0.7337;
-    u0(idx.F6Pg) = 0.1116;
-    u0(idx.GAPg) = 0.0698;
-    u0(idx.PEPg) = 0.0254;
-    u0(idx.PYRg) = 0.174;
-    u0(idx.LACg) = 0.579;
-    u0(idx.NADHg) = 0.0518;
-    u0(idx.ATPg) = 2.2412;
-    u0(idx.PCrg) = 4.6817;
-    u0(idx.O2g) = 0.1589;
+    % low O2 IC's
+    u0(idx.GLCn) = 0.03002;
+    u0(idx.G6Pn) = 0.04736;
+    u0(idx.F6Pn) = 0.00528;
+    u0(idx.GAPn) = 0.01277;
+    u0(idx.PEPn) = 0.0006373;
+    u0(idx.PYRn) = 0.06078;
+    u0(idx.LACn) = 0.8415; 
+    u0(idx.NADHn) = 0.05082;
+    u0(idx.ATPn) = 0.6017;
+    u0(idx.PCrn) = 0.9298;
+    u0(idx.O2n) = 0.002429;
+    
+    u0(idx.GLCe) = 0.1043;
+    u0(idx.LACe) = 0.7764;
+    
+    u0(idx.GLCg) = 0.007809;
+    u0(idx.G6Pg) = 0.5923;
+    u0(idx.F6Pg) = 0.08757;
+    u0(idx.GAPg) = 0.07839;
+    u0(idx.PEPg) = 0.01773;
+    u0(idx.PYRg) = 0.1979;
+    u0(idx.LACg) = 0.898;
+    u0(idx.NADHg) = 0.06365;
+    u0(idx.ATPg) = 2.196;
+    u0(idx.PCrg) = 4.587;
+    u0(idx.O2g) = 0.05901;
     u0(idx.GLYg) = 2.5;
-    u0(idx.O2c) = 7.4886;
-    u0(idx.GLCc) = 4.6519;
-    u0(idx.LACc) = 0.3348;
+    u0(idx.O2c) = 3.461;
+    u0(idx.GLCc) = 4.628;
+    u0(idx.LACc) = 0.3626;
+    
+%     u0(idx.GLCn) = 0.267;
+%     u0(idx.G6Pn) = 0.7277;
+%     u0(idx.F6Pn) = 0.1091;
+%     u0(idx.GAPn) = 0.0418;
+%     u0(idx.PEPn) = 0.0037;
+%     u0(idx.PYRn) = 0.0388;
+%     u0(idx.LACn) = 0.482; 
+%     u0(idx.NADHn) = 0.0319;
+%     u0(idx.ATPn) = 2.2592;
+%     u0(idx.PCrn) = 4.2529;
+%     u0(idx.O2n) = 0.0975;
+%     u0(idx.GLCe) = 0.33785;
+%     u0(idx.LACe) = 0.4899;
+%     u0(idx.GLCg) = 0.1697;
+%     u0(idx.G6Pg) = 0.7337;
+%     u0(idx.F6Pg) = 0.1116;
+%     u0(idx.GAPg) = 0.0698;
+%     u0(idx.PEPg) = 0.0254;
+%     u0(idx.PYRg) = 0.174;
+%     u0(idx.LACg) = 0.579;
+%     u0(idx.NADHg) = 0.0518;
+%     u0(idx.ATPg) = 2.2412;
+%     u0(idx.PCrg) = 4.6817;
+%     u0(idx.O2g) = 0.1589;
+%     u0(idx.GLYg) = 2.5;
+%     u0(idx.O2c) = 7.4886;
+%     u0(idx.GLCc) = 4.6519;
+%     u0(idx.LACc) = 0.3348;
     
 
 

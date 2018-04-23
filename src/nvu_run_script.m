@@ -24,19 +24,19 @@ fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
-XLIM1 = 0;
-XLIM2 = 10000; % End of simulation
+XLIM1 = 50;
+XLIM2 = 150; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2     %%%%%%%%%%%%%%%%% 0.006 or 0.022
-NEURONAL_START      = 91000;      % Start of neuronal stimulation
+NEURONAL_START      = 100;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 91001;      % End of neuronal stimulation 
+NEURONAL_END        = 101;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -56,7 +56,7 @@ TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
 % Load initial NVU
-nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
+nv = NVU(Neuron('k_syn', 1, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
     Astrocyte('trpv_switch', TRPV_SWITCH), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), ...
@@ -65,7 +65,7 @@ nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 11.5 goes to 1 (k_syn)
 
 % Adjust time vector
-nv.neuron.params.dt = 1; dt = nv.neuron.params.dt;
+nv.neuron.params.dt = 0.01; dt = nv.neuron.params.dt;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
@@ -146,8 +146,8 @@ hold off
 figure(2313);
 subplot(2,2,1)
 hold all
-plot(nv.T, power(1.0 - nv.out('dAMP_dATPn'), -1.0));
-xlabel('Time [s]'); ylabel('dAMP_dATPn shit');
+plot(nv.T, nv.out('Vn_pump'));
+xlabel('Time [s]'); ylabel('Vn_pump');
 subplot(2,2,2)
 hold all
 plot(nv.T, nv.out('J_pump_sa'));
