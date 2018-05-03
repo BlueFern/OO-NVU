@@ -190,9 +190,8 @@ classdef ANLS < handle
             Vg_glyp =  p.Vmax_glyp .* (GLYg ./ (GLYg + p.Km_GLY)) .* deltaVt_GLY;
                
             Vne_LAC =  p.Vmax_ne_LAC .* (LACn ./ (LACn + p.Km_ne_LAC) - LACe ./ (LACe + p.Km_ne_LAC));
-%             if Vne_LAC < 0.0 % no lac shuttling
-%                 Vne_LAC = 0.0;
-%             end
+            Vne_LAC = max(0, Vne_LAC);
+
             Vge_LAC =  p.Vmax_ge_LAC .* (LACg ./ (LACg + p.Km_ge_LAC) - LACe ./ (LACe + p.Km_ge_LAC));
             Vec_LAC =  p.Vm_ec_LAC .* (LACe ./ (LACe + p.Km_ec_LAC) - LACc ./ (LACc + p.Km_ec_LAC));
             
@@ -242,6 +241,8 @@ classdef ANLS < handle
             % normal
             
             Vc_O2 =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.O2a - O2c);
+            
+            
             Vc_LAC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.LACa - LACc);
             Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.GLCa - GLCc);
             
@@ -327,13 +328,17 @@ classdef ANLS < handle
                 Uout(self.idx_out.ADPn, :) = ADPn;   
                 Uout(self.idx_out.Vn_ldh, :) = Vn_ldh; 
                 
-                Uout(self.idx_out.Vg_gs, :) = Vg_gs; 
+                Uout(self.idx_out.Vge_LAC, :) = Vge_LAC; 
                 Uout(self.idx_out.Ik_pump1, :) = Ik_pump1; 
                 Uout(self.idx_out.Ik_pump, :) = Ik_pump; 
                 
                 Uout(self.idx_out.CBF2, :) = CBF2; 
                 
-                Uout(self.idx_out.Vg_hk, :) = Vg_hk;
+                Uout(self.idx_out.Vne_LAC, :) = Vne_LAC;
+                Uout(self.idx_out.Vec_LAC, :) = Vec_LAC;
+                Uout(self.idx_out.Vgc_LAC, :) = Vgc_LAC;
+                
+                
                 
                varargout{1} = Uout;
             end
@@ -413,11 +418,14 @@ function [idx, n] = output_indices()
     
     idx.Vn_ldh = 19;
     
-    idx.Vg_gs = 20;
+    idx.Vge_LAC = 20;
     idx.Ik_pump1 = 21;
     idx.Ik_pump = 22;
     idx.CBF2 = 23;
-    idx.Vg_hk = 24;
+    idx.Vne_LAC = 24;
+    idx.Vec_LAC = 25;
+    idx.Vgc_LAC = 26;
+    
     n = numel(fieldnames(idx));
 end
 
@@ -510,10 +518,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vm_ce_GLC', 0.0489);
         
 
-    parser.addParameter('GLCa', 4.8);
+    parser.addParameter('GLCa', 4.0); %4.8
     parser.addParameter('LACa', 0.313);
     parser.addParameter('CO2a', 1.2);
-    parser.addParameter('O2a', 4.34); %8.34
+    parser.addParameter('O2a', 8.34); %8.34
     
     parser.addParameter('Km_ec_LAC', 0.764818);
     parser.addParameter('Vm_ec_LAC', 0.0325);
@@ -619,7 +627,7 @@ function u0 = initial_conditions(idx)
     u0(idx.O2g) = 0.05901;
     u0(idx.GLYg) = 2.5;
     u0(idx.O2c) = 3.461;
-    u0(idx.GLCc) = 4.628;
+    u0(idx.GLCc) = 1.628; %4.628
     u0(idx.LACc) = 0.3626;
     
 %     u0(idx.GLCn) = 0.267;

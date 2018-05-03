@@ -556,7 +556,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('D_K', 1.96e-5);        % [cm2 / s]
     
     parser.addParameter('K_init_e', 2.9); %2.9 
-    parser.addParameter('Na_init_sa', 6); %10 6 for low o2
+    parser.addParameter('Na_init_sa', 6); %10 6
     parser.addParameter('Na_init_d', 10); 
     
     parser.addParameter('R_init', 20); 

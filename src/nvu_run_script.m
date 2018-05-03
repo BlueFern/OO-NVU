@@ -25,18 +25,18 @@ fprintf('Start time is %s\n', char(timeStart));
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
 XLIM1 = 50;
-XLIM2 = 150; % End of simulation
+XLIM2 = 1000; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2     %%%%%%%%%%%%%%%%% 0.006 or 0.022
-NEURONAL_START      = 100;      % Start of neuronal stimulation
+NEURONAL_START      = 1000000;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 101;      % End of neuronal stimulation 
+NEURONAL_END        = 1000001;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -160,6 +160,27 @@ subplot(2,2,4)
 hold all
 plot(nv.T, nv.out('I_pump'));
 xlabel('Time [s]'); ylabel('I_pump');
+
+
+figure(23432);
+subplot(2,2,1)
+hold all
+plot(nv.T, nv.out('Vne_LAC'));
+xlabel('Time [s]'); ylabel('Vne_LAC');
+subplot(2,2,2)
+hold all
+plot(nv.T, nv.out('Vge_LAC'));
+xlabel('Time [s]'); ylabel('Vge_LAC');
+subplot(2,2,3)
+hold all
+plot(nv.T, nv.out('Vec_LAC'));
+xlabel('Time [s]'); ylabel('Vec_LAC');
+subplot(2,2,4)
+hold all
+plot(nv.T, nv.out('Vgc_LAC'));
+xlabel('Time [s]'); ylabel('Vgc_LAC');
+hold off
+
 % figure(24);
 % set(gcf,'Name', 'Vn mito fluxes')
 % subplot(2,2,1)
