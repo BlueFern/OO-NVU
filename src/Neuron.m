@@ -141,7 +141,8 @@ classdef Neuron < handle
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
             %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
-            J_pump_sa   = 2.27 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope)));
+            J_pump_sa   = p.atp1factor * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
 
             J_Napump_sa = 3 * J_pump_sa;
@@ -339,8 +340,8 @@ classdef Neuron < handle
             J_pump1_sa  = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_sa ./ Na_sa)) .^ (-3);
             J_pump1_d   = (1 + (p.K_init_e ./ K)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);
             
-            %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
-            J_pump_sa   = 2.27 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
+            atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope)));
+            J_pump_sa   = p.atp1factor * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
             J_Kpump_sa  = -2 * J_pump_sa;
             J_Kpump_d   = -2 * J_pump_d;  
@@ -556,7 +557,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('D_K', 1.96e-5);        % [cm2 / s]
     
     parser.addParameter('K_init_e', 2.9); %2.9 
-    parser.addParameter('Na_init_sa', 6); %10 6
+    parser.addParameter('Na_init_sa', 10); %10 6
     parser.addParameter('Na_init_d', 10); 
     
     parser.addParameter('R_init', 20); 
@@ -607,6 +608,12 @@ function params = parse_inputs(varargin)
     parser.addParameter('pumpoE', 2.9); %2.9 
     parser.addParameter('pumpoNa', 10); %10
     parser.addParameter('ATP_init_n', 2.2595); % dimless
+    
+    
+    parser.addParameter('ATPheight', 0.6); 
+    parser.addParameter('ATPslope', 1.5); 
+    parser.addParameter('ATPshift', 2.0);
+    parser.addParameter('atp1factor', 2.25);
     
     parser.parse(varargin{:})
     params = parser.Results;

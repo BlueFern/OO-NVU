@@ -126,32 +126,24 @@ classdef ANLS < handle
             
             % CALC RATES
             CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
-            CBF2 = 0.05523;
+            %CBF2 = 0.05523;
 
-            I_pump = 2.28 * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
-            Vn_pump =  6.5 .* (p.As / p.Vs) * 1e2 * I_pump ./ p.F; %0.1489
+            atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope))); % new term trying to drop pump
+            atp_term2 = ((1 + (p.ATP_init_n ./ ATPn)).^(-1)); %term from chang supp material
+            I_pumpv2 = 2.232 * p.Imax * J_pump1_sa .* atp_term2; %2.25 for low GLC, 2.232 for normal remember to do in neuron.m too!!!
+            I_pump = 2.5 * p.Imax * J_pump1_sa .* atp_term;
+            Vn_pump = 6.5 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F;%0.1489
+                  
             
-            Vn_pump = Vn_pump + 0.004;
-%             if t < 50
-%                 Vn_pump = 0.1486;
-%             end
-
-%             xx = ((Vn_pump - 0.158) ./ 1.25); % first /1.25 then 1.5 now   *.5            1.03
-%             
-%             if xx > 0.0
-%                 Vn_pump = Vn_pump - xx;
-%             end
+            % original from ostby... J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
             
-            
-            %J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
             
             
             Jk_pump  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3);
-            Ik_pump1 = 0.5 * p.Imax_k * Jk_pump;
             
-            Ik_pump = Ik_pump1 .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1)); %not being used
+            Ik_pump = 0.5 * p.Imax_k .* Jk_pump .* atp_term; 
             
-            Vk_pump =  0.25 * (1 / p.R_k) * Ik_pump1 ./ p.F; % to look like Cloutier et al. 2009
+            Vk_pump =  0.25 * (1 / p.R_k) * Ik_pump ./ p.F; % to look like Cloutier et al. 2009
 
             
             
@@ -190,7 +182,7 @@ classdef ANLS < handle
             Vg_glyp =  p.Vmax_glyp .* (GLYg ./ (GLYg + p.Km_GLY)) .* deltaVt_GLY;
                
             Vne_LAC =  p.Vmax_ne_LAC .* (LACn ./ (LACn + p.Km_ne_LAC) - LACe ./ (LACe + p.Km_ne_LAC));
-            Vne_LAC = max(0, Vne_LAC);
+            %Vne_LAC = max(0, Vne_LAC);
 
             Vge_LAC =  p.Vmax_ge_LAC .* (LACg ./ (LACg + p.Km_ge_LAC) - LACe ./ (LACe + p.Km_ge_LAC));
             Vec_LAC =  p.Vm_ec_LAC .* (LACe ./ (LACe + p.Km_ec_LAC) - LACc ./ (LACc + p.Km_ec_LAC));
@@ -241,9 +233,9 @@ classdef ANLS < handle
             % normal
             
             Vc_O2 =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.O2a - O2c);
-            
-            
             Vc_LAC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.LACa - LACc);
+            
+            glcA = (1 - max(0, min(1.0, (t - 500)./200.0)) .* 0.5) .* p.GLCa;
             Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.GLCa - GLCc);
             
             % Neuron
@@ -262,7 +254,7 @@ classdef ANLS < handle
             %Vn_pump = 0.1483;% + (0.035 * rectpuls(t - 102.5, 5));
             %Vn_pump = 0.1583;
             
-            du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump));
+            du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump)).* power(1.0 - dAMP_dATPn, -1.0);
             du(idx.PCrn, :) =  - Vn_ck;
             % ECS
             du(idx.GLCe, :) = Vce_GLC - (Veg_GLC .* (1.0 ./ p.Reg) +  V_en_GLC .* (1.0 ./ p.Ren));
@@ -282,10 +274,12 @@ classdef ANLS < handle
             du(idx.GAPg, :) =  2.0 .* Vg_pfk - Vg_pgk;
             
 
-            Vk_pump = 0.0634;% + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
+            %Vk_pump = 0.0609;% + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
             
             
             %Vk_pump = Vn_pump ./ 2.5;
+            
+            % TODO: check actual jump in a simulation with a stimulus
             Vg_gs = 0 + (0.019 * rectpuls(t -(p.t_0 + ((p.lengthpulse + 35) / 2)), p.lengthpulse + 35));
             
             du(idx.ATPg, :) = ((Vg_pgk + Vg_pk +  p.nOP .* Vg_mito + Vg_ck) - (Vg_hk + Vg_pfk + Vg_ATPase + Vk_pump + Vg_gs)) .* power(1.0 - dAMP_dATPg, -1.0);              %todo add na/K pump for astro...
@@ -329,7 +323,7 @@ classdef ANLS < handle
                 Uout(self.idx_out.Vn_ldh, :) = Vn_ldh; 
                 
                 Uout(self.idx_out.Vge_LAC, :) = Vge_LAC; 
-                Uout(self.idx_out.Ik_pump1, :) = Ik_pump1; 
+                Uout(self.idx_out.Ik_pump, :) = Ik_pump; 
                 Uout(self.idx_out.Ik_pump, :) = Ik_pump; 
                 
                 Uout(self.idx_out.CBF2, :) = CBF2; 
@@ -337,6 +331,25 @@ classdef ANLS < handle
                 Uout(self.idx_out.Vne_LAC, :) = Vne_LAC;
                 Uout(self.idx_out.Vec_LAC, :) = Vec_LAC;
                 Uout(self.idx_out.Vgc_LAC, :) = Vgc_LAC;
+                Uout(self.idx_out.atp_term, :) = atp_term;
+                Uout(self.idx_out.I_pumpv2, :) = I_pumpv2;
+                Uout(self.idx_out.atp_term2, :) = atp_term2;
+                
+
+                Uout(self.idx_out.Vg_pgk, :) = Vg_pgk;                
+                Uout(self.idx_out.Vg_pk, :) = Vg_pk;
+                Uout(self.idx_out.Vg_mito, :) = Vg_mito;
+                Uout(self.idx_out.Vg_ck, :) = Vg_ck;
+                Uout(self.idx_out.Vg_hk, :) = Vg_hk;
+                Uout(self.idx_out.Vg_pfk, :) = Vg_pfk;
+                Uout(self.idx_out.Vg_ATPase, :) = Vg_ATPase;
+                Uout(self.idx_out.Vg_gs, :) = Vg_gs;
+                
+                
+                
+                
+                
+                
                 
                 
                 
@@ -419,12 +432,29 @@ function [idx, n] = output_indices()
     idx.Vn_ldh = 19;
     
     idx.Vge_LAC = 20;
-    idx.Ik_pump1 = 21;
+    idx.Ik_pump = 21;
     idx.Ik_pump = 22;
     idx.CBF2 = 23;
     idx.Vne_LAC = 24;
     idx.Vec_LAC = 25;
     idx.Vgc_LAC = 26;
+    
+    idx.atp_term = 27;
+    idx.I_pumpv2 = 28;
+
+    idx.atp_term2 = 29;
+    
+    idx.Vg_pgk = 30;
+    idx.Vg_pgk = 31;
+    
+                  
+    idx.Vg_pk = 32;
+    idx.Vg_mito = 33;
+    idx.Vg_ck = 34;
+    idx.Vg_hk = 35;
+    idx.Vg_pfk = 36;
+    idx.Vg_ATPase = 37;
+    idx.Vg_gs = 38;
     
     n = numel(fieldnames(idx));
 end
@@ -518,7 +548,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('Vm_ce_GLC', 0.0489);
         
 
-    parser.addParameter('GLCa', 4.0); %4.8
+    parser.addParameter('GLCa', 4.8); %4.8
     parser.addParameter('LACa', 0.313);
     parser.addParameter('CO2a', 1.2);
     parser.addParameter('O2a', 8.34); %8.34
@@ -589,6 +619,10 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('K_Na_k', 10000); % uM
     
+    parser.addParameter('ATPheight', 0.6); 
+    parser.addParameter('ATPslope', 1.5); 
+    parser.addParameter('ATPshift', 2.0);
+    
     parser.parse(varargin{:});
     params = parser.Results;
     params.t_0 = params.startpulse;
@@ -598,66 +632,103 @@ function u0 = initial_conditions(idx)
     u0 = zeros(length(fieldnames(idx)), 1);
     % Inital estimations of parameters from experimental data
 
-    % low O2 IC's
-    u0(idx.GLCn) = 0.03002;
-    u0(idx.G6Pn) = 0.04736;
-    u0(idx.F6Pn) = 0.00528;
-    u0(idx.GAPn) = 0.01277;
-    u0(idx.PEPn) = 0.0006373;
-    u0(idx.PYRn) = 0.06078;
-    u0(idx.LACn) = 0.8415; 
-    u0(idx.NADHn) = 0.05082;
-    u0(idx.ATPn) = 0.6017;
-    u0(idx.PCrn) = 0.9298;
-    u0(idx.O2n) = 0.002429;
-    
-    u0(idx.GLCe) = 0.1043;
-    u0(idx.LACe) = 0.7764;
-    
-    u0(idx.GLCg) = 0.007809;
-    u0(idx.G6Pg) = 0.5923;
-    u0(idx.F6Pg) = 0.08757;
-    u0(idx.GAPg) = 0.07839;
-    u0(idx.PEPg) = 0.01773;
-    u0(idx.PYRg) = 0.1979;
-    u0(idx.LACg) = 0.898;
-    u0(idx.NADHg) = 0.06365;
-    u0(idx.ATPg) = 2.196;
-    u0(idx.PCrg) = 4.587;
-    u0(idx.O2g) = 0.05901;
-    u0(idx.GLYg) = 2.5;
-    u0(idx.O2c) = 3.461;
-    u0(idx.GLCc) = 1.628; %4.628
-    u0(idx.LACc) = 0.3626;
-    
-%     u0(idx.GLCn) = 0.267;
-%     u0(idx.G6Pn) = 0.7277;
-%     u0(idx.F6Pn) = 0.1091;
-%     u0(idx.GAPn) = 0.0418;
-%     u0(idx.PEPn) = 0.0037;
-%     u0(idx.PYRn) = 0.0388;
-%     u0(idx.LACn) = 0.482; 
-%     u0(idx.NADHn) = 0.0319;
-%     u0(idx.ATPn) = 2.2592;
-%     u0(idx.PCrn) = 4.2529;
-%     u0(idx.O2n) = 0.0975;
-%     u0(idx.GLCe) = 0.33785;
-%     u0(idx.LACe) = 0.4899;
-%     u0(idx.GLCg) = 0.1697;
-%     u0(idx.G6Pg) = 0.7337;
-%     u0(idx.F6Pg) = 0.1116;
-%     u0(idx.GAPg) = 0.0698;
-%     u0(idx.PEPg) = 0.0254;
-%     u0(idx.PYRg) = 0.174;
-%     u0(idx.LACg) = 0.579;
-%     u0(idx.NADHg) = 0.0518;
-%     u0(idx.ATPg) = 2.2412;
-%     u0(idx.PCrg) = 4.6817;
-%     u0(idx.O2g) = 0.1589;
+%     % low O2 IC's
+%     u0(idx.GLCn) = 0.03002;
+%     u0(idx.G6Pn) = 0.04736;
+%     u0(idx.F6Pn) = 0.00528;
+%     u0(idx.GAPn) = 0.01277;
+%     u0(idx.PEPn) = 0.0006373;
+%     u0(idx.PYRn) = 0.06078;
+%     u0(idx.LACn) = 0.8415; 
+%     u0(idx.NADHn) = 0.05082;
+%     u0(idx.ATPn) = 0.6017;
+%     u0(idx.PCrn) = 0.9298;
+%     u0(idx.O2n) = 0.002429;
+%     
+%     u0(idx.GLCe) = 0.1043;
+%     u0(idx.LACe) = 0.7764;
+%     
+%     u0(idx.GLCg) = 0.007809;
+%     u0(idx.G6Pg) = 0.5923;
+%     u0(idx.F6Pg) = 0.08757;
+%     u0(idx.GAPg) = 0.07839;
+%     u0(idx.PEPg) = 0.01773;
+%     u0(idx.PYRg) = 0.1979;
+%     u0(idx.LACg) = 0.898;
+%     u0(idx.NADHg) = 0.06365;
+%     u0(idx.ATPg) = 2.196;
+%     u0(idx.PCrg) = 4.587;
+%     u0(idx.O2g) = 0.05901;
 %     u0(idx.GLYg) = 2.5;
-%     u0(idx.O2c) = 7.4886;
-%     u0(idx.GLCc) = 4.6519;
-%     u0(idx.LACc) = 0.3348;
+%     u0(idx.O2c) = 3.461;
+%     u0(idx.GLCc) = 4.628; %4.628
+%     u0(idx.LACc) = 0.3626;
+ 
+    % low GLCc IC's
+    %Na_n
+    u0(idx.GLCn) = 0.05412;
+    u0(idx.G6Pn) = 0.04977;
+    u0(idx.F6Pn) = 0.00592;
+    u0(idx.GAPn) = 0.001324;
+    u0(idx.PEPn) = 0.000551;
+    u0(idx.PYRn) = 0.017702;
+    u0(idx.LACn) = 0.127476; 
+    u0(idx.NADHn) = 0.007655;
+    u0(idx.ATPn) = 0.278072;
+    u0(idx.PCrn) = 0.571280;
+    u0(idx.O2n) = 0.109397;
+    %GLU_n
+    %Na_g
+    u0(idx.GLCg) = 0.009113;
+    u0(idx.G6Pg) = 0.036240;
+    u0(idx.F6Pg) = 0.004358;
+    u0(idx.GAPg) = 0.002615;
+    u0(idx.PEPg) = 0.003156;
+    u0(idx.PYRg) = 0.164421;
+    u0(idx.LACg) = 0.137811;
+    u0(idx.NADHg) = 0.015596;
+    u0(idx.ATPg) = 0.818182;
+    u0(idx.PCrg) = 2.375699;
+    u0(idx.O2g) = 0.163565;
+    u0(idx.GLYg) = 2.325127;
+    %Glu_g
+    u0(idx.GLCe) = 0.106889;
+    u0(idx.LACe) = 0.133204;
+    %GLU_e
+    u0(idx.O2c) = 7.487960;
+    u0(idx.GLCc) = 2.5; %4.628
+    u0(idx.LACc) = 0.280176;
+    
+    % normal IC's
+    
+    u0(idx.GLCn) = 0.267;
+    u0(idx.G6Pn) = 0.7277;
+    u0(idx.F6Pn) = 0.1091;
+    u0(idx.GAPn) = 0.0418;
+    u0(idx.PEPn) = 0.0037;
+    u0(idx.PYRn) = 0.0388;
+    u0(idx.LACn) = 0.482; 
+    u0(idx.NADHn) = 0.0319;
+    u0(idx.ATPn) = 2.2592;
+    u0(idx.PCrn) = 4.2529;
+    u0(idx.O2n) = 0.0975;
+    u0(idx.GLCe) = 0.33785;
+    u0(idx.LACe) = 0.6544;
+    u0(idx.GLCg) = 0.1697;
+    u0(idx.G6Pg) = 0.7337;
+    u0(idx.F6Pg) = 0.1116;
+    u0(idx.GAPg) = 0.0698;
+    u0(idx.PEPg) = 0.0254;
+    u0(idx.PYRg) = 0.174;
+    u0(idx.LACg) = 0.9585;
+    u0(idx.NADHg) = 0.07068;
+    u0(idx.ATPg) = 2.2412;
+    u0(idx.PCrg) = 4.6817;
+    u0(idx.O2g) = 0.1589;
+    u0(idx.GLYg) = 2.5;
+    u0(idx.O2c) = 7.4886;
+    u0(idx.GLCc) = 4.6519; %4.6519
+    u0(idx.LACc) = 0.3531;
     
 
 
