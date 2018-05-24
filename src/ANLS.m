@@ -16,11 +16,13 @@ classdef ANLS < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R, J_pump1_sa, K_e, Na_k)
+        function [du, varargout] = rhs(self, t, u, R, J_pump1_sa, K_e, Na_k, Glu)
             % Initalise inputs and parameters
             idx = self.index;
             p = self.params;
             t = t(:).';
+            
+            GLUe = (1 / 3) .* (Glu ./ 1000); %uM to mM, then scaling factor of 1/3
             
             GLCn = u(idx.GLCn, :);            
             G6Pn = u(idx.G6Pn, :);
@@ -51,7 +53,7 @@ classdef ANLS < handle
             ATPg = u(idx.ATPg, :);
             PCrn = u(idx.PCrn, :);
             
-            %GLUg = u(idx.GLUg, :);
+            GLUg = u(idx.GLUg, :);
             %GLUn = u(idx.GLUn, :);
             %GLUe = u(idx.GLUe, :);
             
@@ -132,12 +134,13 @@ classdef ANLS < handle
             atp_term2 = ((1 + (p.ATP_init_n ./ ATPn)).^(-1)); %term from chang supp material
             I_pumpv2 = 2.232 * p.Imax * J_pump1_sa .* atp_term2; %2.25 for low GLC, 2.232 for normal remember to do in neuron.m too!!!
             I_pump = 2.5 * p.Imax * J_pump1_sa .* atp_term;
-            Vn_pump = 6.5 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F;%0.1489
+            Vn_pump = 6.5 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F;%6.5 for changes in o2 or glu
                   
             
             % original from ostby... J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
             
-            
+            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
+            Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
             
             Jk_pump  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3);
             
@@ -273,14 +276,7 @@ classdef ANLS < handle
             du(idx.LACg, :) = Vg_ldh - (Vge_LAC + Vgc_LAC);
             du(idx.GAPg, :) =  2.0 .* Vg_pfk - Vg_pgk;
             
-
-            %Vk_pump = 0.0609;% + (0.006 * rectpuls(t -(p.t_0 + (p.lengthpulse / 2)), p.lengthpulse));
-            
-            
-            %Vk_pump = Vn_pump ./ 2.5;
-            
-            % TODO: check actual jump in a simulation with a stimulus
-            Vg_gs = 0 + (0.019 * rectpuls(t -(p.t_0 + ((p.lengthpulse + 35) / 2)), p.lengthpulse + 35));
+            du(idx.GLUg, :) = Veg_GLU - Vg_gs;
             
             du(idx.ATPg, :) = ((Vg_pgk + Vg_pk +  p.nOP .* Vg_mito + Vg_ck) - (Vg_hk + Vg_pfk + Vg_ATPase + Vk_pump + Vg_gs)) .* power(1.0 - dAMP_dATPg, -1.0);              %todo add na/K pump for astro...
             % Capillary
@@ -344,12 +340,8 @@ classdef ANLS < handle
                 Uout(self.idx_out.Vg_pfk, :) = Vg_pfk;
                 Uout(self.idx_out.Vg_ATPase, :) = Vg_ATPase;
                 Uout(self.idx_out.Vg_gs, :) = Vg_gs;
-                
-                
-                
-                
-                
-                
+                Uout(self.idx_out.GLUe, :) = GLUe;
+                Uout(self.idx_out.Veg_GLU, :) = Veg_GLU;
                 
                 
                 
@@ -402,6 +394,9 @@ function idx = indices()
     idx.PCrg = 26;
     idx.ATPg = 27;
     idx.PCrn = 28;
+    idx.GLUg = 29;
+    
+    
 end
 
 function [idx, n] = output_indices()
@@ -455,6 +450,8 @@ function [idx, n] = output_indices()
     idx.Vg_pfk = 36;
     idx.Vg_ATPase = 37;
     idx.Vg_gs = 38;
+    idx.GLUe = 39;
+    idx.Veg_GLU = 40;
     
     n = numel(fieldnames(idx));
 end
@@ -663,6 +660,7 @@ function u0 = initial_conditions(idx)
 %     u0(idx.O2c) = 3.461;
 %     u0(idx.GLCc) = 4.628; %4.628
 %     u0(idx.LACc) = 0.3626;
+%     u0(idx.GLUg) = 0.0;
  
     % low GLCc IC's
     %Na_n
@@ -729,7 +727,7 @@ function u0 = initial_conditions(idx)
     u0(idx.O2c) = 7.4886;
     u0(idx.GLCc) = 4.6519; %4.6519
     u0(idx.LACc) = 0.3531;
-    
+    u0(idx.GLUg) = 0.0;
 
 
 end

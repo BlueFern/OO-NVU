@@ -75,7 +75,7 @@ classdef NVU < handle
             du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg);
             du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i, R_cGMP2);
             du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p, NO_k, O2);
-            du(self.i_anls, :) = self.anls.rhs(t, ul, R, J_pump1_sa, K_e, Na_k);
+            du(self.i_anls, :) = self.anls.rhs(t, ul, R, J_pump1_sa, K_e, Na_k, Glu);
             
         end
         function init_conds(self)
@@ -108,7 +108,7 @@ classdef NVU < handle
             [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
-            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k);
+            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k, Glu);
 
             tEnd = toc(tStart);
             fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
@@ -139,7 +139,7 @@ classdef NVU < handle
             [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
-            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k);
+            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k, Glu);
 
             tEnd = toc(tStart);
             fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
