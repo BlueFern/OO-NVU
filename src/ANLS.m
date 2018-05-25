@@ -349,11 +349,11 @@ classdef ANLS < handle
             end
         end 
 
-        function [ATPn, ATPg] = shared(self, ~,u)
+        function [ATPn, ATPg, GLUg] = shared(self, ~,u)
            
             ATPn = u(self.index.ATPn, :);
             ATPg = u(self.index.ATPg, :);
-
+            GLUg = u(self.index.GLUg, :);
 
         end  
         
@@ -699,34 +699,34 @@ function u0 = initial_conditions(idx)
     
     % normal IC's
     
-    u0(idx.GLCn) = 0.267;
-    u0(idx.G6Pn) = 0.7277;
-    u0(idx.F6Pn) = 0.1091;
-    u0(idx.GAPn) = 0.0418;
-    u0(idx.PEPn) = 0.0037;
-    u0(idx.PYRn) = 0.0388;
-    u0(idx.LACn) = 0.482; 
-    u0(idx.NADHn) = 0.0319;
-    u0(idx.ATPn) = 2.2592;
+    u0(idx.GLCn) = 0.277;
+    u0(idx.G6Pn) = 0.7283;
+    u0(idx.F6Pn) = 0.1093;
+    u0(idx.GAPn) = 0.06764;
+    u0(idx.PEPn) = 0.003712;
+    u0(idx.PYRn) = 0.0541;
+    u0(idx.LACn) = 0.7685; 
+    u0(idx.NADHn) = 0.04715;
+    u0(idx.ATPn) = 2.2598;
     u0(idx.PCrn) = 4.2529;
     u0(idx.O2n) = 0.0975;
-    u0(idx.GLCe) = 0.33785;
-    u0(idx.LACe) = 0.6544;
-    u0(idx.GLCg) = 0.1697;
-    u0(idx.G6Pg) = 0.7337;
-    u0(idx.F6Pg) = 0.1116;
+    u0(idx.GLCe) = 0.3487;
+    u0(idx.LACe) = 0.7861;
+    u0(idx.GLCg) = 0.1866;
+    u0(idx.G6Pg) = 0.7365;
+    u0(idx.F6Pg) = 0.1124;
     u0(idx.GAPg) = 0.0698;
     u0(idx.PEPg) = 0.0254;
-    u0(idx.PYRg) = 0.174;
-    u0(idx.LACg) = 0.9585;
-    u0(idx.NADHg) = 0.07068;
+    u0(idx.PYRg) = 0.1832;
+    u0(idx.LACg) = 1.198;
+    u0(idx.NADHg) = 0.08299;
     u0(idx.ATPg) = 2.2412;
     u0(idx.PCrg) = 4.6817;
     u0(idx.O2g) = 0.1589;
     u0(idx.GLYg) = 2.5;
     u0(idx.O2c) = 7.4886;
     u0(idx.GLCc) = 4.6519; %4.6519
-    u0(idx.LACc) = 0.3531;
+    u0(idx.LACc) = 0.3639;
     u0(idx.GLUg) = 0.0;
 
 

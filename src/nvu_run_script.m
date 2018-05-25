@@ -36,7 +36,7 @@ NEURONAL_START      = 100;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 101;      % End of neuronal stimulation 
+NEURONAL_END        = 105;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -56,7 +56,7 @@ TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
 % Load initial NVU
-nv = NVU(Neuron('k_syn', 1, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
+nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
     Astrocyte('trpv_switch', TRPV_SWITCH), ...
     WallMechanics('wallMech', 1.7), ...
     SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), ...
@@ -144,56 +144,56 @@ xlim([XLIM1 XLIM2])
 hold off
 
 
-% figure(23223);
-% set(gcf,'Name', 'Astrocyte fluxes/variables')
-% subplot(4,3,1)
-% hold all
-% plot(nv.T, nv.out('J_NBC_k'));
-% xlabel('Time [s]'); ylabel('J_{NBC}');
-% subplot(4,3,2)
-% hold all
-% plot(nv.T, nv.out('J_KCC1_k'));
-% xlabel('Time [s]'); ylabel('J_{KCC1}');
-% subplot(4,3,3)
-% hold all
-% plot(nv.T, nv.out('J_NKCC1_k'));
-% xlabel('Time [s]'); ylabel('J_{NKCC1}');
-% subplot(4,3,4)
-% hold all
-% plot(nv.T, nv.out('J_K_k'));
-% xlabel('Time [s]'); ylabel('J_K');
-% subplot(4,3,5)
-% hold all
-% plot(nv.T, nv.out('J_NaK_k'));
-% xlabel('Time [s]'); ylabel('J_{NaK}');
-% subplot(4,3,6)
-% hold all
-% plot(nv.T, nv.out('J_Na_k'));
-% xlabel('Time [s]'); ylabel('J_{Na}');
-% subplot(4,3,7)
-% hold all
-% plot(nv.T, nv.out('HCO3_k'));
-% xlabel('Time [s]'); ylabel('HCO3_k (ODE?)');
-% subplot(4,3,8)
-% hold all
-% plot(nv.T, nv.out('J_Cl_k'));
-% xlabel('Time [s]'); ylabel('J_{Cl}');
-% subplot(4,3,9)
-% hold all
-% plot(nv.T, nv.out('J_BK_k'));
-% xlabel('Time [s]'); ylabel('J_{BK}');
-% subplot(4,3,10)
-% hold all
-% plot(nv.T, nv.out('J_TRPV_k'));
-% xlabel('Time [s]'); ylabel('J_{TRPV}');
-% subplot(4,3,11)
-% hold all
-% plot(nv.T, nv.out('Na_k'));
-% xlabel('Time [s]'); ylabel('[Na^+]');
-% subplot(4,3,12)
-% hold all
-% plot(nv.T, nv.out('K_k'));
-% xlabel('Time [s]'); ylabel('[K^+]');
+figure(23223);
+set(gcf,'Name', 'Astrocyte fluxes/variables')
+subplot(4,3,1)
+hold all
+plot(nv.T, nv.out('J_NBC_k'));
+xlabel('Time [s]'); ylabel('J_{NBC}');
+subplot(4,3,2)
+hold all
+plot(nv.T, nv.out('J_KCC1_k'));
+xlabel('Time [s]'); ylabel('J_{KCC1}');
+subplot(4,3,3)
+hold all
+plot(nv.T, nv.out('J_NKCC1_k'));
+xlabel('Time [s]'); ylabel('J_{NKCC1}');
+subplot(4,3,4)
+hold all
+plot(nv.T, nv.out('J_K_k'));
+xlabel('Time [s]'); ylabel('J_K');
+subplot(4,3,5)
+hold all
+plot(nv.T, nv.out('J_NaK_k'));
+xlabel('Time [s]'); ylabel('J_{NaK}');
+subplot(4,3,6)
+hold all
+plot(nv.T, nv.out('J_Na_k'));
+xlabel('Time [s]'); ylabel('J_{Na}');
+subplot(4,3,7)
+hold all
+plot(nv.T, nv.out('HCO3_k'));
+xlabel('Time [s]'); ylabel('HCO3_k (ODE?)');
+subplot(4,3,8)
+hold all
+plot(nv.T, nv.out('J_Cl_k'));
+xlabel('Time [s]'); ylabel('J_{Cl}');
+subplot(4,3,9)
+hold all
+plot(nv.T, nv.out('J_BK_k'));
+xlabel('Time [s]'); ylabel('J_{BK}');
+subplot(4,3,10)
+hold all
+plot(nv.T, nv.out('J_TRPV_k'));
+xlabel('Time [s]'); ylabel('J_{TRPV}');
+subplot(4,3,11)
+hold all
+plot(nv.T, nv.out('Na_k'));
+xlabel('Time [s]'); ylabel('[Na^+]');
+subplot(4,3,12)
+hold all
+plot(nv.T, nv.out('K_k'));
+xlabel('Time [s]'); ylabel('[K^+]');
 
 
 % figure(2313);
@@ -498,54 +498,49 @@ hold off
 %     plot(nv.T, nv.out('Na_sa'));
 % 
 
-figure(12341234);
-subplot(3,3,1);
+XLIM1 = 95;
+XLIM2 = 120;
+figure(123414);
+subplot(4,2,1);
     hold all;
     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
     ylabel('v_{sa} [mV]');
     xlim([XLIM1 XLIM2])
-subplot(3,3,2);
+subplot(4,2,2);
     hold all;
-    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
-    ylabel('v_k [mV]');
+    plot(nv.T, nv.out('GLCc'), 'LineWidth', 1);
+    ylabel('GLC_c');
     xlim([XLIM1 XLIM2])
-subplot(3,3,3);
-    hold all;
-    plot(nv.T, nv.out('O2')*1e3, 'LineWidth', 1);
-    ylabel('O2 [\muM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,4);
-    hold all;
-    plot(nv.T, nv.out('Na_k'), 'LineWidth', 1);
-    ylabel('Na_k');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,5);
+subplot(4,2,3);
     hold all;
     plot(nv.T, nv.out('R'), 'LineWidth', 1);
     ylabel('Radius [\mum]');
     xlim([XLIM1 XLIM2])
-subplot(3,3,6);
+subplot(4,2,4);
     hold all;
     plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
     ylabel('K_s [mM]');
     xlim([XLIM1 XLIM2])
-subplot(3,3,7);
+subplot(4,2,5);
     hold all;
-    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-    ylabel('K_e [mM]');
+    plot(nv.T, nv.out('ATPn'), 'LineWidth', 1);
+    ylabel('ATP_n [mM]');
     xlim([XLIM1 XLIM2])
-subplot(3,3,8);
+subplot(4,2,6);
     hold all;
-    plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);
-    ylabel('K_k [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,9);
+    plot(nv.T, nv.out('GLCn'), 'LineWidth', 1);
+    ylabel('GLC_n [mM]');
+    xlim([0 1000])
+subplot(4,2,7);
     hold all;
-    % BOLD using normalised variables
-    plot(nv.T, nv.out('Na_sa'), 'LineWidth', 1);  
-    ylabel('Na_sa');
+    plot(nv.T, nv.out('O2n'), 'LineWidth', 1);
+    ylabel('O2_n [mM]');
     xlim([XLIM1 XLIM2])
-
+subplot(4,2,8);
+    hold all;
+    plot(nv.T, nv.out('LACn'), 'LineWidth', 1);
+    ylabel('LAC_n [mM]');
+    xlim([0 1000])
 
 
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs

@@ -21,7 +21,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -117,6 +117,11 @@ classdef Astrocyte < handle
             p_NO_k = 0;
             c_NO_k = p.k_O2_k * NO_k.^2 * p.O2_k; % [uM/s]
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
+            
+            
+            % ANLS stuff (glutamate -> Na atm)
+            GLUe = Glu;
+            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
 
 
             %% Conservation Equations
@@ -125,7 +130,7 @@ classdef Astrocyte < handle
             
             % Differential Equations in the Astrocyte
             du(idx.K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k;
-            du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
+            du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k + 3*Veg_GLU;
             du(idx.HCO3_k, :) = 2*J_NBC_k;
             du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :) + 2*du(idx.Ca_k, :);
             
@@ -377,8 +382,9 @@ function params = parse_inputs(varargin)
     parser.addParameter('k_O2_k', 9.6e-6);      % [uM^-2 s^-1] ;  (Kavdia2002)
     parser.addParameter('O2_k', 200);           % [uM] ;  (M.E.)
 
-
-    
+    parser.addParameter('Vmax_eg_GLU', 0.0208);
+    parser.addParameter('Km_GLU', 0.05);
+        
     parser.parse(varargin{:})
     params = parser.Results;
     
