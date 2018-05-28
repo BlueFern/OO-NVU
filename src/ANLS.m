@@ -128,12 +128,12 @@ classdef ANLS < handle
             
             % CALC RATES
             CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
-            %CBF2 = 0.05523;
-
+            
+            pumpScaling = 2.232; %2.25 for low GLC, 2.232
             atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope))); % new term trying to drop pump
             atp_term2 = ((1 + (p.ATP_init_n ./ ATPn)).^(-1)); %term from chang supp material
-            I_pumpv2 = 2.232 * p.Imax * J_pump1_sa .* atp_term2; %2.25 for low GLC, 2.232 for normal remember to do in neuron.m too!!!
-            I_pump = 2.5 * p.Imax * J_pump1_sa .* atp_term;
+            I_pumpv2 = pumpScaling * p.Imax * J_pump1_sa .* atp_term2; 
+            I_pump = pumpScaling * p.Imax * J_pump1_sa .* atp_term;
             Vn_pump = 6.5 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F;%6.5 for changes in o2 or glu
                   
             
@@ -239,7 +239,7 @@ classdef ANLS < handle
             Vc_LAC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.LACa - LACc);
             
             glcA = (1 - max(0, min(1.0, (t - 500)./200.0)) .* 0.5) .* p.GLCa;
-            Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.GLCa - GLCc);
+            Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* ( p.GLCa - GLCc);
             
             % Neuron
             
@@ -720,7 +720,7 @@ function u0 = initial_conditions(idx)
     u0(idx.PYRg) = 0.1832;
     u0(idx.LACg) = 1.198;
     u0(idx.NADHg) = 0.08299;
-    u0(idx.ATPg) = 2.2412;
+    u0(idx.ATPg) = 2.2597;
     u0(idx.PCrg) = 4.6817;
     u0(idx.O2g) = 0.1589;
     u0(idx.GLYg) = 2.5;

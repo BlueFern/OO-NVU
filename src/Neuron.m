@@ -141,6 +141,7 @@ classdef Neuron < handle
             J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p) + p.alpha_O2 * p.O2_0)).^(-1);     
 
             %J_pump_sa   = p.Imax * J_pump1_sa .* J_pump2;
+            
             atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope)));
             J_pump_sa   = p.atp1factor * p.Imax * J_pump1_sa .* ((1 + (p.ATP_init_n ./ ATPn)).^(-1));
             J_pump_d    = p.Imax * J_pump1_d .* J_pump2;
@@ -613,7 +614,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('ATPheight', 0.6); 
     parser.addParameter('ATPslope', 1.5); 
     parser.addParameter('ATPshift', 2.0);
-    parser.addParameter('atp1factor', 2.25);
+    parser.addParameter('atp1factor', 2.232);
     
     parser.parse(varargin{:})
     params = parser.Results;

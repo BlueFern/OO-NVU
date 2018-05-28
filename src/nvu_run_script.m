@@ -25,18 +25,18 @@ fprintf('Start time is %s\n', char(timeStart));
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
 XLIM1 = 50;
-XLIM2 = 1000; % End of simulation
+XLIM2 = 10000; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2     %%%%%%%%%%%%%%%%% 0.006 or 0.022
-NEURONAL_START      = 100;      % Start of neuronal stimulation
+NEURONAL_START      = 110000;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 105;      % End of neuronal stimulation 
+NEURONAL_END        = 112000;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -144,56 +144,56 @@ xlim([XLIM1 XLIM2])
 hold off
 
 
-figure(23223);
-set(gcf,'Name', 'Astrocyte fluxes/variables')
-subplot(4,3,1)
-hold all
-plot(nv.T, nv.out('J_NBC_k'));
-xlabel('Time [s]'); ylabel('J_{NBC}');
-subplot(4,3,2)
-hold all
-plot(nv.T, nv.out('J_KCC1_k'));
-xlabel('Time [s]'); ylabel('J_{KCC1}');
-subplot(4,3,3)
-hold all
-plot(nv.T, nv.out('J_NKCC1_k'));
-xlabel('Time [s]'); ylabel('J_{NKCC1}');
-subplot(4,3,4)
-hold all
-plot(nv.T, nv.out('J_K_k'));
-xlabel('Time [s]'); ylabel('J_K');
-subplot(4,3,5)
-hold all
-plot(nv.T, nv.out('J_NaK_k'));
-xlabel('Time [s]'); ylabel('J_{NaK}');
-subplot(4,3,6)
-hold all
-plot(nv.T, nv.out('J_Na_k'));
-xlabel('Time [s]'); ylabel('J_{Na}');
-subplot(4,3,7)
-hold all
-plot(nv.T, nv.out('HCO3_k'));
-xlabel('Time [s]'); ylabel('HCO3_k (ODE?)');
-subplot(4,3,8)
-hold all
-plot(nv.T, nv.out('J_Cl_k'));
-xlabel('Time [s]'); ylabel('J_{Cl}');
-subplot(4,3,9)
-hold all
-plot(nv.T, nv.out('J_BK_k'));
-xlabel('Time [s]'); ylabel('J_{BK}');
-subplot(4,3,10)
-hold all
-plot(nv.T, nv.out('J_TRPV_k'));
-xlabel('Time [s]'); ylabel('J_{TRPV}');
-subplot(4,3,11)
-hold all
-plot(nv.T, nv.out('Na_k'));
-xlabel('Time [s]'); ylabel('[Na^+]');
-subplot(4,3,12)
-hold all
-plot(nv.T, nv.out('K_k'));
-xlabel('Time [s]'); ylabel('[K^+]');
+% figure(23223);
+% set(gcf,'Name', 'Astrocyte fluxes/variables')
+% subplot(4,3,1)
+% hold all
+% plot(nv.T, nv.out('J_NBC_k'));
+% xlabel('Time [s]'); ylabel('J_{NBC}');
+% subplot(4,3,2)
+% hold all
+% plot(nv.T, nv.out('J_KCC1_k'));
+% xlabel('Time [s]'); ylabel('J_{KCC1}');
+% subplot(4,3,3)
+% hold all
+% plot(nv.T, nv.out('J_NKCC1_k'));
+% xlabel('Time [s]'); ylabel('J_{NKCC1}');
+% subplot(4,3,4)
+% hold all
+% plot(nv.T, nv.out('J_K_k'));
+% xlabel('Time [s]'); ylabel('J_K');
+% subplot(4,3,5)
+% hold all
+% plot(nv.T, nv.out('J_NaK_k'));
+% xlabel('Time [s]'); ylabel('J_{NaK}');
+% subplot(4,3,6)
+% hold all
+% plot(nv.T, nv.out('J_Na_k'));
+% xlabel('Time [s]'); ylabel('J_{Na}');
+% subplot(4,3,7)
+% hold all
+% plot(nv.T, nv.out('HCO3_k'));
+% xlabel('Time [s]'); ylabel('HCO3_k (ODE?)');
+% subplot(4,3,8)
+% hold all
+% plot(nv.T, nv.out('J_Cl_k'));
+% xlabel('Time [s]'); ylabel('J_{Cl}');
+% subplot(4,3,9)
+% hold all
+% plot(nv.T, nv.out('J_BK_k'));
+% xlabel('Time [s]'); ylabel('J_{BK}');
+% subplot(4,3,10)
+% hold all
+% plot(nv.T, nv.out('J_TRPV_k'));
+% xlabel('Time [s]'); ylabel('J_{TRPV}');
+% subplot(4,3,11)
+% hold all
+% plot(nv.T, nv.out('Na_k'));
+% xlabel('Time [s]'); ylabel('[Na^+]');
+% subplot(4,3,12)
+% hold all
+% plot(nv.T, nv.out('K_k'));
+% xlabel('Time [s]'); ylabel('[K^+]');
 
 
 % figure(2313);
@@ -232,25 +232,44 @@ xlabel('Time [s]'); ylabel('[K^+]');
 % plot(nv.T, nv.out('Veg_GLU'));
 % xlabel('Time [s]'); ylabel('Veg_GLU');
 
-% figure(20000);
-% set(gcf,'Name', 'Dropping arteriole GLC')
-% subplot(2,2,1)
-% hold all
-% plot(nv.T, nv.out('Vn_pump'));
-% xlabel('Time [s]'); ylabel('ATPase pump (mMs-1');
-% subplot(2,2,2)
-% hold all
-% plot(nv.T, nv.out('ATPn'));
-% xlabel('Time [s]'); ylabel('ATPn (mM)');
-% subplot(2,2,3)
-% hold all
-% plot(nv.T, nv.out('GLCc'));
-% xlabel('Time [s]'); ylabel('GLCc (mM)');
-% subplot(2,2,4)
-% hold all
-% plot(nv.T, nv.out('GLCn'));
-% xlabel('Time [s]'); ylabel('GLCn (mM)');
+figure(20000);
+set(gcf,'Name', 'Dropping arteriole GLC')
+subplot(2,2,1)
+hold all
+plot(nv.T, nv.out('Vn_pump'));
+xlabel('Time [s]'); ylabel('ATPase pump (mM/s)');
+subplot(2,2,2)
+hold all
+plot(nv.T, nv.out('ATPn'));
+xlabel('Time [s]'); ylabel('ATPn (mM)');
+subplot(2,2,3)
+hold all
+plot(nv.T, nv.out('GLCc'));
+xlabel('Time [s]'); ylabel('GLCc (mM)');
+subplot(2,2,4)
+hold all
+plot(nv.T, nv.out('GLCn'));
+xlabel('Time [s]'); ylabel('GLCn (mM)');
 
+
+figure(20070);
+set(gcf,'Name', 'Neuronal Na/K ATPase pump fluxes')
+subplot(2,2,1)
+hold all
+plot(nv.T, nv.out('Vn_pump'));
+xlabel('Time [s]'); ylabel('ATPase pump (mM/s)');
+subplot(2,2,2)
+hold all
+plot(nv.T, nv.out('ATPn'));
+xlabel('Time [s]'); ylabel('ATPn (mM)');
+subplot(2,2,3)
+hold all
+plot(nv.T, nv.out('Na_sa'));
+xlabel('Time [s]'); ylabel('Na_{sa}(mM)');
+subplot(2,2,4)
+hold all
+plot(nv.T, nv.out('K_e'));
+xlabel('Time [s]'); ylabel('K_e (mM)');
 
 
 % figure(23121223);
@@ -538,8 +557,8 @@ subplot(4,2,7);
     xlim([XLIM1 XLIM2])
 subplot(4,2,8);
     hold all;
-    plot(nv.T, nv.out('LACn'), 'LineWidth', 1);
-    ylabel('LAC_n [mM]');
+    plot(nv.T, nv.out('ATPg'), 'LineWidth', 1);
+    ylabel('ATP_g [mM]');
     xlim([0 1000])
 
 
