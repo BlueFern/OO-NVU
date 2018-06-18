@@ -32,7 +32,7 @@ XLIM2 = 1000; % End of simulation
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2     %%%%%%%%%%%%%%%%% 0.006 or 0.022
-NEURONAL_START      = 100;      % Start of neuronal stimulation
+NEURONAL_START      = 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
@@ -54,7 +54,7 @@ GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
-
+    
 % Load initial NVU
 nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
     Astrocyte('trpv_switch', TRPV_SWITCH), ...
@@ -65,7 +65,7 @@ nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 11.5 goes to 1 (k_syn)
 
 % Adjust time vector
-nv.neuron.params.dt = 0.01; dt = nv.neuron.params.dt;
+nv.neuron.params.dt = 1; dt = nv.neuron.params.dt;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
@@ -144,6 +144,62 @@ xlim([XLIM1 XLIM2])
 hold off
 
 
+
+figure(33667);
+set(gcf,'Name', 'ATPase pumps')
+subplot(2,1,1)
+hold all
+plot(nv.T, nv.out('Vn_pump')); 
+xlabel('Time [s]'); ylabel({'Neuron ATPase'; 'pump (mM/s)'});
+xlim([XLIM1 XLIM2])
+subplot(2,1,2)
+hold all
+plot(nv.T, nv.out('Vk_pump')); 
+xlabel('Time [s]'); ylabel({'Astrocyte ATPase';' pump (mM/s)'});
+xlim([XLIM1 XLIM2])
+
+
+
+% XLIM1 = 20;
+% XLIM2 = 500;
+% figure(337);
+% set(gcf,'Name', 'Astrocyte fluxes/variables')
+% subplot(3,1,1)
+% hold all
+% plot(nv.T, nv.out('Vc_GLC')); 
+% xlabel('Time [s]'); ylabel('Vc_GLC (mM/s)');
+% xlim([XLIM1 XLIM2])
+% subplot(3,1,2)
+% hold all
+% plot(nv.T, nv.out('Vc_O2')); 
+% xlabel('Time [s]'); ylabel('Vc_O2 (mM/s)');
+% xlim([XLIM1 XLIM2])
+% subplot(3,1,3)
+% hold all
+% plot(nv.T, nv.out('Vc_LAC')); 
+% xlabel('Time [s]'); ylabel('Vc_LAC (mM/s)');
+% xlim([XLIM1 XLIM2])
+
+% XLIM1 = 20;
+% XLIM2 = 500;
+% figure(3377);
+% set(gcf,'Name', 'Astrocyte fluxes/variables')
+% subplot(3,1,1)
+% hold all
+% plot(nv.T, nv.out('GLCc')); 
+% xlabel('Time [s]'); ylabel('GLCc (mM)');
+% xlim([XLIM1 XLIM2])
+% subplot(3,1,2)
+% hold all
+% plot(nv.T, nv.out('O2c')); 
+% xlabel('Time [s]'); ylabel('O2c (mM)');
+% xlim([XLIM1 XLIM2])
+% subplot(3,1,3)
+% hold all
+% plot(nv.T, nv.out('LACc')); 
+% xlabel('Time [s]'); ylabel('LACc (mM)');
+% xlim([XLIM1 XLIM2])
+% 
 % figure(23223);
 % set(gcf,'Name', 'Astrocyte fluxes/variables')
 % subplot(4,3,1)
@@ -194,8 +250,8 @@ hold off
 % hold all
 % plot(nv.T, nv.out('K_k'));
 % xlabel('Time [s]'); ylabel('[K^+]');
-
-
+% 
+% 
 % figure(2313);
 % subplot(2,2,1)
 % hold all
@@ -232,44 +288,44 @@ hold off
 % plot(nv.T, nv.out('Veg_GLU'));
 % xlabel('Time [s]'); ylabel('Veg_GLU');
 
-figure(20000);
-set(gcf,'Name', 'Dropping arteriole GLC')
-subplot(2,2,1)
-hold all
-plot(nv.T, nv.out('Vn_pump'));
-xlabel('Time [s]'); ylabel('ATPase pump (mM/s)');
-subplot(2,2,2)
-hold all
-plot(nv.T, nv.out('ATPn'));
-xlabel('Time [s]'); ylabel('ATPn (mM)');
-subplot(2,2,3)
-hold all
-plot(nv.T, nv.out('GLCc'));
-xlabel('Time [s]'); ylabel('GLCc (mM)');
-subplot(2,2,4)
-hold all
-plot(nv.T, nv.out('GLCn'));
-xlabel('Time [s]'); ylabel('GLCn (mM)');
+% figure(20000);
+% set(gcf,'Name', 'Dropping arteriole GLC')
+% subplot(2,2,1)
+% hold all
+% plot(nv.T, nv.out('Vn_pump'));
+% xlabel('Time [s]'); ylabel('ATPase pump (mM/s)');
+% subplot(2,2,2)
+% hold all
+% plot(nv.T, nv.out('ATPn'));
+% xlabel('Time [s]'); ylabel('ATPn (mM)');
+% subplot(2,2,3)
+% hold all
+% plot(nv.T, nv.out('GLCc'));
+% xlabel('Time [s]'); ylabel('GLCc (mM)');
+% subplot(2,2,4)
+% hold all
+% plot(nv.T, nv.out('GLCn'));
+% xlabel('Time [s]'); ylabel('GLCn (mM)');
 
 
-figure(20070);
-set(gcf,'Name', 'Neuronal Na/K ATPase pump fluxes')
-subplot(2,2,1)
-hold all
-plot(nv.T, nv.out('Vn_pump'));
-xlabel('Time [s]'); ylabel('ATPase pump (mM/s)');
-subplot(2,2,2)
-hold all
-plot(nv.T, nv.out('ATPn'));
-xlabel('Time [s]'); ylabel('ATPn (mM)');
-subplot(2,2,3)
-hold all
-plot(nv.T, nv.out('Na_sa'));
-xlabel('Time [s]'); ylabel('Na_{sa}(mM)');
-subplot(2,2,4)
-hold all
-plot(nv.T, nv.out('K_e'));
-xlabel('Time [s]'); ylabel('K_e (mM)');
+% figure(20070);
+% set(gcf,'Name', 'Neuronal Na/K ATPase pump fluxes')
+% subplot(2,2,1)
+% hold all
+% plot(nv.T, nv.out('Vn_pump'));
+% xlabel('Time [s]'); ylabel('ATPase pump (mM/s)');
+% subplot(2,2,2)
+% hold all
+% plot(nv.T, nv.out('ATPn'));
+% xlabel('Time [s]'); ylabel('ATPn (mM)');
+% subplot(2,2,3)
+% hold all
+% plot(nv.T, nv.out('Na_sa'));
+% xlabel('Time [s]'); ylabel('Na_{sa}(mM)');
+% subplot(2,2,4)
+% hold all
+% plot(nv.T, nv.out('K_e'));
+% xlabel('Time [s]'); ylabel('K_e (mM)');
 
 
 % figure(23121223);
@@ -492,23 +548,19 @@ xlabel('Time [s]'); ylabel('K_e (mM)');
 %     xlim([20 XLIM2])
 %     
 %     
-% figure(2224);
-% subplot(2,2,1)
-%     plot(nv.T, nv.out('O2c'));
-%     xlabel('Time [s]'); ylabel('O2c');
-%     xlim([20 10000])
-% subplot(2,2,2)
-%     plot(nv.T, nv.out('GLCc')); 
-%     xlabel('Time [s]'); ylabel('GLCc');
-%     xlim([20 10000])
-% subplot(2,2,3)
-%     plot(nv.T, nv.out('LACc'));
-%     xlabel('Time [s]'); ylabel('LACc');
-%     xlim([20 10000])
-% subplot(2,2,4)
-%     plot(nv.T, nv.out('CBF'));
-%     xlabel('Time [s]'); ylabel('CBF');
-%     xlim([20 10000])
+figure();
+subplot(2,2,1)
+    plot(nv.T, nv.out('O2c'));
+    xlabel('Time [s]'); ylabel('O2c');
+subplot(2,2,2)
+    plot(nv.T, nv.out('GLCc')); 
+    xlabel('Time [s]'); ylabel('GLCc');
+subplot(2,2,3)
+    plot(nv.T, nv.out('LACc'));
+    xlabel('Time [s]'); ylabel('LACc');
+subplot(2,2,4)
+    plot(nv.T, nv.out('CBF'));
+    xlabel('Time [s]'); ylabel('CBF');
 
 % figure;
 % subplot(1,2,1)
@@ -517,8 +569,7 @@ xlabel('Time [s]'); ylabel('K_e (mM)');
 %     plot(nv.T, nv.out('Na_sa'));
 % 
 
-XLIM1 = 95;
-XLIM2 = 150;
+
 figure(123414);
 subplot(4,2,1);
     hold all;
@@ -527,8 +578,8 @@ subplot(4,2,1);
     xlim([XLIM1 XLIM2])
 subplot(4,2,2);
     hold all;
-    plot(nv.T, nv.out('GLCc'), 'LineWidth', 1);
-    ylabel('GLC_c');
+    plot(nv.T, nv.out('GLCn'), 'LineWidth', 1);
+    ylabel('GLC_n [mM]');
     xlim([XLIM1 XLIM2])
 subplot(4,2,3);
     hold all;
@@ -547,19 +598,20 @@ subplot(4,2,5);
     xlim([XLIM1 XLIM2])
 subplot(4,2,6);
     hold all;
-    plot(nv.T, nv.out('GLCn'), 'LineWidth', 1);
-    ylabel('GLC_n [mM]');
+    plot(nv.T, nv.out('Vk_pump'), 'LineWidth', 1);
+    ylabel('ATpase Pump (astrocyte) [mMs^{-1}]');
     xlim([0 1000])
 subplot(4,2,7);
     hold all;
-    plot(nv.T, nv.out('O2n'), 'LineWidth', 1);
-    ylabel('O2_n [mM]');
+    plot(nv.T, nv.out('Vn_pump'), 'LineWidth', 1);
+    ylabel('ATpase Pump (neuron) [mMs^{-1}]');
     xlim([XLIM1 XLIM2])
 subplot(4,2,8);
     hold all;
     plot(nv.T, nv.out('ATPg'), 'LineWidth', 1);
     ylabel('ATP_g [mM]');
     xlim([0 1000])
+
 
 
 % % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs

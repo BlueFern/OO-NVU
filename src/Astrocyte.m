@@ -74,6 +74,11 @@ classdef Astrocyte < handle
             % Flux through the Sodium Potassium pump
             J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
             
+            Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
+            Ik_pump = p.Imax_k .* Jk_pump; 
+            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F; % to look like Cloutier et al. 2009
+            J_NaK_k = Vk_pump .* 1000; % convert from mM/s to uM/s
+            
             % Fluxes
             J_BK_k = p.G_BK_k * w_k .* (v_k - E_BK_k);      % BK flux (uM/s)
             J_BK_p = J_BK_k ./ p.VR_pa;                         % K+ influx into the PVS (uM/s)
@@ -196,11 +201,12 @@ classdef Astrocyte < handle
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k, Na_k] = shared(self, ~, u)
+        function [K_p, NO_k, Na_k, K_s] = shared(self, ~, u)
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
             Na_k = u(idx.Na_k, :);
+            K_s = u(idx.K_s, :);
             
         end
         
@@ -291,8 +297,8 @@ function params = parse_inputs(varargin)
     
     % ECS K+ input parameters
     parser.addParameter('ECS_input', 9); 
-    parser.addParameter('t0_ECS', 10000);
-    parser.addParameter('tend_ECS', 20000);
+    parser.addParameter('t0_ECS', 10000000);
+    parser.addParameter('tend_ECS', 20000000);
     
     % Switches to turn on and off some things
     parser.addParameter('rhoSwitch', 1); 
@@ -361,6 +367,11 @@ function params = parse_inputs(varargin)
     parser.addParameter('P_L', 0.0804); %uM s^-1
     parser.addParameter('V_max', 20); %uM s^-1
     parser.addParameter('k_pump', 0.24); %uM
+    parser.addParameter('ATP_init_k',  2.24); %mM
+    parser.addParameter('K_init_s', 2.9); %mM
+    parser.addParameter('Na_init_k', 1.85e4);
+	parser.addParameter('Imax_k', 0.013*6 * 0.08); % no idea about this one TODO (last part to get similar baseline as cloutier)
+
 
     % Additional Equations; Astrocyte Constants
     parser.addParameter('z_K', 1);% [-]

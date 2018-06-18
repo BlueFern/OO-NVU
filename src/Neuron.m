@@ -614,7 +614,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('ATPheight', 0.6); 
     parser.addParameter('ATPslope', 1.5); 
     parser.addParameter('ATPshift', 2.0);
-    parser.addParameter('atp1factor', 2.232);
+    parser.addParameter('atp1factor', 2.232); %2.232
     
     parser.parse(varargin{:})
     params = parser.Results;

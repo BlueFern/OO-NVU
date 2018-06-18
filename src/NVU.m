@@ -64,7 +64,7 @@ classdef NVU < handle
             % Evaluate the coupling quantities to be passed between
             % submodels as coupling
             [ATPn, ATPg, GLUg] = self.anls.shared(self.T, ul);
-            [K_p, NO_k, Na_k] = self.astrocyte.shared(t, ua);
+            [K_p, NO_k, Na_k, K_s] = self.astrocyte.shared(t, ua);
             [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2, J_pump1_sa, K_e] = self.neuron.shared(t, un, ATPn);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(t, us, K_p); 
             [R, h] = self.wall.shared(t, uw);
@@ -75,7 +75,7 @@ classdef NVU < handle
             du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg);
             du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i, R_cGMP2);
             du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p, NO_k, O2);
-            du(self.i_anls, :) = self.anls.rhs(t, ul, R, J_pump1_sa, K_e, Na_k, Glu);
+            du(self.i_anls, :) = self.anls.rhs(t, ul, R, J_pump1_sa, K_e, Na_k, Glu, K_s);
             
         end
         function init_conds(self)
@@ -99,7 +99,7 @@ classdef NVU < handle
             ul = self.U(:, self.i_anls).';
             
             [ATPn, ATPg, GLUg] = self.anls.shared(self.T, ul);
-            [K_p, NO_k, Na_k] = self.astrocyte.shared(self.T, ua);
+            [K_p, NO_k, Na_k, K_s] = self.astrocyte.shared(self.T, ua);
             [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2, J_pump1_sa, K_e] = self.neuron.shared(self.T, un, ATPn);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
@@ -108,7 +108,7 @@ classdef NVU < handle
             [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
-            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k, Glu);
+            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k, Glu, K_s);
 
             tEnd = toc(tStart);
             fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
@@ -128,7 +128,7 @@ classdef NVU < handle
             uw = self.U(:, self.i_wall).';
             ul = self.U(:, self.i_anls).';
             
-            [ATPn, ATPg, GLUg] = self.anls.shared(self.T, ul);
+            [ATPn, ATPg, GLUg, K_s] = self.anls.shared(self.T, ul);
             [K_p, NO_k, Na_k] = self.astrocyte.shared(self.T, ua);
             [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2, J_pump1_sa, K_e] = self.neuron.shared(self.T, un, ATPn);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
@@ -139,7 +139,7 @@ classdef NVU < handle
             [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
-            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k, Glu);
+            [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Na_k, Glu, K_s);
 
             tEnd = toc(tStart);
             fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
