@@ -295,7 +295,7 @@ classdef Neuron < handle
             end
         end
         
-       function [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2, J_pump1_sa, K_e] = shared(self, t, u, ATPn)    %shared variables
+       function [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2, J_pump1_sa, K_e, Na_e] = shared(self, t, u, ATPn)    %shared variables
             t = t(:).';
             p = self.params;
             idx = self.index;
@@ -308,7 +308,7 @@ classdef Neuron < handle
             K_d = u(idx.K_d, :);        % K+ concentration of dendrite, mM
             Na_d = u(idx.Na_d, :);      % Na+ concentration of dendrite, mM
             K_e = u(idx.K_e, :);        % K+ concentration of ECS, mM
-            
+            Na_e = u(idx.Na_e, :);      % Na+ concentration of ECS, mM
             m2 = u(idx.m2, :);          % Activation gating variable, soma/axon KDR channel (K+)
             m3 = u(idx.m3, :);          % Activation gating variable, soma/axon KA channel (K+)
             m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)

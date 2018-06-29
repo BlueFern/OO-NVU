@@ -21,7 +21,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -31,13 +31,13 @@ classdef Astrocyte < handle
             
             K_p = u(idx.K_p, :);
             Ca_p = u(idx.Ca_p, :);
-            Na_k = u(idx.Na_k, :);
+            %Na_k = u(idx.Na_k, :);
             K_k = u(idx.K_k, :);
-            Cl_k = u(idx.Cl_k, :);
-            HCO3_k = u(idx.HCO3_k, :);
+            %Cl_k = u(idx.Cl_k, :);
+            %HCO3_k = u(idx.HCO3_k, :);
             Na_s = u(idx.Na_s, :);
             K_s = u(idx.K_s, :);
-            HCO3_s = u(idx.HCO3_s, :);
+            %HCO3_s = u(idx.HCO3_s, :);
             w_k = u(idx.w_k, :);
             I_k = u(idx.I_k, :);
             
@@ -52,7 +52,7 @@ classdef Astrocyte < handle
             %% Synaptic Cleft:
 
             % Electroneutrality condition
-            Cl_s = Na_s + K_s - HCO3_s;
+            %Cl_s = Na_s + K_s - HCO3_s;
 
             % Volume ratio of SC to AC
             VR_sa = p.R_s/p.R_k;
@@ -65,37 +65,42 @@ classdef Astrocyte < handle
 
             % Nernst potentials (in mV)
             E_K_k = p.ph / p.z_K * log(K_s ./ K_k);
-            E_Na_k = p.ph / p.z_Na * log(Na_s ./ Na_k);
-            E_Cl_k = p.ph / p.z_Cl * log(Cl_s ./ Cl_k);
-            E_NBC_k = p.ph / p.z_NBC * log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
+            %E_Na_k = p.ph / p.z_Na * log(Na_s ./ Na_k);
+            %E_Cl_k = p.ph / p.z_Cl * log(Cl_s ./ Cl_k);
+            %E_NBC_k = p.ph / p.z_NBC * log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
             E_BK_k = p.ph / p.z_K * log(K_p ./ K_k);        
             E_TRPV_k = p.ph / p.z_Ca * log(Ca_p ./ Ca_k);                                     % Nernst potential TRPV
             
-            % Flux through the Sodium Potassium pump
-            J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
+
             
-            Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
-            Ik_pump = p.Imax_k .* Jk_pump; 
-            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F; % to look like Cloutier et al. 2009
-            J_NaK_k = Vk_pump .* 1000; % convert from mM/s to uM/s
+            %du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
+            
+            % Flux through the Sodium Potassium pump
+            %J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
+            
+            Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
+            Ik_pump = 2.8 .* p.Imax_k .* Jk_pump; 
+            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F;
+            Vk_pump = Vk_pump .* 1000; %uM/s
+            %J_NKCC1_k = p.G_NKCC1_k * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));
+            %J_Na_k = p.G_Na_k * (v_k - E_Na_k);
+            %J_NBC_k = p.G_NBC_k * (v_k - E_NBC_k);
+
+                        
+                        
             
             % Fluxes
             J_BK_k = p.G_BK_k * w_k .* (v_k - E_BK_k);      % BK flux (uM/s)
             J_BK_p = J_BK_k ./ p.VR_pa;                         % K+ influx into the PVS (uM/s)
             J_K_k = p.G_K_k * (v_k - E_K_k);
-            J_Na_k = p.G_Na_k * (v_k - E_Na_k);
-            J_NBC_k = p.G_NBC_k * (v_k - E_NBC_k);
-            J_KCC1_k = p.G_KCC1_k * p.ph .* log((K_s .* Cl_s) ./ (K_k .* Cl_k));
-            J_NKCC1_k = p.G_NKCC1_k * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));
-            J_Cl_k = p.G_Cl_k * (v_k - E_Cl_k);
+            %J_KCC1_k = p.G_KCC1_k * p.ph .* log((K_s .* Cl_s) ./ (K_k .* Cl_k));
+            %J_Cl_k = p.G_Cl_k * (v_k - E_Cl_k);
             
             %% Calcium Equations
             % Flux
             J_IP3 = p.J_max * ( I_k ./ (I_k + p.K_I) .*  Ca_k ./ (Ca_k + p.K_act) .* h_k).^3 .* (1 - Ca_k ./ s_k);
             J_ER_leak = p.P_L * (1 - Ca_k ./ s_k);
             J_pump = p.V_max * Ca_k.^2 ./ (Ca_k.^2 + p.k_pump^2);
-%             I_TRPV_k = p.G_TRPV_k * m_k .* (v_k - E_TRPV_k); % TRPV4 current
-%             J_TRPV_k = - I_TRPV_k / (p.z_Ca * p.C_astr_k * p.gamma_i); % TRPV4 flux [uM/s]
             
             J_TRPV_k = p.G_TRPV_k * m_k .* (v_k - E_TRPV_k);
 
@@ -124,20 +129,15 @@ classdef Astrocyte < handle
             d_NO_k = (NO_n - NO_k) ./ tau_nk + (NO_i - NO_k) ./ tau_ki;
             
             
-            % ANLS stuff (glutamate -> Na atm)
-            GLUe = Glu;
-            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
-
-
             %% Conservation Equations
             
-            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k - 2*J_TRPV_k);
+            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - Vk_pump - 2*J_TRPV_k); %todo
             
             % Differential Equations in the Astrocyte
-            du(idx.K_k, :)    = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k;
-            du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k + 3*Veg_GLU;
-            du(idx.HCO3_k, :) = 2*J_NBC_k;
-            du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :) + 2*du(idx.Ca_k, :);
+            du(idx.K_k, :)    = -J_K_k + 2*Vk_pump - J_BK_k; %todo
+            %du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
+            %du(idx.HCO3_k, :) = 2*J_NBC_k;
+            %du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :) + 2*du(idx.Ca_k, :);
             
             % Differential Calcium Equations in Astrocyte
             du(idx.Ca_k, :)     = B_cyt .* (J_IP3 - J_pump + J_ER_leak - J_TRPV_k/p.r_buff);           
@@ -153,9 +153,9 @@ classdef Astrocyte < handle
             du(idx.Ca_p, :)     = J_TRPV_k./ p.VR_pa + J_VOCC_i ./ p.VR_ps - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
            
             % Differential Equations in the Synaptic Cleft
-            du(idx.K_s, :)    = 1./VR_sa * (J_K_k - 2 * J_NaK_k - J_NKCC1_k - J_KCC1_k) + J_K_NEtoSC_k;
-            du(idx.Na_s, :)   = 1./VR_sa * (J_Na_k + 3*J_NaK_k - J_NKCC1_k - J_NBC_k) + J_Na_NEtoSC_k;
-            du(idx.HCO3_s, :) = 1./VR_sa * (-2*J_NBC_k);
+            du(idx.K_s, :)    = 1./VR_sa * (J_K_k - 2 * Vk_pump) + J_K_NEtoSC_k; %todo
+            du(idx.Na_s, :)   = 1./VR_sa * (3*Vk_pump) + J_Na_NEtoSC_k; %todo
+            %du(idx.HCO3_s, :) = 1./VR_sa * (-2*J_NBC_k);
  
             % NO pathway
             du(idx.NO_k, :) = p_NO_k - c_NO_k + d_NO_k;
@@ -177,35 +177,35 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.J_ER_leak, :) = J_ER_leak;
                 Uout(self.idx_out.J_TRPV_k, :) = J_TRPV_k;
                 Uout(self.idx_out.E_BK_k, :) = E_BK_k;
-                Uout(self.idx_out.J_NBC_k, :) = J_NBC_k;
-                Uout(self.idx_out.E_Na_k, :) = E_Na_k;
+                %Uout(self.idx_out.J_NBC_k, :) = J_NBC_k;
+                %Uout(self.idx_out.E_Na_k, :) = E_Na_k;
                 Uout(self.idx_out.E_K_k, :) = E_K_k;
-                Uout(self.idx_out.E_NBC_k, :) = E_NBC_k;
-                Uout(self.idx_out.E_Cl_k, :) = E_Cl_k;
+                %Uout(self.idx_out.E_NBC_k, :) = E_NBC_k;
+                %Uout(self.idx_out.E_Cl_k, :) = E_Cl_k;
 %                 Uout(self.idx_out.I_TRPV_k, :) = I_TRPV_k;
                 Uout(self.idx_out.J_K_k, :) = J_K_k;
-                Uout(self.idx_out.J_Na_k, :) = J_Na_k;
+                %Uout(self.idx_out.J_Na_k, :) = J_Na_k;
                 Uout(self.idx_out.K_k, :) = K_k;
                 Uout(self.idx_out.w_inf, :) = w_inf;
                 Uout(self.idx_out.phi_w, :) = phi_w;
                 Uout(self.idx_out.J_BK_p, :) = J_BK_p;
                 Uout(self.idx_out.E_TRPV_k, :) = E_TRPV_k;
-                Uout(self.idx_out.Na_k, :) = Na_k;
-                Uout(self.idx_out.J_KCC1_k, :) = J_KCC1_k;
-                Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
-                Uout(self.idx_out.J_NaK_k, :) = J_NaK_k;
-                Uout(self.idx_out.J_Cl_k, :) = J_Cl_k;
+                %Uout(self.idx_out.Na_k, :) = Na_k;
+                %Uout(self.idx_out.J_KCC1_k, :) = J_KCC1_k;
+                %Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
+                %Uout(self.idx_out.J_NaK_k, :) = J_NaK_k;
+                %Uout(self.idx_out.J_Cl_k, :) = J_Cl_k;
                 
                 
                 
                 varargout = {Uout};
             end
         end
-        function [K_p, NO_k, Na_k, K_s] = shared(self, ~, u)
+        function [K_p, NO_k, K_s] = shared(self, ~, u)
             idx = self.index;
             K_p = u(self.index.K_p, :);
             NO_k = u(idx.NO_k, :);
-            Na_k = u(idx.Na_k, :);
+            %Na_k = u(idx.Na_k, :);
             K_s = u(idx.K_s, :);
             
         end
@@ -220,22 +220,22 @@ function idx = indices(self)
 % Index of state variables
     idx.NO_k = 1;
     idx.K_p = 2;
-    idx.Na_k = 3;
-    idx.K_k = 4;
-    idx.Cl_k = 5;
-    idx.HCO3_k = 6;
-    idx.Na_s = 7;
-    idx.K_s = 8;
-    idx.HCO3_s = 9;
-    idx.w_k = 10;
-    idx.I_k = 11;
-    idx.Ca_k = 12;
-    idx.h_k = 13;
-    idx.s_k = 14;
-    idx.eet_k = 15;
-    idx.m_k = 16;
-    idx.Ca_p = 17;
-    idx.v_k = 18;
+    %idx.Na_k = 3;
+    idx.K_k = 3;
+    %idx.Cl_k = 5;
+    %idx.HCO3_k = 6;
+    idx.Na_s = 4;
+    idx.K_s = 5;
+    %idx.HCO3_s = 9;
+    idx.w_k = 6;
+    idx.I_k = 7;
+    idx.Ca_k = 8;
+    idx.h_k = 9;
+    idx.s_k = 10;
+    idx.eet_k = 11;
+    idx.m_k = 12;
+    idx.Ca_p = 13;
+    idx.v_k = 14;
 end
 
 function [idx, n] = output_indices(self)
@@ -256,23 +256,23 @@ function [idx, n] = output_indices(self)
     idx.J_ER_leak  = 14;
     idx.J_TRPV_k  = 15;
     idx.E_BK_k  = 16;
-    idx.J_NBC_k  = 17;
-    idx.E_Na_k  = 18; 
-    idx.E_K_k  = 19; 
-    idx.E_NBC_k  = 20; 
-    idx.E_Cl_k  = 21; 
+    %idx.J_NBC_k  = 17;
+    %idx.E_Na_k  = 18; 
+    idx.E_K_k  = 17; 
+    %idx.E_NBC_k  = 20; 
+    %idx.E_Cl_k  = 21; 
 %     idx.I_TRPV_k  = 22; 
-    idx.J_NKCC1_k = 23;
-    idx.J_K_k  = 24; 
-    idx.J_Na_k  = 25;
-    idx.J_BK_p = 26;
-    idx.J_NaK_k = 27;
-    idx.E_TRPV_k = 28;
-    idx.Cak = 29;
-    idx.Na_k = 30;
-    idx.J_K_NEtoSC = 31;
-    idx.J_KCC1_k = 32;
-    idx.J_Cl_k = 33;
+    %idx.J_NKCC1_k = 23;
+    idx.J_K_k  = 18; 
+    %idx.J_Na_k  = 25;
+    idx.J_BK_p = 19;
+    %idx.J_NaK_k = 27;
+    idx.E_TRPV_k = 20;
+    idx.Cak = 21;
+    %idx.Na_k = 30;
+    idx.J_K_NEtoSC = 22;
+    %idx.J_KCC1_k = 32;
+    %idx.J_Cl_k = 33;
     
     n = numel(fieldnames(idx));
 end
@@ -405,13 +405,13 @@ function u0 = initial_conditions(idx,self)
     % Inital estimations of parameters from experimental data
     p = self.params;
     u0 = zeros(length(fieldnames(idx)), 1);
-    u0(idx.Na_k) = 18268;   % [uM]
+    %u0(idx.Na_k) = 18268;   % [uM]
     u0(idx.K_k) = 92708;    % [uM]  
-    u0(idx.HCO3_k) = 9131;  % [uM]
-    u0(idx.Cl_k) = 7733;    % [uM]
+    %u0(idx.HCO3_k) = 9131;  % [uM]
+    %u0(idx.Cl_k) = 7733;    % [uM]
     u0(idx.Na_s) = 150255;  % [uM]
     u0(idx.K_s) = 2837;     % [uM]
-    u0(idx.HCO3_s) = 16881; % [uM]
+    %u0(idx.HCO3_s) = 16881; % [uM]
     u0(idx.K_p) = 3045.1;   % [uM]
     u0(idx.w_k) = 1.703e-4; % [-]
     u0(idx.Ca_k) = 0.1612;  % [uM]

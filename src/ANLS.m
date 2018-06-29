@@ -16,7 +16,7 @@ classdef ANLS < handle
             self.enabled = true(size(self.u0));
             [self.idx_out, self.n_out] = output_indices();
         end
-        function [du, varargout] = rhs(self, t, u, R, J_pump1_sa, K_e, Na_k, Glu, K_s)
+        function [du, varargout] = rhs(self, t, u, R, J_pump1_sa, K_e, Glu, K_s, Na_e)
             % Initalise inputs and parameters
             idx = self.index;
             p = self.params;
@@ -54,6 +54,7 @@ classdef ANLS < handle
             PCrn = u(idx.PCrn, :);
             
             GLUg = u(idx.GLUg, :);
+            Nag = u(idx.Nag, :);
             %GLUn = u(idx.GLUn, :);
             %GLUe = u(idx.GLUe, :);
             
@@ -135,18 +136,12 @@ classdef ANLS < handle
             I_pumpv2 = pumpScaling * p.Imax * J_pump1_sa .* atp_term2; 
             I_pump = pumpScaling * p.Imax * J_pump1_sa .* atp_term;
             Vn_pump = 6.6 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F; %6.5 for changes in o2 or glu????
-                  
-            % original from ostby... J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
-            
-            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
-            Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
+      
             
             
-            
-            Jk_pump  = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_k ./ Na_k)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
-            Ik_pump = 2.0 .* p.Imax_k .* Jk_pump; 
-            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F; % to look like Cloutier et al. 2009
-            
+            Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
+            Ik_pump = p.Imax_k .* Jk_pump; 
+            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F;
             
             Vce_GLC =  p.Vm_ce_GLC .* (GLCc ./ (GLCc + p.Km_ce_GLC) - GLCe ./ (GLCe + p.Km_ce_GLC));
             Vcg_GLC =  p.Vm_cg_GLC .* (GLCc ./ (GLCc + p.Km_cg_GLC) - GLCg ./ (GLCg + p.Km_cg_GLC));
@@ -186,9 +181,11 @@ classdef ANLS < handle
             Vge_LAC =  p.Vmax_ge_LAC .* (LACg ./ (LACg + p.Km_ge_LAC) - LACe ./ (LACe + p.Km_ge_LAC));
             Vec_LAC =  p.Vm_ec_LAC .* (LACe ./ (LACe + p.Km_ec_LAC) - LACc ./ (LACc + p.Km_ec_LAC));
             
-%             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
-%             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-            
+
+            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
+            Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
+            Vg_leak_Na =  (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
+
             
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
             Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2g);            
@@ -198,7 +195,6 @@ classdef ANLS < handle
             NADn = p.NADH_n_tot - NADHn;
             Vn_ldh =  p.kfn_ldh .* PYRn .* NADHn -  p.krn_ldh .* LACn .* NADn;
 
-%           Vn_stim_GLU =  Vn_stim .* p.R_GLU_NA .* (GLUn ./ (GLUn + p.Km_GLU));
             
             NADg = p.NADH_g_tot - NADHg;
             Vg_ldh =  p.kfg_ldh .* PYRg .* NADHg -  p.krg_ldh .* LACg .* NADg;
@@ -206,7 +202,6 @@ classdef ANLS < handle
             Vn_pgk =  p.kn_pgk .* GAPn .* ADPn .* (NADn ./ NADHn);
             Vn_pk =  p.kn_pk .* PEPn .* ADPn;
             Vn_mito =  p.Vmax_n_mito .* (O2n ./ (O2n + p.Km_O2)) .* (ADPn ./ (ADPn + p.Km_ADP)) .* (PYRn ./ (PYRn + p.Km_PYR)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aATP_mito .* ( 1.0 .* (ATPn ./ ADPn -  1.0 .* p.rATP_mito)))));
-%             Vn_mito = 0.0122;
             CRn = p.PCrn_tot - PCrn;
             Vn_ck =  p.kfn_ck .* PCrn .* ADPn -  p.krn_ck .* CRn .* ATPn;
             Vn_ATPase =  p.Vmax_n_ATPase .* (ATPn ./ (ATPn + 0.0010));
@@ -259,6 +254,8 @@ classdef ANLS < handle
             du(idx.GLCe, :) = Vce_GLC - (Veg_GLC .* (1.0 ./ p.Reg) +  V_en_GLC .* (1.0 ./ p.Ren));
             du(idx.LACe, :) = ( Vne_LAC .* (1.0 ./ p.Ren) +  Vge_LAC .* (1.0 ./ p.Reg)) - Vec_LAC;      
             % Astrocyte 
+            
+            du(idx.Nag, :) = (Vg_leak_Na +  3.0 .* Veg_GLU) -  3.0 .* Vk_pump;
             du(idx.GLCg, :) = (Vcg_GLC + Veg_GLC) - Vg_hk;
             du(idx.F6Pg, :) = Vg_pgi - Vg_pfk;
             du(idx.G6Pg, :) = (Vg_hk + Vg_glyp) - (Vg_pgi + Vg_glys);
@@ -338,6 +335,8 @@ classdef ANLS < handle
                 Uout(self.idx_out.Vg_gs, :) = Vg_gs;
                 Uout(self.idx_out.GLUe, :) = GLUe;
                 Uout(self.idx_out.Veg_GLU, :) = Veg_GLU;
+                Uout(self.idx_out.Vg_leak_Na, :) = Vg_leak_Na;
+                
                 
                 
                 
@@ -345,11 +344,12 @@ classdef ANLS < handle
             end
         end 
 
-        function [ATPn, ATPg, GLUg] = shared(self, ~,u)
+        function [ATPn, ATPg, GLUg, Nag] = shared(self, ~,u)
            
             ATPn = u(self.index.ATPn, :);
             ATPg = u(self.index.ATPg, :);
             GLUg = u(self.index.GLUg, :);
+            Nag = u(self.index.Nag, :);
 
         end  
         
@@ -391,6 +391,7 @@ function idx = indices()
     idx.ATPg = 27;
     idx.PCrn = 28;
     idx.GLUg = 29;
+    idx.Nag = 30;
     
     
 end
@@ -448,7 +449,7 @@ function [idx, n] = output_indices()
     idx.Vg_gs = 38;
     idx.GLUe = 39;
     idx.Veg_GLU = 40;
-    
+    idx.Vg_leak_Na = 41;
     n = numel(fieldnames(idx));
 end
 
@@ -605,7 +606,7 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('K_init_e', 2.9);
     parser.addParameter('K_init_s', 2.9);
-    parser.addParameter('Na_init_k', 1.85e4);
+    parser.addParameter('Na_init_k', 13.36); %mM
     parser.addParameter('ATP_init_k', 2.24); 
     parser.addParameter('Imax_k', 0.013*6 * 0.08); % no idea about this one TODO (last part to get similar baseline as cloutier)
     parser.addParameter('R_k', 6e-8); % m
@@ -616,7 +617,8 @@ function params = parse_inputs(varargin)
     parser.addParameter('ATPheight', 0.6); 
     parser.addParameter('ATPslope', 1.5); 
     parser.addParameter('ATPshift', 2.0);
-
+    
+    parser.addParameter('RT', 2577340);
     
     parser.parse(varargin{:});
     params = parser.Results;
@@ -665,6 +667,7 @@ function u0 = initial_conditions(idx)
     
     u0(idx.PCrn) = 4.255;
     u0(idx.GLUg) = 0.0;
+    u0(idx.Nag) = 13.36;
     
     
     
