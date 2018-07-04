@@ -82,6 +82,13 @@ classdef Astrocyte < handle
             Ik_pump = 2.8 .* p.Imax_k .* Jk_pump; 
             Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F;
             Vk_pump = Vk_pump .* 1000; %uM/s
+            
+            GLUe = (Glu ./ 1000); %uM to mM, then scaling factor of 1/3
+            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU)); % one glu and 3 Na+ with this pump
+            
+            Vg_leak_Na =  (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
+            
+            
             %J_NKCC1_k = p.G_NKCC1_k * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));
             %J_Na_k = p.G_Na_k * (v_k - E_Na_k);
             %J_NBC_k = p.G_NBC_k * (v_k - E_NBC_k);
@@ -131,7 +138,7 @@ classdef Astrocyte < handle
             
             %% Conservation Equations
             
-            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - Vk_pump - 2*J_TRPV_k); %todo
+            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - Vk_pump - 2*J_TRPV_k + 3.0 .* Veg_GLU + Vg_leak_Na); %todo
             
             % Differential Equations in the Astrocyte
             du(idx.K_k, :)    = -J_K_k + 2*Vk_pump - J_BK_k; %todo
@@ -395,7 +402,10 @@ function params = parse_inputs(varargin)
 
     parser.addParameter('Vmax_eg_GLU', 0.0208);
     parser.addParameter('Km_GLU', 0.05);
-        
+    parser.addParameter('RT', 2577340);
+    parser.addParameter('gg_NA', 0.00325);
+    parser.addParameter('Sm_g', 10500)
+    parser.addParameter('Vg', 0.25)
     parser.parse(varargin{:})
     params = parser.Results;
     

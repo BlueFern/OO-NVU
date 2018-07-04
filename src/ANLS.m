@@ -22,7 +22,7 @@ classdef ANLS < handle
             p = self.params;
             t = t(:).';
             
-            GLUe = (1 / 3) .* (Glu ./ 1000); %uM to mM, then scaling factor of 1/3
+            GLUe = (Glu ./ 1000); %uM to mM, then scaling factor of 1/3
             
             GLCn = u(idx.GLCn, :);            
             G6Pn = u(idx.G6Pn, :);
@@ -136,7 +136,7 @@ classdef ANLS < handle
             I_pumpv2 = pumpScaling * p.Imax * J_pump1_sa .* atp_term2; 
             I_pump = pumpScaling * p.Imax * J_pump1_sa .* atp_term;
             Vn_pump = 6.6 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F; %6.5 for changes in o2 or glu????
-      
+            %Vn_pump = 0.1583 + (0.035 * rectpuls(t - 102.5, 5));
             
             
             Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
@@ -245,7 +245,7 @@ classdef ANLS < handle
             du(idx.PEPn, :) = Vn_pgk - Vn_pk;
             
 
-            %Vn_pump = 0.1483;% + (0.035 * rectpuls(t - 102.5, 5));
+            
             %Vn_pump = 0.1583;
             
             du(idx.ATPn, :) =  ((Vn_pgk + Vn_pk +  p.nOP .* Vn_mito + Vn_ck) - (Vn_hk + Vn_pfk + Vn_ATPase + Vn_pump)).* power(1.0 - dAMP_dATPn, -1.0);
@@ -591,7 +591,7 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
-    parser.addParameter('R_c_cbf', 0.43); %0.47
+    parser.addParameter('R_c_cbf', 0.43); %0.43
     parser.addParameter('ATP_init_n', 2.2595); % dimless 
     parser.addParameter('F', 9.65e4); %C mol^-1; Faraday's constant
     parser.addParameter('Imax', 0.013*6);  % mA/cm^2
