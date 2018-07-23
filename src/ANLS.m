@@ -22,7 +22,7 @@ classdef ANLS < handle
             p = self.params;
             t = t(:).';
             
-            GLUe = (Glu ./ 1000); %uM to mM, then scaling factor of 1/3
+            GLUe = (Glu ./ 1000); %uM to mM
             
             GLCn = u(idx.GLCn, :);            
             G6Pn = u(idx.G6Pn, :);
@@ -135,13 +135,15 @@ classdef ANLS < handle
             atp_term2 = ((1 + (p.ATP_init_n ./ ATPn)).^(-1)); %term from chang supp material
             I_pumpv2 = pumpScaling * p.Imax * J_pump1_sa .* atp_term2; 
             I_pump = pumpScaling * p.Imax * J_pump1_sa .* atp_term;
-            Vn_pump = 6.6 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F; %6.5 for changes in o2 or glu????
+            Vn_pump = 6.6 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F;
             %Vn_pump = 0.1583 + (0.035 * rectpuls(t - 102.5, 5));
             
-            
-            Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
+            K_s_mM = K_s ./ 1000; 
+            Jk_pump  = (1 + (p.K_init_s ./ K_s_mM)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
             Ik_pump = p.Imax_k .* Jk_pump; 
-            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F;
+            Vk_pump = 3 .* (1 / p.R_k) * Ik_pump ./ p.F; %3.7
+            
+            
             
             Vce_GLC =  p.Vm_ce_GLC .* (GLCc ./ (GLCc + p.Km_ce_GLC) - GLCe ./ (GLCe + p.Km_ce_GLC));
             Vcg_GLC =  p.Vm_cg_GLC .* (GLCc ./ (GLCc + p.Km_cg_GLC) - GLCg ./ (GLCg + p.Km_cg_GLC));
@@ -184,7 +186,7 @@ classdef ANLS < handle
 
             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-            Vg_leak_Na =  (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
 
             
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
@@ -553,7 +555,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('Km_GLU', 0.05);
     parser.addParameter('Vmax_g_gs', 0.3);
     parser.addParameter('Km_ATP', 0.01532);
-    parser.addParameter('Vmax_eg_GLU', 0.0208);
+    parser.addParameter('Vmax_eg_GLU', 3 * 0.0208); %0.0208
     
     parser.addParameter('Vmax_glys', 0.0001528);
     parser.addParameter('Km_G6P_glys', 0.5);
@@ -606,7 +608,7 @@ function params = parse_inputs(varargin)
     
     parser.addParameter('K_init_e', 2.9);
     parser.addParameter('K_init_s', 2.9);
-    parser.addParameter('Na_init_k', 13.36); %mM
+    parser.addParameter('Na_init_k', 13.06); %mM
     parser.addParameter('ATP_init_k', 2.24); 
     parser.addParameter('Imax_k', 0.013*6 * 0.08); % no idea about this one TODO (last part to get similar baseline as cloutier)
     parser.addParameter('R_k', 6e-8); % m
@@ -631,43 +633,40 @@ function u0 = initial_conditions(idx)
     
     % normal IC's
     
-    u0(idx.GLCn) = 0.2763;
-    u0(idx.G6Pn) = 0.7283;
-    u0(idx.F6Pn) = 0.1092;
-    u0(idx.GAPn) = 0.05779;
-    u0(idx.PEPn) = 0.003708;
+    u0(idx.GLCn) = 0.1529;
+    u0(idx.G6Pn) = 0.7179;
+    u0(idx.F6Pn) = 0.1075;
+    u0(idx.GAPn) = 0.05624;
+    u0(idx.PEPn) = 0.00367;
+    u0(idx.PYRn) = 0.04823;
     
-    u0(idx.PYRn) = 0.04874;
-    u0(idx.LACn) = 0.6018; 
-    u0(idx.NADHn) = 0.04165;
+    u0(idx.LACn) = 0.5928; 
+    u0(idx.NADHn) = 0.04109;
     u0(idx.ATPn) = 2.26;
+    u0(idx.GLCg) = 0.006644;
+    u0(idx.F6Pg) = 0.054;
+    u0(idx.G6Pg) = 0.3911;
     
-    u0(idx.GLCg) = 0.1848;
-
-    u0(idx.F6Pg) = 0.1124;
-    u0(idx.G6Pg) = 0.7362;
     u0(idx.GLYg) = 2.5;
+    u0(idx.GLCe) = 0.22;
+    u0(idx.LACe) = 0.6081;
+    u0(idx.O2c) = 7.44;
+    u0(idx.GLCc) = 4.63;
+    u0(idx.LACc) = 0.3487;
     
-    u0(idx.GLCe) = 0.3472;
-    u0(idx.LACe) = 0.6143;
-    u0(idx.O2c) = 7.488;
-    u0(idx.GLCc) = 4.639;
-    u0(idx.LACc) = 0.3494;
-    u0(idx.LACg) = 0.8067;
-    u0(idx.O2n) = 0.1054;
-    u0(idx.GAPg) = 0.1393;
-        
-    u0(idx.PEPg) = 0.02833;
-    u0(idx.PYRg) = 0.1658;
+    u0(idx.LACg) = 0.8066;
+    u0(idx.O2n) = 0.1022;
+    u0(idx.GAPg) = 0.0371;
+    u0(idx.PEPg) = 0.00837;
+    u0(idx.PYRg) = 0.1815;
+    u0(idx.NADHg) = 0.06428;
     
-    u0(idx.NADHg) = 0.06853;
-    u0(idx.O2g) = 0.168;
-    u0(idx.PCrg) = 4.72;
-    u0(idx.ATPg) = 2.258;
-    
+    u0(idx.O2g) = 0.1599;
+    u0(idx.PCrg) = 3.821;
+    u0(idx.ATPg) = 1.794;
     u0(idx.PCrn) = 4.255;
     u0(idx.GLUg) = 0.0;
-    u0(idx.Nag) = 13.36;
+    u0(idx.Nag) = 13.37;
     
     
     

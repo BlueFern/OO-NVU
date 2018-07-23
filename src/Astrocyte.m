@@ -78,16 +78,21 @@ classdef Astrocyte < handle
             % Flux through the Sodium Potassium pump
             %J_NaK_k = p.J_NaK_max * Na_k.^1.5 ./ (Na_k.^1.5 + p.K_Na_k^1.5) .* K_s ./ (K_s + p.K_K_s);
             
-            Jk_pump  = (1 + (p.K_init_s ./ K_s)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
-            Ik_pump = 2.8 .* p.Imax_k .* Jk_pump; 
-            Vk_pump =  (1 / p.R_k) * Ik_pump ./ p.F;
-            Vk_pump = Vk_pump .* 1000; %uM/s
             
-            GLUe = (Glu ./ 1000); %uM to mM, then scaling factor of 1/3
+            %% all my stuff is in mM/s be careful
+            K_s_mM = K_s ./ 1000; 
+            Jk_pump  = (1 + (p.K_init_s ./ K_s_mM)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
+            Ik_pump = p.Imax_k .* Jk_pump; 
+            Vk_pump = 3 .* (1 / p.R_k) * Ik_pump ./ p.F; %3.7
+            Vk_pump2 = Vk_pump .* 1000; %uM/s
+            
+            GLUe = (Glu ./ 1000); %uM to mM
+            
             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU)); % one glu and 3 Na+ with this pump
+            Veg_GLU_uM = Veg_GLU .* 1000;
             
-            Vg_leak_Na =  (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
-            
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
+            Vg_leak_Na_uM = Vg_leak_Na .* 1000;
             
             %J_NKCC1_k = p.G_NKCC1_k * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));
             %J_Na_k = p.G_Na_k * (v_k - E_Na_k);
@@ -138,10 +143,10 @@ classdef Astrocyte < handle
             
             %% Conservation Equations
             
-            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - Vk_pump - 2*J_TRPV_k + 3.0 .* Veg_GLU + Vg_leak_Na); %todo
+            du(idx.v_k, :)    = p.gamma_i .* ( -J_BK_k - J_K_k - Vk_pump2 - 2*J_TRPV_k + 3.0 .* Veg_GLU_uM + Vg_leak_Na_uM); %todo
             
             % Differential Equations in the Astrocyte
-            du(idx.K_k, :)    = -J_K_k + 2*Vk_pump - J_BK_k; %todo
+            du(idx.K_k, :)    = -J_K_k + 2*Vk_pump2 - J_BK_k; %todo
             %du(idx.Na_k, :)   = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
             %du(idx.HCO3_k, :) = 2*J_NBC_k;
             %du(idx.Cl_k, :)   = du(idx.Na_k, :) + du(idx.K_k, :) - du(idx.HCO3_k, :) + 2*du(idx.Ca_k, :);
@@ -160,8 +165,8 @@ classdef Astrocyte < handle
             du(idx.Ca_p, :)     = J_TRPV_k./ p.VR_pa + J_VOCC_i ./ p.VR_ps - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
            
             % Differential Equations in the Synaptic Cleft
-            du(idx.K_s, :)    = 1./VR_sa * (J_K_k - 2 * Vk_pump) + J_K_NEtoSC_k; %todo
-            du(idx.Na_s, :)   = 1./VR_sa * (3*Vk_pump) + J_Na_NEtoSC_k; %todo
+            du(idx.K_s, :)    = 1./VR_sa * (J_K_k - 2 * Vk_pump2) + J_K_NEtoSC_k; %todo
+            du(idx.Na_s, :)   = 1./VR_sa * (3*Vk_pump2) + J_Na_NEtoSC_k; %todo
             %du(idx.HCO3_s, :) = 1./VR_sa * (-2*J_NBC_k);
  
             % NO pathway
@@ -202,7 +207,7 @@ classdef Astrocyte < handle
                 %Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
                 %Uout(self.idx_out.J_NaK_k, :) = J_NaK_k;
                 %Uout(self.idx_out.J_Cl_k, :) = J_Cl_k;
-                
+                Uout(self.idx_out.Vk_pump2, :) = Vk_pump2;
                 
                 
                 varargout = {Uout};
@@ -280,6 +285,7 @@ function [idx, n] = output_indices(self)
     idx.J_K_NEtoSC = 22;
     %idx.J_KCC1_k = 32;
     %idx.J_Cl_k = 33;
+    idx.Vk_pump2 = 23;
     
     n = numel(fieldnames(idx));
 end
@@ -374,11 +380,13 @@ function params = parse_inputs(varargin)
     parser.addParameter('P_L', 0.0804); %uM s^-1
     parser.addParameter('V_max', 20); %uM s^-1
     parser.addParameter('k_pump', 0.24); %uM
-    parser.addParameter('ATP_init_k',  2.24); %mM
-    parser.addParameter('K_init_s', 2.9); %mM
-    parser.addParameter('Na_init_k', 1.85e4);
-	parser.addParameter('Imax_k', 0.013*6 * 0.08); % no idea about this one TODO (last part to get similar baseline as cloutier)
 
+    
+    parser.addParameter('K_init_e', 2.9);
+    parser.addParameter('K_init_s', 2.9);
+    parser.addParameter('Na_init_k', 13.06); %mM
+    parser.addParameter('ATP_init_k', 2.24); 
+    parser.addParameter('Imax_k', 0.013*6 * 0.08); % no idea about this one TODO (last part to get similar baseline as cloutier)
 
     % Additional Equations; Astrocyte Constants
     parser.addParameter('z_K', 1);% [-]
@@ -400,7 +408,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('k_O2_k', 9.6e-6);      % [uM^-2 s^-1] ;  (Kavdia2002)
     parser.addParameter('O2_k', 200);           % [uM] ;  (M.E.)
 
-    parser.addParameter('Vmax_eg_GLU', 0.0208);
+    parser.addParameter('Vmax_eg_GLU', 3 * 0.0208); %0.0208
     parser.addParameter('Km_GLU', 0.05);
     parser.addParameter('RT', 2577340);
     parser.addParameter('gg_NA', 0.00325);
