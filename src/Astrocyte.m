@@ -91,7 +91,7 @@ classdef Astrocyte < handle
             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU)); % one glu and 3 Na+ with this pump
             Veg_GLU_uM = Veg_GLU .* 1000;
             
-            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(Na_e ./ Nag) - -70.0);
             Vg_leak_Na_uM = Vg_leak_Na .* 1000;
             
             %J_NKCC1_k = p.G_NKCC1_k * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));

@@ -27,18 +27,18 @@ fprintf('Start time is %s\n', char(timeStart));
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
 XLIM1 = 50;
-XLIM2 = 2000; % End of simulation
+XLIM2 = 1000; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
 
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2     %%%%%%%%%%%%%%%%% 0.006 or 0.022 sometimes 0042?
-NEURONAL_START      = 1000                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;      % Start of neuronal stimulation
+NEURONAL_START      = 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ;      % Start of neuronal stimulation
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 1020;      % End of neuronal stimulation 
+NEURONAL_END        = 120;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -143,7 +143,7 @@ figure(336647);
 set(gcf,'Name', 'new stuff')
 subplot(2,3,1)
 hold all
-plot(nv.T, nv.out('Vk_pump')); 
+plot(nv.T, nv.out('Nag')); 
 xlabel('Time [s]'); ylabel('Vk_pump');
 
 subplot(2,3,2)
@@ -171,7 +171,34 @@ hold all
 plot(nv.T, nv.out('Na_e')); 
 xlabel('Time [s]'); ylabel('Na_e');
 
-
+XLIM1 = 90;
+XLIM2 = 200;
+figure(123416);
+subplot(2,2,1);
+    hold all;
+    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+    ylabel('v_sa [mV]');
+    xlabel('Time [s]');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,2);
+    hold all;
+    plot(nv.T, nv.out('R'), 'LineWidth', 1);
+    ylabel('Radius [\mum]');
+    xlabel('Time [s]');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,3);
+    hold all;
+    plot(nv.T, nv.out('Nag'), 'LineWidth', 1);
+    ylabel('Na_k  [mM]');
+    xlabel('Time [s]');
+    xlim([XLIM1 XLIM2])
+subplot(2,2,4);
+    hold all;
+    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+    ylabel('K_e [mM]');
+    xlabel('Time [s]');
+    xlim([XLIM1 XLIM2])
+    
 % figure(556);
 % set(gcf,'Name', 'Astrocytic K+')
 % subplot(2,3,1)
@@ -494,30 +521,29 @@ end
     
 %% Plot some variables
 % % 
-XLIM1 = 990;
-XLIM2 = 1050;
+XLIM1 = 90;
+XLIM2 = 200;
 figure(12341234);
 subplot(3,3,1);
     hold all;
-    plot(nv.T, nv.out('K_k'), 'LineWidth', 1);
-    ylabel('K_k');
+    plot(nv.T, nv.out('ATPn'), 'LineWidth', 1);
+    ylabel('ATP_n  [mM]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,2);
     hold all;
-    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
-    ylabel('v_k [mV]');
+    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+    ylabel('v_sa [mV]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,3);
     hold all;
     plot(nv.T, nv.out('Nag'), 'LineWidth', 1);
-    ylabel('Nak');
+    ylabel('Na_k  [mM]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,4);
     hold all;
-    plot(nv.T, nv.out('K_p'), 'LineWidth', 1);
-    ylabel('K_p');
+    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+    ylabel('K_e [mM]');
     xlim([XLIM1 XLIM2])
-    
 subplot(3,3,5);
     hold all;
     plot(nv.T, nv.out('R'), 'LineWidth', 1);
@@ -530,19 +556,19 @@ subplot(3,3,6);
     xlim([XLIM1 XLIM2])
 subplot(3,3,7);
     hold all;
-    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-    ylabel('K_e [mM]');
-    xlim([XLIM1 XLIM2])
+    plot(nv.T, nv.out('GLCn'), 'LineWidth', 1);
+    ylabel('GLC_n [mM]');
+    xlim([XLIM1 1000])
 subplot(3,3,8);
     hold all;
-    plot(nv.T, nv.out('J_K_k'), 'LineWidth', 1);
-    ylabel('J_K_k');
+    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
+    ylabel('v_k [mV]');
     xlim([XLIM1 XLIM2])
 subplot(3,3,9);
     hold all;
     % BOLD using normalised variables
-    plot(nv.T, nv.out('Vk_pump'), 'LineWidth', 1);  
-    ylabel('Vk_pump');
+    plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);  
+    ylabel('K_k [mM]');
     xlim([XLIM1 XLIM2])
     
 % %  % Plot figures - whatever you want

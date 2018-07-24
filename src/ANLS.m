@@ -186,7 +186,7 @@ classdef ANLS < handle
 
             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150.0 ./ Nag) - -70.0);
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(Na_e ./ Nag) - -70.0);
 
             
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
