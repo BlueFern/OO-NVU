@@ -320,7 +320,12 @@ classdef Neuron < handle
             O2 = u(idx.O2, :);
             
             %% Glutamate function dependent on neuron membrane potential
-            Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );  % based on extracellular K+ (Kager2000) - smooth
+            %Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );  % based on extracellular K+ (Kager2000) - smooth
+            Glu = max(0, (1846/3) .* K_e - (7384/3));
+            
+%             Glu = 1846 * 0.5 * (1 + tanh(((K_e - 6.35) / 0.1)));  % Take 2!!!
+            
+            
             
             %% Fluxes for the ODEs - (unfortunately) must be reproduced in this function to share with Astrocyte.m
             K = K_e;             

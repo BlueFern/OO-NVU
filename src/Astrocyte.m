@@ -21,7 +21,7 @@ classdef Astrocyte < handle
             [self.idx_out, self.n_out] = output_indices(self);
         end
 
-        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag)
+        function [du, varargout] = rhs(self, t, u, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag, Na_e)
             % Initalise inputs and parameters
             t = t(:).';
             p = self.params;
@@ -65,7 +65,7 @@ classdef Astrocyte < handle
 
             % Nernst potentials (in mV)
             E_K_k = p.ph / p.z_K * log(K_s ./ K_k);
-            %E_Na_k = p.ph / p.z_Na * log(Na_s ./ Na_k);
+            E_Na_k = p.ph / p.z_Na * log(Na_s ./ Nag);
             %E_Cl_k = p.ph / p.z_Cl * log(Cl_s ./ Cl_k);
             %E_NBC_k = p.ph / p.z_NBC * log((Na_s .* HCO3_s.^2) ./ (Na_k .* HCO3_k.^2));
             E_BK_k = p.ph / p.z_K * log(K_p ./ K_k);        
@@ -89,13 +89,14 @@ classdef Astrocyte < handle
             GLUe = (Glu ./ 1000); %uM to mM
             
             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU)); % one glu and 3 Na+ with this pump
+            Veg_GLU =  0.030125 .* GLUe;
             Veg_GLU_uM = Veg_GLU .* 1000;
             
-            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(Na_e ./ Nag) - -70.0);
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150 ./ Nag) - -70.0);
             Vg_leak_Na_uM = Vg_leak_Na .* 1000;
             
             %J_NKCC1_k = p.G_NKCC1_k * p.ph .* log((Na_s .* K_s .* Cl_s.^2) ./ (Na_k .* K_k .* Cl_k.^2));
-            %J_Na_k = p.G_Na_k * (v_k - E_Na_k);
+            J_Na_k = p.G_Na_k * (v_k - E_Na_k);
             %J_NBC_k = p.G_NBC_k * (v_k - E_NBC_k);
 
                         
@@ -196,7 +197,7 @@ classdef Astrocyte < handle
                 %Uout(self.idx_out.E_Cl_k, :) = E_Cl_k;
 %                 Uout(self.idx_out.I_TRPV_k, :) = I_TRPV_k;
                 Uout(self.idx_out.J_K_k, :) = J_K_k;
-                %Uout(self.idx_out.J_Na_k, :) = J_Na_k;
+                Uout(self.idx_out.J_Na_k, :) = J_Na_k;
                 Uout(self.idx_out.K_k, :) = K_k;
                 Uout(self.idx_out.w_inf, :) = w_inf;
                 Uout(self.idx_out.phi_w, :) = phi_w;
@@ -276,7 +277,7 @@ function [idx, n] = output_indices(self)
 %     idx.I_TRPV_k  = 22; 
     %idx.J_NKCC1_k = 23;
     idx.J_K_k  = 18; 
-    %idx.J_Na_k  = 25;
+    idx.J_Na_k  = 24;
     idx.J_BK_p = 19;
     %idx.J_NaK_k = 27;
     idx.E_TRPV_k = 20;
@@ -408,7 +409,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('k_O2_k', 9.6e-6);      % [uM^-2 s^-1] ;  (Kavdia2002)
     parser.addParameter('O2_k', 200);           % [uM] ;  (M.E.)
 
-    parser.addParameter('Vmax_eg_GLU', 3 * 0.0208); %0.0208
+    parser.addParameter('Vmax_eg_GLU', 1.5 * 0.0208); %0.0208
     parser.addParameter('Km_GLU', 0.05);
     parser.addParameter('RT', 2577340);
     parser.addParameter('gg_NA', 0.00325);

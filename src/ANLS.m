@@ -129,6 +129,9 @@ classdef ANLS < handle
             
             % CALC RATES
             CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
+            CBF_02 = p.CBF_init * (R.^4 / p.R_init^4);
+            CBF_GLC = p.GLC_init * (R.^4 / p.R_init^4);
+            CBF_LAC = p.LAC_init * (R.^4 / p.R_init^4);
             
             pumpScaling = 2.232; %2.25 for low GLC, 2.232
             atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope))); % new term trying to drop pump
@@ -185,8 +188,10 @@ classdef ANLS < handle
             
 
             Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
+            Veg_GLU =  0.030125 .* GLUe;
+            
             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(Na_e ./ Nag) - -70.0);
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150 ./ Nag) - -70.0);
 
             
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
@@ -257,7 +262,7 @@ classdef ANLS < handle
             du(idx.LACe, :) = ( Vne_LAC .* (1.0 ./ p.Ren) +  Vge_LAC .* (1.0 ./ p.Reg)) - Vec_LAC;      
             % Astrocyte 
             
-            du(idx.Nag, :) = (Vg_leak_Na +  3.0 .* Veg_GLU) -  3.0 .* Vk_pump;
+            du(idx.Nag, :) = 1 .* ((Vg_leak_Na +  3.0 .* Veg_GLU) -  3.0 .* Vk_pump);
             du(idx.GLCg, :) = (Vcg_GLC + Veg_GLC) - Vg_hk;
             du(idx.F6Pg, :) = Vg_pgi - Vg_pfk;
             du(idx.G6Pg, :) = (Vg_hk + Vg_glyp) - (Vg_pgi + Vg_glys);
@@ -552,10 +557,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('Km_ec_LAC', 0.764818);
     parser.addParameter('Vm_ec_LAC', 0.0325);
     parser.addParameter('R_GLU_NA', 0.075);
-    parser.addParameter('Km_GLU', 0.05);
+    parser.addParameter('Km_GLU', 0.15);
     parser.addParameter('Vmax_g_gs', 0.3);
     parser.addParameter('Km_ATP', 0.01532);
-    parser.addParameter('Vmax_eg_GLU', 3 * 0.0208); %0.0208
+    parser.addParameter('Vmax_eg_GLU', 1.5 * 0.0208); %0.0208
     
     parser.addParameter('Vmax_glys', 0.0001528);
     parser.addParameter('Km_G6P_glys', 0.5);
@@ -621,6 +626,10 @@ function params = parse_inputs(varargin)
     parser.addParameter('ATPshift', 2.0);
     
     parser.addParameter('RT', 2577340);
+    
+    parser.addParameter('GLC_init', 4.63);
+    parser.addParameter('LAC_init', 0.3487);
+    parser.addParameter('O2_init', 7.44);
     
     parser.parse(varargin{:});
     params = parser.Results;

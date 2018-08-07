@@ -26,8 +26,8 @@ fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
 FIG_NUM = 1;
-XLIM1 = 50;
-XLIM2 = 1000; % End of simulation
+XLIM1 = 95;
+XLIM2 = 200; % End of simulation
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
@@ -38,7 +38,7 @@ NEURONAL_START      = 100                                                       
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 120;      % End of neuronal stimulation 
+NEURONAL_END        = 110;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -68,7 +68,7 @@ nv = NVU(Neuron('k_syn', 1.8, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 11.5 goes to 1 (k_syn)
 
 % Adjust time vector
-nv.neuron.params.dt = 0.001; dt = nv.neuron.params.dt;
+nv.neuron.params.dt = 0.1; dt = nv.neuron.params.dt;
 nv.T = 0:dt:XLIM2;
 numTimeSteps = length(nv.T);
 
@@ -124,81 +124,111 @@ end
 %% Run the simulation
 nv.simulate() 
 
-figure(2);
-hold all
-set(gcf,'Name', 'ANLS State Variables')
-anls_vars = fieldnames(nv.anls.index);
-i_anls = size(anls_vars, 1);
-for i = 1:1:i_anls
-    subplot(5,6,i)
-    hold all
-    plot(nv.T, nv.out(char(anls_vars(i))));
-    xlabel('Time [s]'); ylabel(strcat(anls_vars(i), ' [mM]'));
-    
-end
+% figure(2);
+% hold all
+% set(gcf,'Name', 'ANLS State Variables')
+% anls_vars = fieldnames(nv.anls.index);
+% i_anls = size(anls_vars, 1);
+% for i = 1:1:i_anls
+%     subplot(5,6,i)
+%     hold all
+%     plot(nv.T, nv.out(char(anls_vars(i))));
+%     xlabel('Time [s]'); ylabel(strcat(anls_vars(i), ' [mM]'));
+%     
+% end
 % 
 % 
 % 
+XLIM1 = 90;
+XLIM2 = 120;
 figure(336647);
 set(gcf,'Name', 'new stuff')
-subplot(2,3,1)
-hold all
-plot(nv.T, nv.out('Nag')); 
-xlabel('Time [s]'); ylabel('Vk_pump');
-
-subplot(2,3,2)
-hold all
-plot(nv.T, nv.out('Veg_GLU')); 
-xlabel('Time [s]'); ylabel('Veg_GLU');
-
-subplot(2,3,3)
-hold all
-plot(nv.T, nv.out('K_s')); 
-xlabel('Time [s]'); ylabel('K_s');
-
-subplot(2,3,4)
+subplot(2,2,1)
 hold all
 plot(nv.T, nv.out('Nag')); 
 xlabel('Time [s]'); ylabel('Nag');
-
-subplot(2,3,5)
+xlim([XLIM1 XLIM2])
+subplot(2,2,2)
+hold all
+plot(nv.T, nv.out('Veg_GLU')); 
+xlabel('Time [s]'); ylabel('Veg_GLU');
+xlim([XLIM1 XLIM2])
+subplot(2,2,3)
 hold all
 plot(nv.T, nv.out('Vg_leak_Na')); 
 xlabel('Time [s]'); ylabel('Vg_leak_Na');
-
-subplot(2,3,6)
+xlim([XLIM1 XLIM2])
+subplot(2,2,4)
 hold all
-plot(nv.T, nv.out('Na_e')); 
-xlabel('Time [s]'); ylabel('Na_e');
+plot(nv.T, nv.out('Vk_pump')); 
+xlabel('Time [s]'); ylabel('Vk_pump');
+xlim([XLIM1 XLIM2])
 
-XLIM1 = 90;
-XLIM2 = 200;
-figure(123416);
-subplot(2,2,1);
-    hold all;
-    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
-    ylabel('v_sa [mV]');
-    xlabel('Time [s]');
-    xlim([XLIM1 XLIM2])
-subplot(2,2,2);
-    hold all;
-    plot(nv.T, nv.out('R'), 'LineWidth', 1);
-    ylabel('Radius [\mum]');
-    xlabel('Time [s]');
-    xlim([XLIM1 XLIM2])
-subplot(2,2,3);
-    hold all;
-    plot(nv.T, nv.out('Nag'), 'LineWidth', 1);
-    ylabel('Na_k  [mM]');
-    xlabel('Time [s]');
-    xlim([XLIM1 XLIM2])
-subplot(2,2,4);
-    hold all;
-    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-    ylabel('K_e [mM]');
-    xlabel('Time [s]');
-    xlim([XLIM1 XLIM2])
-    
+figure(7);
+plot(nv.T,((nv.out('Vg_leak_Na') +  3.0 .* nv.out('Veg_GLU')) -  3.0 .* nv.out('Vk_pump'))); 
+xlabel('Time [s]'); ylabel('dnag/gt');
+xlim([XLIM1 XLIM2])
+
+
+figure(8);
+plot(nv.T,nv.out('Glu')); 
+xlabel('Time [s]'); ylabel('Glu');
+xlim([XLIM1 XLIM2])
+
+
+
+figure(11);
+
+plot(nv.T,nv.out('K_e')); 
+xlabel('Time [s]'); ylabel('K_e');
+xlim([XLIM1 XLIM2])
+
+
+figure(12);
+hold all
+plot(nv.T,nv.out('Na_s')); 
+xlabel('Time [s]'); ylabel('Na_s');
+xlim([XLIM1 XLIM2])
+
+% XLIM1 = 90;
+% XLIM2 = 200;
+% figure(12384416);
+% subplot(2,3,1);
+%     hold all;
+%     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+%     ylabel('v_sa [mV]');
+%     xlabel('Time [s]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,2);
+%     hold all;
+%     plot(nv.T, nv.out('R'), 'LineWidth', 1);
+%     ylabel('Radius [\mum]');
+%     xlabel('Time [s]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,3);
+%     hold all;
+%     plot(nv.T, nv.out('Nag'), 'LineWidth', 1);
+%     ylabel('Na_k  [mM]');
+%     xlabel('Time [s]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,4);
+%     hold all;
+%     plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+%     ylabel('K_e [mM]');
+%     xlabel('Time [s]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,5);
+%     hold all;
+%     plot(nv.T, nv.out('K_s'), 'LineWidth', 1);
+%     ylabel('K_s [mM]');
+%     xlabel('Time [s]');
+%     xlim([XLIM1 XLIM2])
+% subplot(2,3,6);
+%     hold all;
+%     plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
+%     ylabel('v_k [mV]');
+%     xlabel('Time [s]');
+%     xlim([XLIM1 XLIM2])    
 % figure(556);
 % set(gcf,'Name', 'Astrocytic K+')
 % subplot(2,3,1)
@@ -521,55 +551,54 @@ end
     
 %% Plot some variables
 % % 
-XLIM1 = 90;
-XLIM2 = 200;
-figure(12341234);
-subplot(3,3,1);
-    hold all;
-    plot(nv.T, nv.out('ATPn'), 'LineWidth', 1);
-    ylabel('ATP_n  [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,2);
-    hold all;
-    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
-    ylabel('v_sa [mV]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,3);
-    hold all;
-    plot(nv.T, nv.out('Nag'), 'LineWidth', 1);
-    ylabel('Na_k  [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,4);
-    hold all;
-    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-    ylabel('K_e [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,5);
-    hold all;
-    plot(nv.T, nv.out('R'), 'LineWidth', 1);
-    ylabel('Radius [\mum]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,6);
-    hold all;
-    plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
-    ylabel('K_s [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,7);
-    hold all;
-    plot(nv.T, nv.out('GLCn'), 'LineWidth', 1);
-    ylabel('GLC_n [mM]');
-    xlim([XLIM1 1000])
-subplot(3,3,8);
-    hold all;
-    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
-    ylabel('v_k [mV]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,9);
-    hold all;
-    % BOLD using normalised variables
-    plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);  
-    ylabel('K_k [mM]');
-    xlim([XLIM1 XLIM2])
+
+% figure(12341234);
+% subplot(3,3,1);
+%     hold all;
+%     plot(nv.T, nv.out('ATPn'), 'LineWidth', 1);
+%     ylabel('ATP_n  [mM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,2);
+%     hold all;
+%     plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+%     ylabel('v_sa [mV]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,3);
+%     hold all;
+%     plot(nv.T, nv.out('Nag'), 'LineWidth', 1);
+%     ylabel('Na_k  [mM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,4);
+%     hold all;
+%     plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+%     ylabel('K_e [mM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,5);
+%     hold all;
+%     plot(nv.T, nv.out('R'), 'LineWidth', 1);
+%     ylabel('Radius [\mum]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,6);
+%     hold all;
+%     plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
+%     ylabel('K_s [mM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,7);
+%     hold all;
+%     plot(nv.T, nv.out('GLCn'), 'LineWidth', 1);
+%     ylabel('GLC_n [mM]');
+%     xlim([XLIM1 1000])
+% subplot(3,3,8);
+%     hold all;
+%     plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
+%     ylabel('v_k [mV]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,3,9);
+%     hold all;
+%     % BOLD using normalised variables
+%     plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);  
+%     ylabel('K_k [mM]');
+%     xlim([XLIM1 XLIM2])
     
 % %  % Plot figures - whatever you want
 

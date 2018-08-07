@@ -72,7 +72,7 @@ classdef NVU < handle
 
             du = zeros(size(u));
             du(self.i_neuron, :) = self.neuron.rhs(t, un, NO_k, R, ATPn);
-            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag);
+            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag, Na_e);
             du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i, R_cGMP2);
             du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p, NO_k, O2);
             du(self.i_anls, :) = self.anls.rhs(t, ul, R, J_pump1_sa, K_e, Glu, K_s, Na_e);
@@ -105,7 +105,7 @@ classdef NVU < handle
             [R, h] = self.wall.shared(self.T, uw);
                      
             [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R, ATPn);
-            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag, Na_e);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
             [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Glu, K_s, Na_e);
@@ -136,7 +136,7 @@ classdef NVU < handle
 
                      
             [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R, ATPn);
-            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu, ATPg, GLUg, Nag, Na_e);
             [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
             [~, self.outputs{5}] = self.anls.rhs(self.T, ul, R, J_pump1_sa, K_e, Glu, K_s, Na_e);
