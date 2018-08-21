@@ -409,7 +409,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('k_O2_k', 9.6e-6);      % [uM^-2 s^-1] ;  (Kavdia2002)
     parser.addParameter('O2_k', 200);           % [uM] ;  (M.E.)
 
-    parser.addParameter('Vmax_eg_GLU', 1.5 * 0.0208); %0.0208
+    parser.addParameter('Vmax_eg_GLU', 3 * 0.0208); %0.0208
     parser.addParameter('Km_GLU', 0.05);
     parser.addParameter('RT', 2577340);
     parser.addParameter('gg_NA', 0.00325);

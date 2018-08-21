@@ -38,7 +38,7 @@ NEURONAL_START      = 100                                                       
 CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
-NEURONAL_END        = 110;      % End of neuronal stimulation 
+NEURONAL_END        = 200;      % End of neuronal stimulation 
 
 % Used if CURRENT_STRENGTH = 3 or 4
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
@@ -140,7 +140,7 @@ nv.simulate()
 % 
 % 
 XLIM1 = 90;
-XLIM2 = 120;
+XLIM2 = 300;
 figure(336647);
 set(gcf,'Name', 'new stuff')
 subplot(2,2,1)
@@ -189,6 +189,43 @@ hold all
 plot(nv.T,nv.out('Na_s')); 
 xlabel('Time [s]'); ylabel('Na_s');
 xlim([XLIM1 XLIM2])
+
+
+XLIM1 = 90;
+XLIM2 = 120;
+figure(357);
+set(gcf,'Name', 'new stuff2')
+subplot(2,3,1)
+hold all
+plot(nv.T, nv.out('CBF2')); 
+xlabel('Time [s]'); ylabel('CBF2');
+xlim([XLIM1 XLIM2])
+subplot(2,3,2)
+hold all
+plot(nv.T, nv.out('CBF_GLC')); 
+xlabel('Time [s]'); ylabel('CBF_GLC');
+xlim([XLIM1 XLIM2])
+subplot(2,3,3)
+hold all
+plot(nv.T, nv.out('CBF_LAC')); 
+xlabel('Time [s]'); ylabel('CBF_LAC');
+xlim([XLIM1 XLIM2])
+subplot(2,3,4)
+hold all
+plot(nv.T, nv.out('Vc_LAC')); 
+xlabel('Time [s]'); ylabel('Vc_LAC');
+xlim([XLIM1 XLIM2])
+subplot(2,3,5)
+hold all
+plot(nv.T, nv.out('Vc_GLC')); 
+xlabel('Time [s]'); ylabel('Vc_GLC');
+xlim([XLIM1 XLIM2])
+subplot(2,3,6)
+hold all
+plot(nv.T, nv.out('CBF_O2')); 
+xlabel('Time [s]'); ylabel('CBF_O2');
+xlim([XLIM1 XLIM2])
+
 
 % XLIM1 = 90;
 % XLIM2 = 200;

@@ -60,7 +60,7 @@ classdef ANLS < handle
             
             
             
-%             %CALC algebraic vars
+%             % original code from the modelDB code
 %             V_en_GLC =  p.Vm_en_GLC .* (GLCe ./ (GLCe + p.Km_en_GLC) - GLCn ./ (GLCn + p.Km_en_GLC));
 %             Vn_hk =  p.Vmax_n_hk .* ATPn .* (GLCn ./ (GLCn + p.Km_GLC)) .* (1.0 - 1.0 ./ (1.0 + exp(  - p.aG6P_inh_hk .* ( 1.0 .* (G6Pn - p.G6P_inh_hk)))));
 %             Vn_pgi =  p.Vmaxf_n_pgi .* (G6Pn ./ (G6Pn + p.Km_G6P)) -  p.Vmaxr_n_pgi .* (F6Pn ./ (F6Pn + p.Km_F6P_pgi));
@@ -129,25 +129,24 @@ classdef ANLS < handle
             
             % CALC RATES
             CBF2 = p.CBF_init * (R.^4 / p.R_init^4);
-            CBF_02 = p.CBF_init * (R.^4 / p.R_init^4);
+            CBF_O2 = p.O2_init * (R.^4 / p.R_init^4);
             CBF_GLC = p.GLC_init * (R.^4 / p.R_init^4);
             CBF_LAC = p.LAC_init * (R.^4 / p.R_init^4);
             
-            pumpScaling = 2.232; %2.25 for low GLC, 2.232
-            atp_term = p.ATPheight * 0.5 * (1 + tanh(((ATPn - p.ATPshift) / p.ATPslope))); % new term trying to drop pump
-            atp_term2 = ((1 + (p.ATP_init_n ./ ATPn)).^(-1)); %term from chang supp material
-            I_pumpv2 = pumpScaling * p.Imax * J_pump1_sa .* atp_term2; 
-            I_pump = pumpScaling * p.Imax * J_pump1_sa .* atp_term;
-            Vn_pump = 6.6 .* (p.As / p.Vs) * 1e2 * I_pumpv2 ./ p.F;
-            %Vn_pump = 0.1583 + (0.035 * rectpuls(t - 102.5, 5));
+            pumpScaling = 2.232;
+            
+            atp_term = ((1 + (p.ATP_init_n ./ ATPn)).^(-1)); %term from chang supp material
+            I_pump = pumpScaling * p.Imax * J_pump1_sa .* atp_term; 
+            
+            %neuronal atpase pump
+            Vn_pump = 6.6 .* (p.As / p.Vs) * 1e2 * I_pump ./ p.F; %6.6 constant to get the right baseline of pump rate.
             
             K_s_mM = K_s ./ 1000; 
             Jk_pump  = (1 + (p.K_init_s ./ K_s_mM)).^(-2) .* (1 + (p.Na_init_k ./ Nag)) .^ (-3) .* ((1 + (p.ATP_init_k ./ ATPg)).^(-1));
             Ik_pump = p.Imax_k .* Jk_pump; 
+            % astrocytic atpase pump
             Vk_pump = 3 .* (1 / p.R_k) * Ik_pump ./ p.F; %3.7
-            
-            
-            
+                        
             Vce_GLC =  p.Vm_ce_GLC .* (GLCc ./ (GLCc + p.Km_ce_GLC) - GLCe ./ (GLCe + p.Km_ce_GLC));
             Vcg_GLC =  p.Vm_cg_GLC .* (GLCc ./ (GLCc + p.Km_cg_GLC) - GLCg ./ (GLCg + p.Km_cg_GLC));
             
@@ -175,33 +174,19 @@ classdef ANLS < handle
                 gly_switch = 1;
             end
             
-            %unitstepSB2 = piecewise({t - (p.t_0 + p.lengthpulse + p.tend_GLY)>=0.0, 1.0 }, 0.0)
-            
             deltaVt_GLY = 1.0 +  p.stim .* (p.delta_GLY .* p.KO3 .* (1.0 ./ (1.0 + exp( 1.0 .*  - p.sr_GLY .* (t - (p.t_0 + p.tstart_GLY))))) .* (1.0 - unitstepSB2)) .* gly_switch;
             Vg_glyp =  p.Vmax_glyp .* (GLYg ./ (GLYg + p.Km_GLY)) .* deltaVt_GLY;
-               
             Vne_LAC =  p.Vmax_ne_LAC .* (LACn ./ (LACn + p.Km_ne_LAC) - LACe ./ (LACe + p.Km_ne_LAC));
-            %Vne_LAC = max(0, Vne_LAC);
-
             Vge_LAC =  p.Vmax_ge_LAC .* (LACg ./ (LACg + p.Km_ge_LAC) - LACe ./ (LACe + p.Km_ge_LAC));
             Vec_LAC =  p.Vm_ec_LAC .* (LACe ./ (LACe + p.Km_ec_LAC) - LACc ./ (LACc + p.Km_ec_LAC));
-            
-
-            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));
-            Veg_GLU =  0.030125 .* GLUe;
-            
+            Veg_GLU =  p.Vmax_eg_GLU .* (GLUe ./ (GLUe + p.Km_GLU));       
             Vg_gs =  p.Vmax_g_gs .* ( (GLUg ./ (GLUg + p.Km_GLU)) .* (ATPg ./ (ATPg + p.Km_ATP)));
-            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150 ./ Nag) - -70.0);
-
-            
+            Vg_leak_Na =  1.06 .* (p.Sm_g ./ p.Vg) .* (p.gg_NA ./ p.F) .* ( (p.RT ./ p.F) .* log(150 ./ Nag) - -70.0);    
             Vcn_O2 =  (p.PScapn ./ p.Vn) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2n);
-            Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2g);            
-                                 
+            Vcg_O2 =  (p.PScapg ./ p.Vg) .* ( p.Ko2 .* power(p.HbOP ./ O2c - 1.0, -1.0 ./ p.nh_O2) - O2g);                                           
             Vgc_LAC =  p.Vmax_gc_LAC .* (LACg ./ (LACg + p.Km_gc_LAC) - LACc ./ (LACc + p.Km_gc_LAC));
-
             NADn = p.NADH_n_tot - NADHn;
             Vn_ldh =  p.kfn_ldh .* PYRn .* NADHn -  p.krn_ldh .* LACn .* NADn;
-
             
             NADg = p.NADH_g_tot - NADHg;
             Vg_ldh =  p.kfg_ldh .* PYRg .* NADHg -  p.krg_ldh .* LACg .* NADg;
@@ -231,16 +216,14 @@ classdef ANLS < handle
 %             Vc_LAC =  ((p.R_c_cbf * CBF) ./ p.Vc) .* (p.LACa - LACc);
 %             Vc_GLC =  4.64;
 
-            % normal
             
+            % These are incorrect units! According to Cheng sup material,
+            % CBF2 has units mM/s.
             Vc_O2 =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.O2a - O2c);
             Vc_LAC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.LACa - LACc);
-            
-            glcA = (1 - max(0, min(1.0, (t - 500)./200.0)) .* 0.5) .* p.GLCa;
-            Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* ( p.GLCa - GLCc);
+            Vc_GLC =  ((p.R_c_cbf * CBF2) ./ p.Vc) .* (p.GLCa - GLCc);
             
             % Neuron
-            
             du(idx.GLCn, :) = V_en_GLC - Vn_hk;
             du(idx.G6Pn, :) = Vn_hk - Vn_pgi;
             du(idx.F6Pn, :) = Vn_pgi - Vn_pfk;
@@ -292,9 +275,7 @@ classdef ANLS < handle
                 Uout = zeros(self.n_out, size(u, 2));
 
                 Uout(self.idx_out.Vn_pump, :) = Vn_pump;  
-             
-            
-            
+
                 Uout(self.idx_out.Vk_pump, :) = Vk_pump;
                 Uout(self.idx_out.deltaVt_GLY, :) = deltaVt_GLY;
                 
@@ -328,8 +309,7 @@ classdef ANLS < handle
                 Uout(self.idx_out.Vec_LAC, :) = Vec_LAC;
                 Uout(self.idx_out.Vgc_LAC, :) = Vgc_LAC;
                 Uout(self.idx_out.atp_term, :) = atp_term;
-                Uout(self.idx_out.I_pumpv2, :) = I_pumpv2;
-                Uout(self.idx_out.atp_term2, :) = atp_term2;
+
                 
 
                 Uout(self.idx_out.Vg_pgk, :) = Vg_pgk;                
@@ -344,8 +324,10 @@ classdef ANLS < handle
                 Uout(self.idx_out.Veg_GLU, :) = Veg_GLU;
                 Uout(self.idx_out.Vg_leak_Na, :) = Vg_leak_Na;
                 
-                
-                
+                Uout(self.idx_out.CBF_GLC, :) = CBF_GLC;
+                Uout(self.idx_out.CBF_LAC, :) = CBF_LAC;
+                Uout(self.idx_out.CBF_O2, :) = CBF_O2;
+
                 
                varargout{1} = Uout;
             end
@@ -406,7 +388,6 @@ end
 function [idx, n] = output_indices()
     % Index of all other output parameters
     idx.Vn_pump = 1;
-
                 
     idx.Vk_pump = 2;
     idx.deltaVt_GLY = 3;
@@ -439,24 +420,27 @@ function [idx, n] = output_indices()
     idx.Vgc_LAC = 26;
     
     idx.atp_term = 27;
-    idx.I_pumpv2 = 28;
-
-    idx.atp_term2 = 29;
     
-    idx.Vg_pgk = 30;
-    idx.Vg_pgk = 31;
+    
+    idx.Vg_pgk = 28;
+    idx.Vg_pgk = 29;
     
                   
-    idx.Vg_pk = 32;
-    idx.Vg_mito = 33;
-    idx.Vg_ck = 34;
-    idx.Vg_hk = 35;
-    idx.Vg_pfk = 36;
-    idx.Vg_ATPase = 37;
-    idx.Vg_gs = 38;
-    idx.GLUe = 39;
-    idx.Veg_GLU = 40;
-    idx.Vg_leak_Na = 41;
+    idx.Vg_pk = 30;
+    idx.Vg_mito = 31;
+    idx.Vg_ck = 32;
+    idx.Vg_hk = 33;
+    idx.Vg_pfk = 34;
+    idx.Vg_ATPase = 35;
+    idx.Vg_gs = 36;
+    idx.GLUe = 37;
+    idx.Veg_GLU = 38;
+    idx.Vg_leak_Na = 39;
+    idx.CBF_GLC = 40;
+    idx.CBF_LAC = 41;
+    idx.CBF_O2 = 42;
+    
+    
     n = numel(fieldnames(idx));
 end
 
@@ -560,7 +544,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('Km_GLU', 0.15);
     parser.addParameter('Vmax_g_gs', 0.3);
     parser.addParameter('Km_ATP', 0.01532);
-    parser.addParameter('Vmax_eg_GLU', 1.5 * 0.0208); %0.0208
+    parser.addParameter('Vmax_eg_GLU', 3 * 0.0208); % 0.0208 scaled to provide sensible astrocytic [Na+] given our larger atpase pump rate.
     
     parser.addParameter('Vmax_glys', 0.0001528);
     parser.addParameter('Km_G6P_glys', 0.5);
@@ -591,11 +575,11 @@ function params = parse_inputs(varargin)
     parser.addParameter('v1_n', 0.041);
     parser.addParameter('v2_n', 2.55);
     
-
+    % these are not used right now, (gly cycle)
     parser.addParameter('tstart_GLY', 25); % s after input stim starts
     parser.addParameter('tend_GLY', 223); % s after input ends  
     
-    
+
     parser.addParameter('R_init', 20); 
     parser.addParameter('CBF_init', 3.2e-2); 
     parser.addParameter('R_c_cbf', 0.43); %0.43
@@ -620,10 +604,7 @@ function params = parse_inputs(varargin)
     
     
     parser.addParameter('K_Na_k', 10000); % uM
-    
-    parser.addParameter('ATPheight', 0.6); 
-    parser.addParameter('ATPslope', 1.5); 
-    parser.addParameter('ATPshift', 2.0);
+   
     
     parser.addParameter('RT', 2577340);
     
