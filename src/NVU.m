@@ -57,16 +57,16 @@ classdef NVU < handle
             % Evaluate the coupling quantities to be passed between
             % submodels as coupling
 
-            [J_NaK_n, NO_n] = self.neuron.shared(t, un);
             [K_p, NO_k] = self.astrocyte.shared(t, ua);
-            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(t, us, K_p); 
+            [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = self.neuron.shared(t, un);
+            [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(t, us, K_p); 
             [R, h] = self.wall.shared(t, uw);
 
             du = zeros(size(u));
-            du(self.i_neuron, :) = self.neuron.rhs(t, un, NO_k);
-            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i, J_NaK_i, J_K_i);
+            du(self.i_neuron, :) = self.neuron.rhs(t, un, NO_k, R);
+            du(self.i_astrocyte, :) = self.astrocyte.rhs(t, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu);
             du(self.i_wall, :) = self.wall.rhs(t, uw, Ca_i, R_cGMP2);
-            du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p, NO_k);
+            du(self.i_smcec, :) = self.smcec.rhs(t, us, R, h, K_p, NO_k, O2);
         end
         function init_conds(self)
             self.u0 = zeros(self.n, 1);
@@ -78,7 +78,7 @@ classdef NVU < handle
         function simulate(self)
             self.init_conds()
             f = @(t, u) self.rhs(t, u);
-            tic
+            tStart = tic;
             [self.T, self.U] = ode15s(f, self.T, self.u0, self.odeopts);
             % Now evaluate all of the additional parameters
             un = self.U(:, self.i_neuron).';
@@ -86,21 +86,26 @@ classdef NVU < handle
             us = self.U(:, self.i_smcec).';
             uw = self.U(:, self.i_wall).';
 
-            [J_NaK_n, NO_n] = self.neuron.shared(self.T, un);
             [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
-            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
+            [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = self.neuron.shared(self.T, un);
+            [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      
-            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k);
-            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i, J_NaK_i, J_K_i);
-            [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
+            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu);
+            [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
 
-            toc
+            tEnd = toc(tStart);
+            fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
         end
+        
+        % Use this function to run with user specified initial conditions -
+        % currently uses the ICs from the previous run to avoid transient
+        % behaviour, see nvu_run_script for details
         function simulateManualICs(self)
             f = @(t, u) self.rhs(t, u);
-            tic
+            tStart = tic;
             [self.T, self.U] = ode15s(f, self.T, self.u0, self.odeopts);
             % Now evaluate all of the additional parameters
             un = self.U(:, self.i_neuron).';
@@ -108,17 +113,18 @@ classdef NVU < handle
             us = self.U(:, self.i_smcec).';
             uw = self.U(:, self.i_wall).';
 
-            [J_NaK_n, NO_n] = self.neuron.shared(self.T, un);
             [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
-            [J_KIR_i, J_NaK_i, J_K_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
+            [Glu, J_KIR_k, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = self.neuron.shared(self.T, un);
+            [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      
-            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k);
-            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, J_NaK_n, NO_n, NO_i, J_NaK_i, J_K_i);
-            [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k);
+            [~, self.outputs{1}] = self.neuron.rhs(self.T, un, NO_k, R);
+            [~, self.outputs{2}] = self.astrocyte.rhs(self.T, ua, J_KIR_i, R, J_VOCC_i, NO_n, NO_i, J_K_NEtoSC, J_Na_NEtoSC, Glu);
+            [~, self.outputs{3}] = self.smcec.rhs(self.T, us, R, h, K_p, NO_k, O2);
             [~, self.outputs{4}] = self.wall.rhs(self.T, uw, Ca_i, R_cGMP2);
 
-            toc
+            tEnd = toc(tStart);
+            fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60));
         end
         function u = out(self, input_str)
             success = false;

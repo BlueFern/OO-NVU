@@ -1,0 +1,141 @@
+
+\section{Existing Models}
+\subsection{The Astrocyte Model}
+
+The release of glutamate from the neuron in the synaptic cleft is simulated by creating a smooth pulse function $\rho$ that describes the ratio of bound to total glutamate receptors on the synapse end of the astrocyte. This induces an $IP_3$ release into the cell, causing the release of Calcium from the \gls{ER} into the cytosol, which on his turn leads to the production of EET. The \gls{K} release into the \gls{PVS} is controled by the BK-channels. The opening of the BK-channels is regulated by the membrane voltage, as wel as the EET and \gls{Ca} concentration.
+
+\section{Equations}
+\subsection{Astrocyte Model}
+\subsubsection{Input Signal}
+\paragraph{$\rho$ input signal}
+The smooth pulse function $\rho$
+\begin{equation}
+\rho(t) = ((Amp - base)/2)\times(1+tanh((t-t_0)/\theta_L))+base+((Amp-base)/2)\times(1+tanh((t-t_2)/\theta_R))+base-Amp                     
+\end{equation}
+%
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{| p{0.09\linewidth} | >{\footnotesize} p{0.6\linewidth} | >{\footnotesize} p{0.17\linewidth} | >{\footnotesize} p{0.02\linewidth} |}
+		\arrayrulecolor{lightgrey}\hline
+		$Amp$           & Amplitude of smooth pulse function & 0.7 & ME\\
+		$base$          & Baseline of smooth pulse function & 0.1 & ME\\
+		$\theta_L$      & Left ramp of smooth pulse function & 1 & ME\\
+		$\theta_R$      & Left ramp of smooth pulse function & 1 & ME\\
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Conservation Equations}
+
+\paragraph{Astrocyte}~\\
+
+%
+\gls{Ca} concentration in the astrocytic cytosol
+\begin{equation} \label{eq:ckInt}
+\dfrac{\mathrm{d}c_k}}{\mathrm{d}t}= B_{\mathrm{cyt}}(J_{\mathrm{IP_3}}-J_{\mathrm{pump}}+J_{\mathrm{ER_leak}})
+\end{equation}
+\gls{Ca} concentration in the astrocytic \gls{ER}
+\begin{equation} \label{eq:skInt}
+\dfrac{\mathrm{d}s_k}}{\mathrm{d}t}= \frac{1}{VR_{\mathrm{ER_cyt}}}(\frac{dc_k}{dt})
+\end{equation}
+The inactivation variable for $IP_3$
+\begin{equation} \label{eq:hkInt}
+\dfrac{\mathrm{d}h_k}}{\mathrm{d}t}= k_{\mathrm{on}}[K_{\mathrm{inh}}-(c_k+K_{\mathrm{inh}})h_k]
+\end{equation}
+The $IP_3$ concentration
+\begin{equation} \label{eq:ikInt}
+\dfrac{\mathrm{d}i_k}}{\mathrm{d}t}= r_hG-k_{\mathrm{deg}}i_k
+\end{equation}
+The EET concentration
+\begin{equation} \label{eq:eetkInt}
+\dfrac{\mathrm{d}eetk_k}}{\mathrm{d}t}= V_{\mathrm{eet}}(c_k-c_{\mathrm{k,min}})-k_{\mathrm{eet}}eet_k
+\end{equation}
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{| p{0.09\linewidth} | >{\footnotesize} p{0.6\linewidth} | >{\footnotesize} p{0.17\linewidth} | >{\footnotesize} p{0.02\linewidth} |}
+		\arrayrulecolor{lightgrey}\hline
+		$ VR_{\mathrm{ER_{\mathrm{cyt}}}} $  & Volume ratio of the \gls{ER} to the cytosol in the astrocyte  & 0.185 [-] & \cite{} \\
+		$k_{\mathrm{on}} $         & Rate of \gls{Ca} binding to the \gls{IP3}R & 2 [\muMs^{-1}] & \cite{} \\
+		$K_{\mathrm{inh}$          & Dissociation rate of $k_{\mathrm{on}}$  & [0.1\muM] & \cite{} \\
+		$r_h$                      & Maximum rate of \gls{IP3} production in the astrocyte & 4.8 [\muM] & \cite{} \\
+		$k_{\mathrm{deg}$          & Rate constant for \gls{IP3} degradation & 1.25 [s^{-1}] & \cite{} \\
+		$V_{\mathrm{eet}} $        & Rate constant for EET production   & 72[\muM] & \cite{} \\
+		$k_{\mathrm{eet}}$         & Rate constant for EET degradation  & 7.2[\uM] & \cite{} \\
+		$c_{\mathrm{k,min}}$       & Minimum \gls{Ca} concentration required for EET production & 0.1 [uM] & \cite{} \\			
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Fluxes}~\\
+\gls{Ca} flux from the ER to the cytosol in the astrocyte through \gls{IP3} Receptors (\gls{IP3}R) by \gls{IP3}: 
+\begin{equation} \label{eq:J_ip3}
+J_{\mathrm{IP3}}=J_{\mathrm{max}}[(\frac{i_k}{i_k+K_i})(\frac{c_k}{c_k+K_{\mathrm{act}}})h_k]^3\times [1-\frac{c_k}{s_k}] 
+\end{equation}
+%
+The leakage \gls{Ca}  flux from the \gls{ER} to the cytosol in the astrocyte:
+\begin{equation} \label{eq:J_ER_leak}
+J_{\mathrm{ER_leak}} = P_L(1-\frac{c_k}{s_k})
+\end{equation}	
+%
+The ATP dependent \gls{Ca}  pump flux from the cytoplasm to the ER in the astrocyte:
+\begin{equation} \label{eq:J_pump}
+J_{\mathrm{pump}} = V_{\mathrm{max}}\frac{c_k^2}{c_k^2+k_pump^2}
+\end{equation}
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{| p{0.09\linewidth} | >{\footnotesize} p{0.6\linewidth} | >{\footnotesize} p{0.17\linewidth} | >{\footnotesize} p{0.02\linewidth} |}
+		\arrayrulecolor{lightgrey}\hline	
+		$J_{max}$       & Maximum \gls{IP3} rate                                                & 2880 \uMps        & \cite{Farr2011} \\  
+		$K_I$           & Dissociation constant for \gls{IP3} binding to \gls{IP3}R             & 0.03 \uM          & \cite{Farr2011} \\ 
+		$K_{act}$       & Dissociation constant for \gls{Ca} binding to \gls{IP3}R              & 0.17 \uM          & \cite{Farr2011} \\ 
+		$P_L$           & Associated with the steady state \gls{Ca} balance                     & 5.2 \uM           & \cite{Farr2011} \\ 
+		$V_{max}$       & Maximal pumping rate of the \gls{Ca} pump                             & 20 \uMps          & \cite{Farr2011} \\ 
+		$k_{pump}$      & Dissociation constant of the \gls{Ca} pump                            & 0.24 \uM          & \cite{Farr2011} \\ 
+		\hline
+	\end{tabular}
+\end{table}
+
+\subsubsection{Additional Equations}
+\paragraph{Astrocyte}~\\
+The Calcium buffering parameter in the astrocytic cytosol (-)
+\begin{equation} \label{eq:B_cyt}
+B_{cyt}=\left(1+BK_{end}+ \frac{K_{ex}B_{ex}}{(K_{ex}+c_k)^2}\right)^{-1} 
+\end{equation}
+The ratio of active to total G-protein (-)
+\begin{equation} \label{eq:G}
+G=\frac{\rho+\delta}{K_g+\rho+\delta}
+\end{equation}
+Equilibrium state BK-channel (-):
+\begin{equation} \label{eq:winf}
+w_{\infty}=0.5 \left(1+\mathrm{tanh}\left(\frac{v_{k}+(eet_{\mathrm{shift}}eet_k)-v_{3} }{v_{4}} \right)  \right) 
+\end{equation}
+%
+The time constant associated with the opening of BK channels	 (in \pers):
+\begin{equation} \label{eq:phin}
+\phi_{w}=\psi_{w}\mathrm{cosh}\left( \frac{v_{k}-v_{3}}{2v_{4}}\right) 
+\end{equation}
+\gls{Ca} dependent shift of the opening of the BK-channels
+\begin{equation} \label{eq:v_3}
+v_{3}=\frac{v_5}{2}\mathrm{tanh}\left( \frac{c_k-Ca_3}{Ca_4}\right)+v_6 
+\end{equation}
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{| p{0.09\linewidth} | >{\footnotesize} p{0.6\linewidth} | >{\footnotesize} p{0.17\linewidth} | >{\footnotesize} p{0.02\linewidth} |}
+		\arrayrulecolor{lightgrey}\hline
+
+		$BK_{end}$      & Cytosolic endogenous buffer constant                              & 40 [-] & \cite{LoesEvert} \\
+		$K_{ex}$        & Cytosolic exogenous buffer dissociation constant                  & 0.26 [\uM] & \cite{LoesEvert} \\
+		$B_{ex}$        & Concentration of cytosolic exogenous buffer                       & 11.35 [\uM] & \cite{LoesEvert} \\
+		$\delta$        & Ratio of the activities of the bound and unbound receptors        & 1.235e-3 [\uM] & \cite{LoesEvert}\\
+		$K_G$           & The G-protein dissociation constant                               & 8.82  [uM] & \cite{LoesEvert}\\
+		$v_{4}$			& A measure of the spread of the distribution of the open probability of the BK channel	& 14.5e-3 \Volt   &  \cite{Gonzalez1994}  
+		\\
+		$v_{5}$			& Determines the range of the shift of $n_\inf$ as calcium varies    		& 8e-3 \Volt  & \cite{LoesEvert}  \\
+		$v_{6}$			& The voltage associated with the opening of half the population		& -15e-3 \Volt  & \cite{LoesEvert}  \\
+		$ \psi_{w}$    	& A characteristic time for the open probability of the BK channel		& 2.664 \pers & \cite{Gonzalez1994} \\
+		
+		\hline
+	\end{tabular}
+\end{table}
