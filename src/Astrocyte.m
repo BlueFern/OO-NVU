@@ -171,7 +171,6 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.E_K_k, :) = E_K_k;
                 Uout(self.idx_out.E_NBC_k, :) = E_NBC_k;
                 Uout(self.idx_out.E_Cl_k, :) = E_Cl_k;
-%                 Uout(self.idx_out.I_TRPV_k, :) = I_TRPV_k;
                 Uout(self.idx_out.J_K_k, :) = J_K_k;
                 Uout(self.idx_out.J_Na_k, :) = J_Na_k;
                 Uout(self.idx_out.K_k, :) = K_k;

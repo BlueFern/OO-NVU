@@ -114,7 +114,7 @@ classdef NVU < handle
             uw = self.U(:, self.i_wall).';
 
             [K_p, NO_k] = self.astrocyte.shared(self.T, ua);
-            [Glu, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = self.neuron.shared(self.T, un);
+            [Glu, J_KIR_k, J_K_NEtoSC, J_Na_NEtoSC, NO_n, O2] = self.neuron.shared(self.T, un);
             [J_KIR_i, Ca_i, J_VOCC_i, NO_i, R_cGMP2] = self.smcec.shared(self.T, us, K_p);
             [R, h] = self.wall.shared(self.T, uw);
                      

@@ -6,7 +6,7 @@
 
 %% Construct NVU
 % The NVU consists of a number of submodules, implemented as MATLAB
-% classes, presently an astrocyte, a lumped SMC/EC model, and a model of
+% classes, presently a neuron/ECS, an astrocyte, a lumped SMC/EC model, and a model of
 % the wall mechanics. 
 %
 % The parameters of each of these submodules are
@@ -23,17 +23,25 @@ timeStart = datetime('now');
 fprintf('Start time is %s\n', char(timeStart));
 
 odeopts = odeset('RelTol', 1e-04, 'AbsTol', 1e-04, 'MaxStep', 0.5, 'Vectorized', 1);
-FIG_NUM = 1;
-XLIM1 = 95;
-XLIM2 = 150; % End of simulation
+FIG_NUM = 1;    % For plotting purposes
+XLIM1 = 95;     
+XLIM2 = 150;    % End of simulation
+
+% Decide whether we want normal NVC (0) or CSD conditions (1)
+CSD_SWITCH    = 1;  
+
+CURRENT_TYPE  = 1;  % Types of current input:
+                    % 1: normal block
+                    % 2: two block stimulations (second stimulation is 8 sec after and 1 sec long)
+                    % 3: obtained from whisker pad experimental input data (csv file)
+                    % 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % For current type 1 or 2 use max current strength 0.022
 % For current type 3 use max current strength 0.042
 % For current type 4 use max current strength 0.035
-
 CURRENT_STRENGTH    = 0.022;    % Max strength of current input in mA/cm2
+
 NEURONAL_START      = 100;      % Start of neuronal stimulation
-CURRENT_TYPE        = 1;        % Types of current input. 1: normal, 2: two stimulations (second stimulation is 8 sec after and 1 sec long), 3: obtained from experimental input data, 4: whisker pad (from experiment) + locus coeruleus (pain pathway)
 
 % Used if CURRENT_STRENGTH = 1 or 2
 NEURONAL_END        = 101;      % End of neuronal stimulation 
@@ -42,24 +50,31 @@ NEURONAL_END        = 101;      % End of neuronal stimulation
 ISI = 7;                        % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
 stim = 1;                       % INDEX for length of initial stimulation [2,8,16]
 
-% Used if CURRENT_STRENGTH = 4: scaling for the two stimulation components,
-% alpha for whisker pad and beta for locus coeruleus/pain. Default for both
-% is 1. 
-% I_total = alpha * I_Wh + beta * I_LC
-alpha = 1;
-beta = 1;
-
 J_PLC           = 0.11;      % Jplc value in EC: 0.11 for steady state, 0.3 for oscillations
 GLU_SWITCH      = 1;        % Turn on glutamate input (for NO and Ca2+ pathways)
 NO_PROD_SWITCH  = 1;        % Turn on Nitric Oxide production 
 TRPV_SWITCH     = 1;        % Turn on TRPV4 Ca2+ channel from AC to PVS
 O2SWITCH        = 1;        % 0: ATP is plentiful, 1: ATP is limited (oxygen-limited regime, default)
 
-% Load initial NVU
-nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, 'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH), ...
-    Astrocyte('trpv_switch', TRPV_SWITCH), ...
-    WallMechanics('wallMech', 1.7), ...
-    SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
+% Load initial NVU depending on whether we want normal NVC or CSD conditions
+
+if CSD_SWITCH == 0
+    nv = NVU(Neuron('k_syn', 11.5, 'CurrentType', CURRENT_TYPE, 'O2switch', O2SWITCH, 'startpulse', ...
+        NEURONAL_START, 'lengthpulse', NEURONAL_END - NEURONAL_START, 'Istrength', CURRENT_STRENGTH, ...
+        'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, ...
+        'gNaleak_sa', 6.2378e-5, 'gKleak_sa', 2.1989e-4, 'gleak_sa', 10*6.2378e-5, 'gNaleak_d', 6.2961e-5, 'gKleak_d', 2.1987e-4, 'gleak_d', 10*6.2961e-5, 'Imax', 0.013*6), ...
+        Astrocyte('trpv_switch', TRPV_SWITCH), ...
+        WallMechanics(), ...
+        SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
+else
+    nv = NVU(Neuron('k_syn', 1, 'CurrentType', 1, 'O2switch', O2SWITCH, 'startpulse', ...
+        NEURONAL_START, 'lengthpulse', 1, 'Istrength', 0.006, ...
+        'GluSwitch', GLU_SWITCH, 'NOswitch', NO_PROD_SWITCH, ...
+        'gNaleak_sa', 9.5999e-6, 'gKleak_sa', 3.4564e-5, 'gleak_sa', 10*9.5999e-6, 'gNaleak_d', 1.0187e-5, 'gKleak_d', 3.4564e-5, 'gleak_d', 10*1.0187e-5, 'Imax', 0.013), ...
+        Astrocyte('trpv_switch', TRPV_SWITCH), ...
+        WallMechanics(), ...
+        SMCEC('J_PLC', J_PLC, 'NOswitch', NO_PROD_SWITCH), 'odeopts', odeopts);
+end
 
 % Adjust time vector
 nv.neuron.params.dt = 0.001; dt = nv.neuron.params.dt;
@@ -90,8 +105,7 @@ end
 %% Construct additional pain pathway stimulation I_LC and input total current I_total to Neuron.m
 if nv.neuron.params.CurrentType == 4
     
-    % Construct first stimulation, set to work for any NEURONAL_START or any
-    % initial stimulus duration (2,8,16 s)
+    % Construct first stimulation, set to work for any NEURONAL_START or any initial stimulus duration (2,8,16 s)
     time_1 = linspace(0, actual_stim, 10000); 
     I_1 = 0.0006 * time_1.^2 + 0.1;             % Chosen for the shape! Can be modified if needed
     time_1 = time_1 + NEURONAL_START;           % Shift so starts at NEURONAL_START
@@ -109,7 +123,7 @@ if nv.neuron.params.CurrentType == 4
     I_LC = I_1 + I_2;
     
     % Total current (whisker pad plus LC)
-    I_total = alpha*I_Wh + beta*I_LC;
+    I_total = I_Wh + I_LC;
     
     % Input to Neuron.m
     nv.neuron.input_data = I_total;
@@ -118,7 +132,8 @@ end
 %% Run the simulation
 nv.simulate() 
 
-% % Run this to take the ICs as the end of the last simulation run i.e. steady state ICs
+% % Run these 3 lines to take the ICs as the end of the last simulation run
+% i.e. steady state ICs  
 % ICs = (nv.U(end, :))';
 % nv.u0 = ICs;
 % nv.simulateManualICs() 
@@ -145,6 +160,51 @@ CMRO2_N = CMRO2./CMRO2_0;
 HBT_N = CBF_N .* HBR_N ./ CMRO2_N;                                          % Total hemoglobin (normalised)
 HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                      % Oxyhemoglobin (normalised)
 BOLD_N = 100 * np.V_0 * ( np.a_1 * (1 - HBR_N) - np.a_2 * (1 - CBV_N) );    % BOLD (percentage increase from 0)
+
+    
+%% Plot some variables
+% % 
+figure(FIG_NUM);
+subplot(3,3,1);
+    hold all;
+    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
+    ylabel('v_{sa} [mV]');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,2);
+    hold all;
+    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
+    ylabel('v_k [mV]');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,3);
+    hold all;
+    plot(nv.T, nv.out('J_NaK_k'), 'LineWidth', 1);
+    ylabel('J_{NaK_k}');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,4);
+    hold all;
+    plot(nv.T, nv.out('J_pump_sa'), 'LineWidth', 1);
+    ylabel('J_{NaK_n}');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,5);
+    hold all;
+    plot(nv.T, nv.out('R'), 'LineWidth', 1);
+    ylabel('R');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,6);
+    hold all;
+    plot(nv.T, 4.5e-3 * nv.out('K_e') - 112, 'LineWidth', 1);
+    ylabel('v_{KIR_k}');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,7);
+    hold all;
+    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
+    ylabel('K_e [mM]');
+    xlim([XLIM1 XLIM2])
+subplot(3,3,8);
+    hold all;
+    plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);
+    ylabel('K_k [mM]');
+    xlim([XLIM1 XLIM2])
 
 %% Plot experimental and model CBF from data file
 if nv.neuron.params.CurrentType == 3 || nv.neuron.params.CurrentType == 4 
@@ -292,56 +352,7 @@ end
 % %     set(p1,'FaceAlpha',0.1,'EdgeColor', 'none');
 % %     p2=patch([100+actual_stim+actual_ISI 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI+1 100+actual_stim+actual_ISI],[1 1 1.4 1.4],'k');
 % %     set(p2,'FaceAlpha',0.1,'EdgeColor', 'none');
-    
-%% Plot some variables
-% % 
-figure(FIG_NUM);
-subplot(3,3,1);
-    hold all;
-    plot(nv.T, nv.out('v_sa'), 'LineWidth', 1);
-    ylabel('v_{sa} [mV]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,2);
-    hold all;
-    plot(nv.T, nv.out('v_k'), 'LineWidth', 1);
-    ylabel('v_k [mV]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,3);
-    hold all;
-    plot(nv.T, nv.out('O2')*1e3, 'LineWidth', 1);
-    ylabel('O2 [\muM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,4);
-    hold all;
-    plot(nv.T, (nv.out('CBF')-CBF_0)./CBF_0, 'LineWidth', 1);
-    ylabel('\Delta CBF / CBF_0');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,5);
-    hold all;
-    plot(nv.T, nv.out('R'), 'LineWidth', 1);
-    ylabel('Radius [\mum]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,6);
-    hold all;
-    plot(nv.T, nv.out('K_s')/1e3, 'LineWidth', 1);
-    ylabel('K_s [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,7);
-    hold all;
-    plot(nv.T, nv.out('K_e'), 'LineWidth', 1);
-    ylabel('K_e [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,8);
-    hold all;
-    plot(nv.T, nv.out('K_k')/1e3, 'LineWidth', 1);
-    ylabel('K_k [mM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,3,9);
-    hold all;
-    % BOLD using normalised variables
-    plot(nv.T, BOLD_N, 'LineWidth', 1);  
-    ylabel('\Delta BOLD (%)');
-    xlim([XLIM1 XLIM2])
+
 % %  % Plot figures - whatever you want
 
 %% Plot for paper

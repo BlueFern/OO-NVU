@@ -219,7 +219,7 @@ classdef Neuron < handle
             du(idx.Buff_e, :)   = p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e);
 
             % change in concentration of Na,K in the extracellular space 
-            du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd));
+            du(idx.Na_e, :)     = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd)) ;
             du(idx.K_e, :)      = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - du(idx.Buff_e) + self.input_ECS(t);
             
             % change in tissue oxygen
@@ -308,6 +308,7 @@ classdef Neuron < handle
             h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
             h5 = u(idx.h5, :);          % Inactivation gating variable, dendrite KA channel (K+)
             O2 = u(idx.O2, :);
+      
             
             %% Glutamate function dependent on neuron membrane potential
             Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );  % based on extracellular K+ (Kager2000) - smooth
@@ -466,12 +467,16 @@ function params = parse_inputs(varargin)
     parser.addParameter('Imax', 0.013*6);  
       
     parser.addParameter('CurrentType', 1);  % Type of current input. 1: normal, 2: two stimulations, 3: obtained from data, 4: obtained from data+extra pathway
-   
     parser.addParameter('GluSwitch', 1); 
     parser.addParameter('KSwitch', 1); 
     parser.addParameter('NOswitch', 1); 
     parser.addParameter('O2switch', 1); 
     
+    %Unused parameters
+    parser.addParameter('VR_ek', 0.5);   % [-] volume ratio of ECS to AC (M.E.)
+    parser.addParameter('KIR_switch', 0); 
+    parser.addParameter('NaK_ek_switch', 0); 
+     
     % Glutamate parameters
     parser.addParameter('Glu_max', 1846);   % [uM] (one vesicle, Santucci2008)
     parser.addParameter('Glu_slope', 0.1);  % [mM] Slope of sigmoidal (M.E.)

@@ -109,6 +109,8 @@
 The single \gls{nvu} model originally developed by \citet{Farr2011} and later extended by \citet{Dormanns2015}, \citet{Dormanns2016}, \citet{Mathias2017}, \citet{Kenny2018}, and (Elshin ref) contains 67 \glspl{ode} plus a large number of algebraic variables and parameters. The equations and parameters are divided into sections corresponding to different compartments and pathways of the model.
 The following parameters are given for ordinary \gls{nvc} conditions.
 
+% % 279 parameters!
+
 \section{Global Constants}
 \begin{longtable}[h!]{ p{0.12\linewidth}   p{0.6\linewidth}   p{0.28\linewidth} }
 	\hline
@@ -136,9 +138,9 @@ The input current to the soma (mA cm$^{-2}$):
 %	I_{stim} = I_{strength} \cdot \text{rectpuls}(t - t_0, lengthpulse)
 	I_{stim} = 
 	\begin{cases} 
-	      0 & t\leq t_0 \\
+	      0 & t< t_0 \\
 	      I_{strength} & t_0\leq t\leq t_f \\
-	      0 & t_f\leq t 
+	      0 & t_f< t 
 	\end{cases}
 	\end{equation}
 %
@@ -1548,33 +1550,33 @@ $\alpha$			& Scaling factor for initial radius										& 0.6   \\
 
 \subsection{\Glspl{ode}}
 %
-\pot concentration in the astrocyte of block $i$ with four neighbours $j$ (\uM):
+\pot concentration in the astrocyte of \gls{nvu} block $i$ with four neighbours $j$ (\uM):
 \begin{align}
 \frac{d K_k^i}{dt} = \sum_j Q_{K,j \to i} - J_{K_k}^i + 2 J_{NaK_{k}}^i + J_{NKCC1_{k}}^i +  J_{KCC1_{k}}^i
 \end{align}
 %
-Membrane potential in the astrocyte of block $i$ with four neighbours $j$ (mV):
+Membrane potential in the astrocyte of \gls{nvu} block $i$ with four neighbours $j$ (mV):
 \begin{align}
-\frac{d v_k}{dt} = \gamma_j \left[ \sum_j z_K Q_{K,j \to i} -J_{BK_k}^i - J_{K_k}^i - J_{Cl_k}^i - J_{NBC_k}^i - J_{Na_k}^i - J_{NaK_k}^i - 2J_{TRPV_k}^i \right]
+\frac{d v_k^i}{dt} = \gamma_j \left[ \sum_j z_K Q_{K,j \to i} -J_{BK_k}^i - J_{K_k}^i - J_{Cl_k}^i - J_{NBC_k}^i - J_{Na_k}^i - J_{NaK_k}^i - 2J_{TRPV_k}^i \right]
 \end{align}
 %
-\pot concentration in the \gls{ecs} of block $i$ with four neighbours $j$ (mM):
+\pot concentration in the \gls{ecs} of \gls{nvu} block $i$ with four neighbours $j$ (mM):
 \begin{align}
 \frac{dK_{e}^i}{dt} &= \sum_j Q^{e}_{K,j\to i} + \frac{1}{F f_e} \left( \frac{A_s I_{K,tot_{sa}}^i}{V_s} + \frac{A_d I_{K,tot_d}^i}{V_d} \right) - \frac{d \text{Buff}^i_e}{dt}
 \end{align}
 %
-\na concentration in the \gls{ecs} of block $i$ with four neighbours $j$ (mM):
+\na concentration in the \gls{ecs} of \gls{nvu} block $i$ with four neighbours $j$ (mM):
 \begin{align}
-\frac{d Na_e}{dt} &= \sum_j Q^{e}_{Na,j\to i} + \frac{1}{F f_e} \left( \frac{A_s I_{Na,tot_{sa}}^i}{V_s} + \frac{A_d I_{Na,tot_d}^i}{V_d} \right)
+\frac{d Na_e^i}{dt} &= \sum_j Q^{e}_{Na,j\to i} + \frac{1}{F f_e} \left( \frac{A_s I_{Na,tot_{sa}}^i}{V_s} + \frac{A_d I_{Na,tot_d}^i}{V_d} \right)
 \end{align}
 %
 		\subsection{Algebraic Variables}
-Rate of change of $K_k$ in block $i$ due to gap junctional flux from neighbour $j$ (\mus):
+Rate of change of $K_k$ in \gls{nvu} block $i$ due to gap junctional flux from neighbour $j$ (\mus):
 \begin{align}
 Q_{K,j \to i} = \frac{D_{gap}}{\Delta x^2} \left( (K_k^j - K_K^i) + \frac{z_K F}{RT} \frac{K_k^i + K_k^j}{2} (v_k^j - v_k^i) \right)
 \end{align}
 %
-Rate of change of $K_e$ and $Na_e$ in block $i$ due to extracellular electrodiffusion from neighbour $j$ (mM \psec):
+Rate of change of $K_e$ and $Na_e$ in \gls{nvu} block $i$ due to extracellular electrodiffusion from neighbour $j$ (mM \psec):
 \begin{align}
 Q^{e}_{K,j\to i} &= \frac{D_{K,e}}{\Delta x^2} \left[ 
 (K_e^j - K_e^i) - z_K \left(\frac{K_e^i + K_e^j}{2}\right) 
@@ -1595,10 +1597,10 @@ Q^{e}_{Na,j\to i} &= \frac{D_{Na,e}}{\Delta x^2} \left[
 	\hline
 	Parameter & Description & Value \\
 	\hline
-$D_{gap}$ 		& Astrocytic gap junction diffusion coefficient & $3.1\e{-9}$ m$^2$\psec \\
+$D_{gap}$ 		& Astrocytic gap junction diffusion coefficient & $3.1\e{-9}$ m$^2$ \psec \\
 $\Delta x^2$ 	& Width of one \gls{nvu} block & $1.24\e{-4}$ m \\
-$D_{K,e}$ 		& Extracellular \pot diffusion coefficient & $3.8\e{-9}$ m$^2$\psec \\
-$D_{Na,e}$ 		& Extracellular \na diffusion coefficient & $2.5\e{-9}$ m$^2$\psec \\
+$D_{K,e}$ 		& Extracellular \pot diffusion coefficient & $3.8\e{-9}$ m$^2$ \psec \\
+$D_{Na,e}$ 		& Extracellular \na diffusion coefficient & $2.5\e{-9}$ m$^2$ \psec \\
 \hline
 \caption{Parameters of the large scale tissue slice model.}
 \end{longtable}
