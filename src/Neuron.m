@@ -340,8 +340,38 @@ classdef Neuron < handle
             J_K_tot_d   = J_KDR_d + J_KA_d + J_Kleak_d + J_Kpump_d + J_NMDA_K_d;
             
             dKedt = 1/(p.Farad * p.fe) * (((p.As * J_K_tot_sa) / p.Vs)  + ((p.Ad * J_K_tot_d) / p.Vd)) - (p.Mu * K_e .* (p.B0 - Buff_e) ./ (1 + exp(-((K_e - 5.5) ./ 1.09))) - (p.Mu * Buff_e)) + self.input_ECS(t);
+            
+            %% Optional if we want J_Na_NEtoSC dependent on Na_e rather than taken as the opposite flux to J_K_NEtoSC
+            m1 = u(idx.m1, :);          % Activation gating variable, soma/axon NaP channel (Na+)
+            m4 = u(idx.m4, :);          % Activation gating variable, dendrite NaP channel (Na+)
+            m5 = u(idx.m5, :);          % Activation gating variable, dendrite NMDA channel (Na+)
+            m8 = u(idx.m8, :);          % Activation gating variable, soma/axon NaT channel (Na+)
+            h1 = u(idx.h1, :);          % Inactivation gating variable, soma/axon NaP channel (Na+)
+            h3 = u(idx.h3, :);          % Inactivation gating variable, dendrite NaP channel (Na+)
+            h4 = u(idx.h4, :);          % Inactivation gating variable, dendrite NMDA channel (Na+)
+            h6 = u(idx.h6, :);          % Inactivation gating variable, soma/axon NaT channel (Na+)
+            Na_e = u(idx.Na_e, :);      % Na+ concentration of ECS, mM
+            
+            E_Na_sa     = p.ph * log(Na_e ./ Na_sa);
+            E_Na_d      = p.ph * log(Na_e ./ Na_d);
+            
+            J_NaP_d = (m4.^2 .* h3 .* p.gNaP_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph)));
+            J_Naleak_d  = p.gNaleak_d * (v_d - E_Na_d);
+            J_Napump_d = 3 * J_pump_d;
+            J_NMDA_Na_d = ( (m5 .* h4 .* p.gNMDA_GHk * p.Farad .* v_d .* (Na_d - (exp(-v_d / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_d / p.ph))) ) ./ (1 + 0.33 * p.Mg * exp(-(0.07 * v_d + 0.7)));
+            J_NaP_sa = (m1.^2 .* h1 .* p.gNaP_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+            J_Naleak_sa = p.gNaleak_sa * (v_sa - E_Na_sa);
+            J_Napump_sa = 3 * J_pump_sa;
+            J_NaT_sa = (m8.^3 .* h6 .* p.gNaT_GHk * p.Farad .* v_sa .* (Na_sa - (exp(-v_sa / p.ph) .* Na_e))) ./ (p.ph * (1 - exp(-v_sa / p.ph)));
+            
+            J_Na_tot_d = J_NaP_d + J_Naleak_d + J_Napump_d + J_NMDA_Na_d;
+            J_Na_tot_sa = J_NaP_sa + J_Naleak_sa + J_Napump_sa + J_NaT_sa;
+            dNaedt = 1/(p.Farad * p.fe) * (((p.As * J_Na_tot_sa) / p.Vs) + ((p.Ad * J_Na_tot_d) / p.Vd)) ;
+            
+            %%
             J_K_NEtoSC = p.k_syn * dKedt;
-            J_Na_NEtoSC = -p.k_syn * dKedt;
+            J_Na_NEtoSC = - p.k_syn * dKedt;  % Old
+%             J_Na_NEtoSC = p.k_syn * dNaedt;     % New    
        end
        
               %% Current input to neuron

@@ -1,7 +1,6 @@
 classdef Astrocyte < handle
     % The 'Astrocyte' code contains the following sections of the model:
-    % The Neuron, Synaptic cleft, the Astrocyte and the Perivascular Space
-    % Currently there is no content under the Neuron sub-section
+    % The Synaptic cleft, the Astrocyte and the Perivascular Space
     % Please refer to the relevient sections in the documentation for
     % full information on the equations and variable names.
     properties
@@ -183,6 +182,7 @@ classdef Astrocyte < handle
                 Uout(self.idx_out.J_NKCC1_k, :) = J_NKCC1_k;
                 Uout(self.idx_out.J_NaK_k, :) = J_NaK_k;
                 Uout(self.idx_out.J_Cl_k, :) = J_Cl_k;
+                Uout(self.idx_out.Cl_s, :) = Cl_s;
                 varargout = {Uout};
             end
         end
@@ -255,6 +255,7 @@ function [idx, n] = output_indices(self)
     idx.J_K_NEtoSC = 31;
     idx.J_KCC1_k = 32;
     idx.J_Cl_k = 33;
+    idx.Cl_s = 34;
     n = numel(fieldnames(idx));
 end
 

@@ -33,7 +33,7 @@ for i = 1:1:i_astrocyte
 end
 hold off
 
-figure(3);
+figure(30);
 hold all
 set(gcf,'Name', 'SMC and EC State Variables')
 smcec_vars = fieldnames(nv.smcec.index);
@@ -47,7 +47,7 @@ for i = 1:1:i_smcec
 end
 hold off
 
-figure(4);
+figure(40);
 hold all
 set(gcf,'Name', 'Wall Mechanics State Variables')
 wall_vars = fieldnames(nv.wall.index);
