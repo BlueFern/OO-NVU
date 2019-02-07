@@ -194,7 +194,7 @@ classdef SMCEC < handle
             R_cGMP2 = cGMP_i.^2 ./ (cGMP_i.^2 + p.K_m_mlcp^2);
             
             v_KIR_i = p.z_1 * K_p - p.z_2;
-            G_KIR_i = p.F_KIR_i * exp(p.z_5 * v_i + p.z_3 * K_p - p.z_4);
+            G_KIR_i = p.F_KIR_i * exp(p.z_5 * v_i + p.z_3 * K_p);   % Previously had exp(p.z_5 * v_i + p.z_3 * K_p + p.z_4) but exp(z_4) has been taken out and combined into parameter F_KIR (prev 0.381, now 1.285e-6)
             J_KIR_i = G_KIR_i .* (v_i - v_KIR_i);
             
             J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
@@ -338,7 +338,7 @@ function params = parse_inputs(varargin)
     parser.addParameter('G_K_i', 4.46e-3); %uM mV^-1 s^-1
     parser.addParameter('v_K_i', -94); %mV
 
-    parser.addParameter('F_KIR_i', 0.381); % uM mV^-1 s^-1
+    parser.addParameter('F_KIR_i', 1.285e-6); % uM mV^-1 s^-1, previously 0.381
     parser.addParameter('k_d_i', 0.1); % s^-1
 
     % Endothelial Cell Flux Constants
