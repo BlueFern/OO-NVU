@@ -1,5 +1,5 @@
-# OO-NVU
-Object-oriented implementation of the original NVU (envy-you) model and code.
+# OO-NVU - Version 2.1
+Object-oriented implementation of the NVU model.
 
 NVU 2.1 contains the following pathways:
 * Neuronal dynamics stimulated by a current input to the soma
