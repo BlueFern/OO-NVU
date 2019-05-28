@@ -17,7 +17,7 @@ The code is run in Matlab:
 * To adjust any algebraic variables see the file `all_algebraic_variables.m`
 * To adjust any differential equations see the file `NVU_DE_system.m`
 * To adjust initial conditions see the file `initial_conditions.m`
-* When adding any new state variables to `NVU_DE_system.m` these must also be added to `all_indices` and `set_variable_names.m`
+* When adding any new state variables to `NVU_DE_system.m` these must also be added to `all_indices.m` and `set_variable_names.m`
 
 Note that time is in milliseconds.
 
