@@ -1,5 +1,5 @@
-# OO-NVU - Version 3?
-Object-oriented implementation of the NVU model.
+# OO-NVU - Version 3
+Matlab implementation of the NVU model.
 
 Contains the following pathways:
 * Excitatory/inhibitory neuron dynamics based on Wilson & Cowan (1972)
@@ -7,12 +7,19 @@ Contains the following pathways:
 * Nitric oxide pathway via glutamate release from the neuron into the SC
 * Astrocytic calcium pathway via glutamate release from the neuron into the SC
 * TRPV4 calcium channel on the astrocytic endfoot
+* 20-HETE and Arachidonic Acid dynamics in the astroycte and SMC
 
 How to Run 
 ----
 The code is run in Matlab:
-1) To solve the system use the script nvu_run_script.m
-2) To quickly plot all variables use the script plot_all_variables.m 
+* To solve the system use the script `run_NVU_DE_system.m`
+* To change any model parameters see the file `all_parameters.m`
+* To adjust any algebraic variables see the file `all_algebraic_variables.m`
+* To adjust any differential equations see the file `NVU_DE_system.m`
+* To adjust initial conditions see the file `initial_conditions.m`
+* When adding any new state variables to `NVU_DE_system.m` these must also be added to `all_indices` and `set_variable_names.m`
+
+Note that time is in milliseconds.
 
 For further information on the NVU model refer to the following papers:
 * Wilson, H. R., & Cowan, J. D. (1972). Excitatory and inhibitory interactions in localized populations of model neurons. Biophysical Journal, 12, 1–24.
