@@ -122,10 +122,6 @@ fprintf('Elapsed time is %d minutes and %f seconds\n',floor(tEnd/60),rem(tEnd,60
 timeEnd = datetime('now');
 fprintf('End time is %s\n', char(timeEnd));
 
-t_sec = t/1e3;                  % Convert time from ms to s
-XLIM1 = p.startpulse/1e3 - 5;   % start plotting 5 sec before stimulus begins
-XLIM2 = p.Tend/1e3;               % stop plotting at end of simulation time
-
 %% Calculate normalised CBF, CBV, HbR, CMRO2, HbT, HbO, %BOLD
 preNeuronalStimTime = floor((p.startpulse)*numTimeSteps/p.Tend);
 CBF_0 = CBF(preNeuronalStimTime);
@@ -144,6 +140,9 @@ HBO_N = (HBT_N - 1) - (HBR_N - 1) + 1;                                  % Oxyhem
 BOLD_N = 100 * p.V_0 * ( p.a_1 * (1 - HBR_N) - p.a_2 * (1 - CBV_N) );   % BOLD (percentage increase from 0)
 
 %% Plot figures (with time in sec)
+t_sec = t/1e3;                  % Convert time from ms to s
+XLIM1 = p.startpulse/1e3 - 5;   % start plotting 5 sec before stimulus begins
+XLIM2 = p.Tend/1e3;               % stop plotting at end of simulation time
 
 % Plot the CBF from the Zheng experiments
 if p.Whiskerpad == 1 || p.Whiskerpad == 2 || p.Whiskerpad == 3 || p.Whiskerpad == 4
@@ -189,7 +188,7 @@ if p.lengthpulse == 16e3 && p.double_pulse == 0
 end
 
 % Plot the model hemodynamics
-figure(22);
+figure;
 hold all;
 plot(t_sec, HBO_N, 'r', 'LineWidth', 1)
 plot(t_sec, HBR_N, 'b', 'LineWidth', 1)
@@ -197,48 +196,48 @@ plot(t_sec, HBT_N, 'g', 'LineWidth', 1)
 xlim([XLIM1 XLIM2])
 % ylim([0.87 1.2]);
 xlabel('Time [s]')
-p1=patch([p.startpulse*1e-3 (p.startpulse + p.lengthpulse)*1e-3 (p.startpulse + p.lengthpulse)*1e-3 p.startpulse*1e-3],[0.7 0.7 1.3 1.3],'k');
-set(p1,'FaceAlpha',0.05,'EdgeColor', 'none');
+% p1=patch([p.startpulse*1e-3 (p.startpulse + p.lengthpulse)*1e-3 (p.startpulse + p.lengthpulse)*1e-3 p.startpulse*1e-3],[0.7 0.7 1.3 1.3],'k');
+% set(p1,'FaceAlpha',0.05,'EdgeColor', 'none');
 legend('HbO','HbR','HbT');
 
 % Plot the 20-HETE variables
-figure(23);
-subplot(3,2,1)
-hold all;
-    plot(t_sec, Ca_k);
-    xlabel('Time [s]'); ylabel('Ca_k [\muM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,2,2)
-hold all;
-    plot(t_sec, H_i);
-    xlabel('Time [s]'); ylabel('H_i [\muM]');    
-%     ylim([0.12 0.24])
-xlim([XLIM1 XLIM2])
-subplot(3,2,3)
-hold all;
-    plot(t_sec, AA_k);
-    xlabel('Time [s]'); ylabel('AA_k [\muM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,2,4)
-hold all;
-    plot(t_sec, AA_i);
-    xlabel('Time [s]'); ylabel('AA_i [\muM]');
-    xlim([XLIM1 XLIM2])
-subplot(3,2,5)
-hold all;
-    plot(t_sec, w_i);
-    xlabel('Time [s]'); ylabel('w_i [-]');
-    xlim([XLIM1 XLIM2])
-subplot(3,2,6)
-hold all;
-    plot(t_sec, R);
-    xlabel('Time [s]'); ylabel('R [\mum]');
-    xlim([XLIM1 XLIM2])
-subplot(4,2,7)
-hold all;
-    plot(t_sec, CMRO2);
-    xlabel('Time [s]'); ylabel('CMRO2');
-    xlim([XLIM1 XLIM2])
+% figure(23);
+% subplot(3,2,1)
+% hold all;
+%     plot(t_sec, Ca_k);
+%     xlabel('Time [s]'); ylabel('Ca_k [\muM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,2,2)
+% hold all;
+%     plot(t_sec, H_i);
+%     xlabel('Time [s]'); ylabel('H_i [\muM]');    
+% %     ylim([0.12 0.24])
+% xlim([XLIM1 XLIM2])
+% subplot(3,2,3)
+% hold all;
+%     plot(t_sec, AA_k);
+%     xlabel('Time [s]'); ylabel('AA_k [\muM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,2,4)
+% hold all;
+%     plot(t_sec, AA_i);
+%     xlabel('Time [s]'); ylabel('AA_i [\muM]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,2,5)
+% hold all;
+%     plot(t_sec, w_i);
+%     xlabel('Time [s]'); ylabel('w_i [-]');
+%     xlim([XLIM1 XLIM2])
+% subplot(3,2,6)
+% hold all;
+%     plot(t_sec, R);
+%     xlabel('Time [s]'); ylabel('R [\mum]');
+%     xlim([XLIM1 XLIM2])
+% subplot(4,2,7)
+% hold all;
+%     plot(t_sec, CMRO2);
+%     xlabel('Time [s]'); ylabel('CMRO2');
+%     xlim([XLIM1 XLIM2])
 
 %% Plot anything else...
 % 
@@ -273,46 +272,73 @@ hold all;
 % ylabel('K_e')
 % xlim([XLIM1 XLIM2])
 
-figure(30);
-subplot(2,2,3)
-hold all
-plot(t_sec, OEF)
-ylabel('OEF')
-xlim([XLIM1 XLIM2])
-subplot(2,2,1)
-hold all
-plot(t_sec, f_in)
-ylabel('f_{in}')
-xlim([XLIM1 XLIM2])
-subplot(2,2,2)
-hold all
-plot(t_sec, CBF)
-ylabel('CBF')
-xlim([XLIM1 XLIM2])
-subplot(2,2,4)
-hold all
-plot(t_sec, CMRO2_N)
-ylabel('CMRO2')
-xlim([XLIM1 XLIM2])
+% figure(30);
+% subplot(2,2,3)
+% hold all
+% plot(t_sec, OEF)
+% ylabel('OEF')
+% xlim([XLIM1 XLIM2])
+% subplot(2,2,1)
+% hold all
+% plot(t_sec, f_in)
+% ylabel('f_{in}')
+% xlim([XLIM1 XLIM2])
+% subplot(2,2,2)
+% hold all
+% plot(t_sec, CBF)
+% ylabel('CBF')
+% xlim([XLIM1 XLIM2])
+% subplot(2,2,4)
+% hold all
+% plot(t_sec, CMRO2_N)
+% ylabel('CMRO2')
+% xlim([XLIM1 XLIM2])
 
-figure(31)
-subplot(4,1,1)
+figure(30)
+subplot(3,3,1)
+hold all
+plot(t_sec, J_GABA_k)
+ylabel('J_{GABA,k} [\muM/s]')
+xlim([XLIM1 XLIM2])
+subplot(3,3,2)
+hold all
+plot(t_sec, J_GABA_i)
+ylabel('J_{GABA,i} [\muM/s]')
+xlim([XLIM1 XLIM2])
+subplot(3,3,3)
+hold all
+plot(t_sec, J_VOCC_i)
+ylabel('J_{VOCC,i} [\muM/s]')
+xlim([XLIM1 XLIM2])
+subplot(3,3,4)
 hold all
 plot(t_sec, v_k)
-ylabel('v_k')
+ylabel('v_k [mV]')
 xlim([XLIM1 XLIM2])
-subplot(4,1,2)
+subplot(3,3,5)
 hold all
-plot(t_sec, w_k)
-ylabel('w_k')
+plot(t_sec, v_i)
+ylabel('v_i [mV]')
 xlim([XLIM1 XLIM2])
-subplot(4,1,3)
+subplot(3,3,6)
 hold all
-plot(t_sec, Ca_k)
-ylabel('Ca_k')
+plot(t_sec, Ca_i)
+ylabel('Ca_i [\muM]')
 xlim([XLIM1 XLIM2])
-subplot(4,1,4)
+subplot(3,3,7)
 hold all
-plot(t_sec, J_Cl_k)
-ylabel('J_{Cl,k}')
+plot(t_sec, NO_n)
+ylabel('NO_n [\muM]')
 xlim([XLIM1 XLIM2])
+subplot(3,3,8)
+hold all
+plot(t_sec, H_i)
+ylabel('20-HETE [\muM]')
+xlim([XLIM1 XLIM2])
+subplot(3,3,9)
+hold all
+plot(t_sec, (CBF - CBF_0) ./ CBF_0)
+ylabel('\Delta CBF')
+xlim([XLIM1 XLIM2])
+
+

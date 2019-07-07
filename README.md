@@ -1,9 +1,8 @@
-# OO-NVU - Version 3
+# OO-NVU - Version 3.2?
 Matlab implementation of the NVU model.
 
 Contains the following pathways:
-* Excitatory/inhibitory neuron dynamics based on Wilson & Cowan (1972)
-* K+ pathway via K+ release from the neuron into the SC
+* Inhibitory interneuron GABA (vasodilation) and NPY (vasoconstriction) pathways
 * Nitric oxide pathway via glutamate release from the neuron into the SC
 * Astrocytic calcium pathway via glutamate release from the neuron into the SC
 * TRPV4 calcium channel on the astrocytic endfoot

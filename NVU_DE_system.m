@@ -71,12 +71,7 @@ else
     du(idx.I_t) =  1 ./ p.tau_i .* (-I_t + (k_i - p.r_i .* I_t) .* s_arg_i);            % [ms^-1] Change in inhibitory cells firing     
 end
 
-if p.gamma_switch == 0
-    du(idx.K_e, :) = - p.beta_K_e * (K_e - p.K_eBase) + p.alpha_K_e * p.beta_K_e .* ((abs(E_t - I_t) - p.EImin) ./ (p.EI_relative - p.EImin));  % [mM ms^-1]  Change in extracellular potassium concentration
-else
-    du(idx.K_e, :) = - p.beta_K_e * (K_e - p.K_eBase) + Gamma(t,p,E_t,I_t);
-end
-
+du(idx.K_e, :) = - p.beta_K_e * (K_e - p.K_eBase) + p.alpha_K_e * p.beta_K_e .* ((abs(E_t - I_t) - p.EImin) ./ (p.EI_relative - p.EImin));  % [mM ms^-1]  Change in extracellular potassium concentration
 du(idx.Na_sa) = - p.beta_Na_sa * (Na_sa - p.Na_saBase) + p.alpha_Na_sa * p.beta_Na_sa .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin));  % [mM ms^-1]   Change in soma/axon sodium concentration                  
 du(idx.Na_d) =  - p.beta_Na_d * (Na_d - p.Na_dBase) +  p.alpha_Na_d * p.beta_Na_d .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin)); % [mM ms^-1]   Change in dendrite sodium concentration
 du(idx.O2) = J_O2_vascular - J_O2_background - J_O2_pump;  % [mM ms^-1]  Change in oxygen concentration             
@@ -91,7 +86,7 @@ du(idx.NO_n) = p_NO_n - c_NO_n + d_NO_n;        % [uM ms^-1] Change in NO concen
 
 du(idx.K_p) = J_BK_k ./ (p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay * (K_p - p.K_p_min) ;
 du(idx.Ca_p) = J_TRPV_k./ p.VR_pa + J_VOCC_i ./ p.VR_ps - p.Ca_decay_k .* (Ca_p - p.Capmin_k); % calcium concentration in PVS
-du(idx.v_k) = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k - 2*J_TRPV_k);
+du(idx.v_k) = p.gamma_i .* ( -J_BK_k - J_K_k - J_Cl_k - J_NBC_k - J_Na_k - J_NaK_k - 2*J_TRPV_k - J_GABA_k);
 du(idx.Na_k) = -J_Na_k - 3*J_NaK_k + J_NKCC1_k + J_NBC_k;
 du(idx.K_k) = -J_K_k + 2*J_NaK_k + J_NKCC1_k + J_KCC1_k - J_BK_k;
 du(idx.HCO3_k) = 2*J_NBC_k;
@@ -112,7 +107,7 @@ du(idx.AA_k) = (p.AA_m * p.AA_max)./(p.AA_m + (Ca_k - p.Ca0)).^2 .* du(idx.Ca_k)
 
 du(idx.Ca_i) = J_IP3_i - J_SR_uptake_i - J_extrusion_i + J_SR_leak_i - J_VOCC_i + J_CICR_i + J_NaCa_i - 0.1*J_stretch_i + J_Ca_coup_i;
 du(idx.s_i) = J_SR_uptake_i - J_CICR_i - J_SR_leak_i;
-du(idx.v_i) = p.gamma_i * ( -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i -J_stretch_i - J_KIR_i) + V_coup_i;
+du(idx.v_i) = p.gamma_i * ( -J_NaK_i - J_Cl_i - 2*J_VOCC_i - J_NaCa_i - J_K_i -J_stretch_i - J_KIR_i - J_GABA_i) + V_coup_i;
 du(idx.w_i) = p.lambda_i * (K_act_i - w_i); 
 du(idx.I_i) = J_IP3_coup_i - J_degrad_i;
 du(idx.NO_i) = p_NO_i - c_NO_i + d_NO_i;

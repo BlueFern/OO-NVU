@@ -52,13 +52,10 @@ f_out           = CBV.^(1/p.d) + p.tau_TAT * (1/(p.tau_MTT + p.tau_TAT) .* ( CBF
 % CMRO2_init      = p.CBF_init * P_02;% [mM s^-1]  Initial metabolic rate of oxygen
 
 % NO pathway
-Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );
-w_NR2A = Glu ./ (p.K_mA + Glu);     % [-] 
-w_NR2B = Glu ./ (p.K_mB + Glu);     % [-] 
-I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-0.08 * (p.v_n + 20))) * (exp(2 * p.v_n / p.ph)) / (1 - exp(2 * p.v_n / p.ph));   % [fA]                                    
-I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B);   % [fA]                                                 
+% Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );
+                                               
 CaM = Ca_n / p.m_c;                 % [uM]        
-p_NO_n = nNOS_act_n * p.V_max_NO_n * p.O2_n /  (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n);
+p_NO_n = ( nNOS_act_n * p.V_max_NO_n * p.O2_n /  (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) );
 c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n;   
 tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);                          % [ms]
 d_NO_n = (NO_k - NO_n) ./ tau_nk;         
@@ -106,11 +103,10 @@ J_ER_leak = p.P_L * (1 - Ca_k ./ s_k);
 J_pump = p.V_max * Ca_k.^2 ./ (Ca_k.^2 + p.k_pump^2);
 J_TRPV_k = p.G_TRPV_k * m_k .* (v_k - E_TRPV_k);
 
-rho = p.rho_min + (p.rho_max - p.rho_min)/p.Glu_max * Glu;
 
 % Other equations
 B_cyt = 1 ./ (1 + p.BK_end + p.K_ex * p.B_ex ./ (p.K_ex + Ca_k).^2);
-G = (rho + p.delta) ./ (p.K_G + rho + p.delta);
+
 v_3 = p.v_6 - p.v_5 / 2 * tanh((Ca_k - p.Ca_3) / p.Ca_4);
 
 % Parent Calcium equations 
@@ -136,7 +132,6 @@ J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);   % SERCA pump
 J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
 J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
 J_SR_leak_i = p.L_i * s_i;
-J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i)); %***
 J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* (v_i - p.v_NaCa_i);
 
 h = 0.1 * R; 
@@ -192,7 +187,9 @@ c_NO_j = p.k_O2 .* NO_j.^2 .* O2_j;% consumption by oxygen
 J_lumen = - NO_j * 4 * p.D_cNO ./ (25.^2); 
 d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 
 
-W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 ./ (tau_wss + sqrt(16 * p.delta_wss.^2 + tau_wss.^2)); 
+% W_wss = p.W_0 .* (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2)); 
+W_wss = p.W_0 .* (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2) - 4 * p.delta_wss).^2 ./ (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2)); 
+
 F_wss = 1 ./ (1 + p.alp .* exp(- W_wss)) - 1 ./ (1 + p.alp); 
 Act_eNOS_Ca = p.K_dis .* Ca_j ./ (p.K_eNOS + Ca_j); 
 Act_eNOS_wss = p.g_max .* F_wss;  
@@ -229,3 +226,41 @@ end
 
 CMRO2 = f_in .* OEF ./ p.E_0;                                               % Cerebral metabolic rate of oxygen consumption
 J_O2_vascular   = CBF .* OEF ./ p.E_0;                                      % [mM s^-1] Vascular supply of oxygen, previously CBF .* ((p.O2_b - O2) ./ (p.O2_b - p.O2_0));   
+
+%% GABA stuff
+GABA = GABA(t,p); % [-] Normalised GABA concentration (normalised wrt some GABA_max), = 1 during neuronal stimulation and 0 otherwise
+
+g_GABA = p.G_GABA * 0.5 * ( 1 + tanh( (GABA - p.g_midpoint) / p.g_slope ) ); % Conductance of GABA dependent Cl channel, where conductance=0 when GABA=0 and conductance=G_Cl (value taken from SMC model) when GABA is max
+
+% Glutamate can be released when K_e goes higher than Ke_switch or when GABA increases
+Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) ) + ... 
+      p.GluSwitch * p.GABAswitch * 0.5 * p.Glu_GABAmax * ( 1 + tanh( (GABA - p.g_midpoint) / p.g_slope) );
+
+% Fluxes through the GABA activated Cl channels
+J_GABA_k = p.GABAswitch * g_GABA .* (v_k - p.E_GABA);
+J_GABA_i = p.GABAswitch * g_GABA .* (v_i - p.E_GABA);
+
+% Glutamate dependent algebraic variables
+w_NR2A = Glu ./ (p.K_mA + Glu);     % [-] 
+w_NR2B = Glu ./ (p.K_mB + Glu);     % [-] 
+I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-0.08 * (p.v_n + 20))) * (exp(2 * p.v_n / p.ph)) / (1 - exp(2 * p.v_n / p.ph));   % [fA]                                    
+I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B);   % [fA]  
+
+rho = p.rho_min + (p.rho_max - p.rho_min)/p.Glu_max * Glu;
+G = (rho + p.delta) ./ (p.K_G + rho + p.delta);
+
+%% NPY: released in interneurons, has a vasoconstrictive effect by opening the VOCCs
+NPY = NPY(t,p); % [-] Normalised NPY concentration (normalised wrt some NPY_max), = 1 during neuronal stimulation and 0 otherwise
+
+% Conductance increases from baseline when NPY increases
+g_VOCC = p.G_Ca_i * (1 + p.NPYswitch * p.npy_increase * 0.5 * ( 1 + tanh( (NPY - p.npy_midpoint) / p.npy_slope ) ) );
+J_VOCC_i = g_VOCC .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i)); 
+
+
+
+
+
+
+
+
+

@@ -12,7 +12,7 @@ u0(idx.O2) = 0.02566;        % [uM]old value 0.0266
 u0(idx.CBV) = 1.204;       % [-] old value 1.3167
 u0(idx.HbR) = 0.7641;       % [-] old value 0.6665
 u0(idx.Ca_n) = 0.1;         % [uM]
-u0(idx.nNOS_act_n) = 0;%0.01056; % [uM]old value 0.318
+u0(idx.nNOS_act_n) = 0.01056; % [uM]old value 0.318
 u0(idx.NO_n) = 0.02425;      % [uM] old value 0.1671   
 
 % Astrocyte
@@ -54,13 +54,17 @@ u0(idx.Ca_j) = 0.8339; % 0.1;           [uM]
 u0(idx.s_j) = 0.6262; % 0.1;            [uM]
 u0(idx.v_j) = -68.39; % -75;            [mV]
 u0(idx.I_j) = 0.825; % 0.1;             [uM]
-u0(idx.eNOS_act_j) = 0;%0.4451; % 0.7;     [uM]
+u0(idx.eNOS_act_j) = 0.4451; % 0.7;     [uM]
 u0(idx.NO_j) = 0.02051; % 0.05;          [uM] old value 0.0528
 
 % Wall Mechanics
 u0(idx.Mp) = 0.0842;                                                    % [-]
 u0(idx.AMp) = 0.0622;                                                   % [-]
 u0(idx.AM) = 0.2746; 
-u0(idx.R) = 20;%22.44;
+u0(idx.R) = 22.44;
+
+% Set for steady state when all NOS production is turned off, loads from file (comment out if unwanted) 
+% load no_eNOS_u0.mat
+% u0 = no_eNOS_u0;
 
 end

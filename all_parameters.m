@@ -4,19 +4,21 @@ function p = all_parameters()
 p.num_variables = 51; % Number of state variables
 
 %% Input [ms]
-p.startpulse = 300e3;        % Start time of input stimulation
+p.startpulse = 100e3;        % Start time of input stimulation
 p.lengthpulse = 2e3;       % Length of stimulation
-p.Tend = 330e3;             % End of simulation
+p.Tend = 130e3;             % End of simulation
 p.dt = .01e3;               % Time step (overwritten to be smaller if p.Whiskerpad = 2)
 
 %% Commonly changed parameters - move any parameters needed here (don't duplicate)
 
-p.gamma_switch = 0;     % Turn on/off use of Gamma function. Probably shouldn't be used if lengthpulse is less than 10 or so
+p.GABAswitch = 1;       % 0: no GABA, normal neuronal activity, 1: GABA (opens chlorine channels on AC and SMC) and no neuronal activity
+p.NPYswitch = 0;        % 0: no NPY release, 1: NPY release (opens VOCCs and causes constriction)
+
 p.GluSwitch = 1;        % Turn on/off glutamate input
 p.O2switch = 1;         % O2switch = 0 ATP is plentiful, O2switch = 1 ATP is limited (oxygen-limited regime)
-p.NOswitch_NE = 0;      % Turn on/off neuronal NO production
-p.NOswitch_EC_WSS = 0;  % Turn on/off WSS induced eNOS production
-p.NOswitch_EC_CA = 0;   % Turn on/off Ca2+ induced eNOS production
+p.NOswitch_NE = 1;      % Turn on/off neuronal NO production
+p.NOswitch_EC_WSS = 1;  % Turn on/off WSS induced eNOS production
+p.NOswitch_EC_CA = 1;   % Turn on/off Ca2+ induced eNOS production
 p.wallMech = 2.7;       % scaling factor for the wall mechanics
 p.LCpathway = 0;        % Locus coeruleus pathway used for Whiskerpad = 1,2,4
 p.E_switch = 1;         % E_switch = 0: use Buxton1997 model for OEF (no dependency on tissue O2 conc.), E_switch = 1: OEF dependent on tissue O2 (currently not working)***
@@ -31,11 +33,16 @@ p.Whiskerpad = 0;       % 0: Model with square input pulse
                         
 p.double_pulse = 0;     % 1: use the second pulse in the Zheng input data, 0: only one pulse. Used for p.Whiskerpad = 1 or 4
 
-if p.Whiskerpad == 5 
+if p.Whiskerpad == 5
     p.Pinput = 0.0; % inhibitory input only, no excitation
     p.Qinput = 1.0;
 else
     p.Pinput = 1.0; % excitatory input only, no inhibition
+    p.Qinput = 0.0;
+end
+
+if p.GABAswitch == 1
+    p.Pinput = 0.0; % no neuronal activity
     p.Qinput = 0.0;
 end
 
@@ -468,7 +475,7 @@ p.n_cross = 3;                                      % [-]
 
 % Mechanical Equation Constants
 p.eta_R = 1e7;                                        % [Pa ms]
-p.R_init = 19;%20;                                      % [um]
+p.R_init = 20;                                      % [um] 
 p.trans_p = 4000;                                   % [Pa]
 p.E_passive = 66e3;                                 % [Pa]
 p.E_active = 233e3;                                 % [Pa]
@@ -487,16 +494,31 @@ p.V_a = 0.212e-2;  % ms^-1  old value 0.212e-3
 p.K_a = 228.2;  % uM
 p.V_f = 0.0319e-2;  % ms^-1 old value 0.0319e-3
 p.K_f = 23.5;  % uM
-p.lambda_h = 2.0e-3;  % ms^-1  old value 0.139e-3
+p.lambda_h = 2.0e-3 ;  % ms^-1  old value 0.139e-3
 p.Hshift = 30;
 p.H0 = 0.126;
 p.NO_rest = 0.02047;
 p.R_NO = 0.02;
 
 %% Oxygen extraction fraction parameters
+p.f_in0 = 1.681;            % Baseline f_in for normalising, note that CBF/CBF_init is not exactly 1 so we need to do this to get f_in = 1 at baseline
 % p.O2_b = 5.175;             % previously 4e-2 (from Chang2013); [mM] baseline capillary O2 concentration (not used anymore)
 p.O2_0 = 0.01;              % previously 0.02 (from Chang2013); [mM] baseline tissue O2 concentration
 p.g_OEF = 0.2;              % Ratio of tissue O2 to plasma O2 (0.01 / 0.053)
 p.E_0 = 0.4;                % [-] baseline OEF
 p.J_0 = 0.053;             % previously 0.032; [mM/s] steady state change in pump & background flux due to CBF
+
+%% GABA parameters
+p.g_slope = 0.1; % [-] Slope of GABA sigmoidal
+p.g_midpoint = 0.6; % [-] Midpoint of GABA sigmoidal
+p.E_GABA = -75; %[mV] Reversal potential of GABA activated Cl channel
+p.G_GABA = .2 * p.G_Cl_i; % Maximum conductance of GABA activated Cl channel, based on SMC Cl leak channel conductance
+p.Glu_GABAmax = p.Glu_max; % [uM] Max amount of glutamate produced when GABA released, M.E. (but doesn't make much difference anyway)
+
+%% NPY parameters
+p.npy_increase = 0.15; % [-] proportion increase of VOCC conductance from baseline value due to NPY, e.g. 0.5 means 50% increase, M.E.
+p.npy_slope = 0.1; % [-] Slope of NPY sigmoidal
+p.npy_midpoint = 0.6; % [-] Midpoint of NPY sigmoidal
+
+
 end
