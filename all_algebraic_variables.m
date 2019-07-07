@@ -64,11 +64,8 @@ tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);                          % [ms]
 d_NO_n = (NO_k - NO_n) ./ tau_nk;         
 
 % Flux from ECS to SC
-if p.gamma_switch == 0
-    dKedt = -p.beta_K_e * (K_e - p.K_eBase) + (p.alpha_K_e .* p.beta_K_e) .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin));          % K_e derivative as neuron activation in Ostby            
-else
-    dKedt = - p.beta_K_e * (K_e - p.K_eBase) + Gamma(t,p,E_t,I_t); 
-end
+dKedt = -p.beta_K_e * (K_e - p.K_eBase) + (p.alpha_K_e .* p.beta_K_e) .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin));          % K_e derivative as neuron activation in Ostby            
+
 
 J_K_NEtoSC = p.k_syn * dKedt * 1e3;                                   % Input flux: K+ flux into SC
 J_Na_NEtoSC = -p.k_syn * dKedt * 1e3;                                 % Input flux: Na+ flux out of SC
