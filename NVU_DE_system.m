@@ -63,22 +63,30 @@ all_algebraic_variables()
 
 %% Set the RHS of the ODEs
 
-du(idx.E_t) =  1 ./ p.tau_e .* (-E_t + (k_e - p.r_e .* E_t) .* s_arg_e);            % [ms^-1] Change in excitatory cells firing      
-du(idx.I_t) =  1 ./ p.tau_i .* (-I_t + (k_i - p.r_i .* I_t) .* s_arg_i);            % [ms^-1] Change in inhibitory cells firing     
+if p.Whiskerpad == 2 % Using thalamic input T(t) rather than P(t), Q(t)
+    du(idx.E_t) =  1 ./ p.tau_e .* (-E_t + f_arg_e);            
+    du(idx.I_t) =  1 ./ p.tau_i .* (-I_t + f_arg_i);          
+else
+    du(idx.E_t) =  1 ./ p.tau_e .* (-E_t + (k_e - p.r_e .* E_t) .* s_arg_e);            % [ms^-1] Change in excitatory cells firing      
+    du(idx.I_t) =  1 ./ p.tau_i .* (-I_t + (k_i - p.r_i .* I_t) .* s_arg_i);            % [ms^-1] Change in inhibitory cells firing     
+end
 
 if p.gamma_switch == 0
-    du(idx.K_e, :) = - p.beta_K_e * (K_e - p.K_eBase) + p.alpha_K_e * p.beta_K_e .* (abs(E_t - I_t) ./ p.EI_relative);  % [mM ms^-1]  Change in extracellular potassium concentration
+    du(idx.K_e, :) = - p.beta_K_e * (K_e - p.K_eBase) + p.alpha_K_e * p.beta_K_e .* ((abs(E_t - I_t) - p.EImin) ./ (p.EI_relative - p.EImin));  % [mM ms^-1]  Change in extracellular potassium concentration
 else
     du(idx.K_e, :) = - p.beta_K_e * (K_e - p.K_eBase) + Gamma(t,p,E_t,I_t);
 end
 
-du(idx.Na_sa) = - p.beta_Na_sa * (Na_sa - p.Na_saBase) + p.alpha_Na_sa * p.beta_Na_sa .* (abs(E_t - I_t) ./ p.EI_relative);  % [mM ms^-1]   Change in soma/axon sodium concentration                  
-du(idx.Na_d) =  - p.beta_Na_d * (Na_d - p.Na_dBase) +  p.alpha_Na_d * p.beta_Na_d .* (abs(E_t - I_t) ./ p.EI_relative); % [mM ms^-1]   Change in dendrite sodium concentration
-du(idx.O2) = J_O2_vascular - J_O2_background - J_O2_pump;  % [uM ms^-1]  Change in oxygen concentration             
-du(idx.CBV) = 1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ); % [ms^-1] Change in normalized cerebral blood volume         
-du(idx.HbR) = 1/p.tau_MTT * ( CMRO2./CMRO2_init - HbR./CBV .* f_out );  % [ms^-1]  Change in normalized deoxyhemoglobin           
+du(idx.Na_sa) = - p.beta_Na_sa * (Na_sa - p.Na_saBase) + p.alpha_Na_sa * p.beta_Na_sa .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin));  % [mM ms^-1]   Change in soma/axon sodium concentration                  
+du(idx.Na_d) =  - p.beta_Na_d * (Na_d - p.Na_dBase) +  p.alpha_Na_d * p.beta_Na_d .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin)); % [mM ms^-1]   Change in dendrite sodium concentration
+du(idx.O2) = J_O2_vascular - J_O2_background - J_O2_pump;  % [mM ms^-1]  Change in oxygen concentration             
+du(idx.CBV) = 1/(p.tau_MTT + p.tau_TAT) .* ( f_in  - CBV.^(1/p.d) ); % [ms^-1] Change in normalized cerebral blood volume         
+
+% du(idx.HbR) = 1/p.tau_MTT * ( CMRO2./CMRO2_init - HbR./CBV .* f_out );  % [ms^-1]  Change in normalized deoxyhemoglobin   
+du(idx.HbR) = 1/p.tau_MTT * ( f_in .* OEF ./ p.E_0 - HbR./CBV .* f_out );  % [ms^-1]  Change in normalized deoxyhemoglobin   
+
 du(idx.Ca_n) = (I_Ca_tot / (2 * p.Farad * p.V_spine) - (p.k_ex * (Ca_n - p.Ca_rest))) / (1 + p.lambda_buf); % [uM ms^-1] Change in calcium concentration          
-du(idx.nNOS_act_n) = p.V_maxNOS * CaM ./ (p.K_actNOS + CaM) - p.mu2_n * nNOS_act_n;         % [uM ms^-1]  Change in active NO concentration 
+du(idx.nNOS_act_n) = p.NOswitch_NE * p.V_maxNOS * CaM ./ (p.K_actNOS + CaM) - p.mu2_n * nNOS_act_n;         % [uM ms^-1]  Change in active NO concentration 
 du(idx.NO_n) = p_NO_n - c_NO_n + d_NO_n;        % [uM ms^-1] Change in NO concentration         
 
 du(idx.K_p) = J_BK_k ./ (p.VR_pa) + J_KIR_i ./ p.VR_ps - p.R_decay * (K_p - p.K_p_min) ;
@@ -124,6 +132,6 @@ du(idx.NO_j) = p_NO_j - c_NO_j + d_NO_j;
 du(idx.Mp) = p.wallMech * ( p.K_4 * AMp + K_1 .* M - (K_2 + p.K_3) .* Mp );
 du(idx.AMp) = p.wallMech  * ( p.K_3 * Mp + K_6 .* AM - (p.K_4 + K_5) .* AMp );
 du(idx.AM) = p.wallMech  * ( K_5 .* AMp - (p.K_7 + K_6) .* AM );
-du(idx.R) =  p.R_init / eta * ( R * p.trans_p ./ h - E .* (R - R_0) ./ R_0);
+du(idx.R) =  p.R_init / p.eta_R * ( R * p.trans_p ./ h - E .* (R - R_0) ./ R_0);
 
 end

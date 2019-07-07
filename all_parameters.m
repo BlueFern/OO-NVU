@@ -4,25 +4,27 @@ function p = all_parameters()
 p.num_variables = 51; % Number of state variables
 
 %% Input [ms]
-p.startpulse = 2040e3;        % Start time of input stimulation
-p.lengthpulse = .1e3;       % Length of stimulation
-p.Tend = 2100e3;             % End of simulation
-p.dt = 0.1e3;               % Time step
+p.startpulse = 300e3;        % Start time of input stimulation
+p.lengthpulse = 2e3;       % Length of stimulation
+p.Tend = 330e3;             % End of simulation
+p.dt = .01e3;               % Time step (overwritten to be smaller if p.Whiskerpad = 2)
 
 %% Commonly changed parameters - move any parameters needed here (don't duplicate)
 
-p.gamma_switch = 1;     % Turn on/off use of Gamma function. Probably shouldn't be used if lengthpulse is less than 10 or so
+p.gamma_switch = 0;     % Turn on/off use of Gamma function. Probably shouldn't be used if lengthpulse is less than 10 or so
 p.GluSwitch = 1;        % Turn on/off glutamate input
 p.O2switch = 1;         % O2switch = 0 ATP is plentiful, O2switch = 1 ATP is limited (oxygen-limited regime)
-p.NOswitch_NE = 1;      % Turn on/off neuronal NO production
-p.NOswitch_EC_WSS = 1;  % Turn on/off WSS induced eNOS production
-p.NOswitch_EC_CA = 1;   % Turn on/off Ca2+ induced eNOS production
+p.NOswitch_NE = 0;      % Turn on/off neuronal NO production
+p.NOswitch_EC_WSS = 0;  % Turn on/off WSS induced eNOS production
+p.NOswitch_EC_CA = 0;   % Turn on/off Ca2+ induced eNOS production
 p.wallMech = 2.7;       % scaling factor for the wall mechanics
+p.LCpathway = 0;        % Locus coeruleus pathway used for Whiskerpad = 1,2,4
+p.E_switch = 1;         % E_switch = 0: use Buxton1997 model for OEF (no dependency on tissue O2 conc.), E_switch = 1: OEF dependent on tissue O2 (currently not working)***
 
 %% Whiskerpad: different cases
 p.Whiskerpad = 0;       % 0: Model with square input pulse
                         % 1: Model with whiskerpad Zheng input interpolation
-                        % 2: Model with whiskerpad Zheng input approximation ** not working
+                        % 2: Model with whisker model with thalamic input (Pinto et al) with single input block (no trailing 2 sec stimulus as in Zheng) scaled by Zheng input
                         % 3: Model with 2 square input pulses for Zheng paradigm
                         % 4: Model with whiskerpad Zheng input interpolation and fitted parameters to experiment
                         % 5: model with inhibitory neurons only
@@ -39,20 +41,30 @@ end
 
 if p.Whiskerpad == 1 || p.Whiskerpad == 2 || p.Whiskerpad == 3 || p.Whiskerpad == 4
     p.ISI = 7;                    % INDEX for time period between stimulations [0.6,1,2,3,4,6,8]
-    p.stim = 3;                   % INDEX for length of initial stimulation [2,8,16] ****
-    
-    ISI_array = [0.6,1,2,3,4,6,8]*1e3;
-    initial_stim_array = [2,8,16]*1e3;
-    
+    ISI_array = [0.6,1,2,3,4,6,8]*1e3;    
     p.actual_ISI = ISI_array(p.ISI);            % time period between stimulations
-    p.lengthpulse = initial_stim_array(p.stim); % length of initial stimulation *** lengthpulse is overwritten here so make sure if you're using the Zheng paradigm to change p.stim accordingly
-    p.secondpulse = p.startpulse + p.lengthpulse + p.actual_ISI;  
-    p.secondlength = 2e3;                       % length of second pulse
+    
+    % p.stim = INDEX for length of initial stimulation [2,8,16] 
+    if p.lengthpulse == 2e3
+        p.stim = 1;
+    elseif p.lengthpulse == 8e3
+        p.stim = 2;
+    elseif p.lengthpulse == 16e3
+        p.stim = 3;
+    end
+
 end
 
-if p.Whiskerpad == 0 || p.Whiskerpad == 5   % No second pulse
-    p.actual_ISI = 0; 
+if p.Whiskerpad == 1 || p.Whiskerpad == 3 || p.Whiskerpad == 4
+    p.secondpulse = p.startpulse + p.lengthpulse + p.actual_ISI;  
+    p.secondlength = 2e3;                       % length of second pulse
+else
+    p.actual_ISI = 0;       % No second pulse
     p.secondlength = 0;
+end
+
+if p.Whiskerpad == 2
+    p.dt = 0.001e3; % Thalamic input with fast triangles needs a smaller timestep
 end
   
 % Alpha, beta and rest values adjusted for the different inputs
@@ -63,9 +75,11 @@ if p.Whiskerpad == 0 || p.Whiskerpad == 3 || p.Whiskerpad == 5
     p.beta_Na_sa = 0.39e-3;
     p.alpha_Na_d = -2.12;
     p.beta_Na_d = 0.75e-3;
-    p.K_eRest = 3.5;
-    p.Na_saRest = 9.37;
-    p.Na_dRest = 9.42;
+    p.K_eBase = 3.5;
+    p.Na_saBase = 9.37;
+    p.Na_dBase = 9.42;
+    p.tau_e = 3;        
+    p.tau_i = 3;           
 elseif p.Whiskerpad == 1
     p.alpha_K_e = 3.5;
     p.beta_K_e = 10e-3;
@@ -73,19 +87,23 @@ elseif p.Whiskerpad == 1
     p.beta_Na_sa = 0.65e-3;
     p.alpha_Na_d = -2.12;
     p.beta_Na_d = 0.7e-3;
-    p.K_eRest = 3.567;
-    p.Na_saRest = 9.237;
-    p.Na_dRest = 9.318;
-elseif p.Whiskerpad == 2
-    p.alpha_K_e = 4.3;
-    p.beta_K_e = 10e-3;
-    p.alpha_Na_sa = 6.2;
-    p.beta_Na_sa = 0.65e-3;
-    p.alpha_Na_d = -3.1;
-    p.beta_Na_d = 0.9e-3;
-    p.K_eRest = 3.567;
-    p.Na_saRest = 9.237;
-    p.Na_dRest = 9.318;
+    p.K_eBase = 3.567;
+    p.Na_saBase = 9.237;
+    p.Na_dBase = 9.318;
+    p.tau_e = 3;        
+    p.tau_i = 3;    
+elseif p.Whiskerpad == 2 % Thalamic input
+    p.alpha_K_e = 3*3.2;
+    p.beta_K_e = 4.2e-3;
+    p.alpha_Na_sa = 4.23;
+    p.beta_Na_sa = 0.39e-3;
+    p.alpha_Na_d = -2.12;
+    p.beta_Na_d = 0.75e-3;
+    p.K_eBase = 3.5;
+    p.Na_saBase = 9.37;
+    p.Na_dBase = 9.42;
+    p.tau_e = 5;        
+    p.tau_i = 15;    
 elseif p.Whiskerpad == 4
     p.alpha_K_e = 3.3;    % 3.3 with wallMech = 2.0 for CBF fit to Zheng, 3.0 with wallMech = 2.0 for fit to Berwick
     p.beta_K_e = 10e-3;
@@ -93,12 +111,25 @@ elseif p.Whiskerpad == 4
     p.beta_Na_sa = 0.65e-3;
     p.alpha_Na_d = -2.12;
     p.beta_Na_d = 0.7e-3;
-    p.K_eRest = 3.567;
-    p.Na_saRest = 9.237;
-    p.Na_dRest = 9.318;
+    p.K_eBase = 3.567;
+    p.Na_saBase = 9.237;
+    p.Na_dBase = 9.318;
+    p.tau_e = 3;        
+    p.tau_i = 3;  
 end
 
 %% Neuron
+
+
+if p.Whiskerpad == 2 % Thalamic input
+    p.EI_relative = 0.5167; % [-]    Maximum value for abs(E-I) after external inputs
+    p.EImin = 0.1396;       % [-]    Minimum value for abs(E-I) after external inputs
+else
+    p.EI_relative = 0.2894; % [-]    Maximum value for abs(E-I) after external inputs
+    p.EImin = 0;       % [-]    Minimum value for abs(E-I) after external inputs
+end
+
+p.Tinput = 0.2;
 
 % Gamma parameters
 p.gamma_width = 6e3;   % [ms]
@@ -106,9 +137,9 @@ p.gamma_delay = -2e3;   % [ms]?
 
 % Wilson and Cowan model parameters
 % K_e, Na_sa, Na_d parameters
-p.K_eBase = 3.5;        % [mM]
-p.Na_saBase = 9.37;     % [mM]
-p.Na_dBase = 9.42;      % [mM]
+% p.K_eBase = 3.5;        % [mM]
+% p.Na_saBase = 9.37;     % [mM]
+% p.Na_dBase = 9.42;      % [mM]
 
 % p.alpha_K_e = 3.2;      % [-]
 % p.beta_K_e = 4.2e-3;    % [ms^-1]
@@ -118,21 +149,26 @@ p.Na_dBase = 9.42;      % [mM]
 % p.beta_Na_d = 0.75e-3;  % [ms^-1]
 
 % E and I parameters
-p.EI_relative = 0.2894; % [-]    Maximum value for E-I after external inputs
 p.c1 = 12;              % [-]
 p.c2 = 10;              % [-]
 p.c3 = 13;              % [-]
 p.c4 = 11;              % [-]
 p.r_e = 1.0;            % [ms]?
 p.r_i = 4.0;            % [ms]?
-p.tau_e = 3;            % [ms]
-p.tau_i = 3;            % [ms]
 p.k_e_input = 10;
 p.k_i_input = 10;
 p.a_e = 1.2;            % [-]
 p.theta_e = 2.8;        % [-]
 p.a_i = 1.0;            % [-]
 p.theta_i = 4.0;        % [-]
+
+% Thalamic input parameters
+p.wee = 42;
+p.wie = 24.6;
+p.wei = 42;
+p.wii = 18;
+p.wte = 53.43;
+p.wti = 68.4;
 
 % p.Pinput = 1.0;         % [-]
 % p.Qinput = 0.0;         % [-]
@@ -154,18 +190,15 @@ p.d = 0.4;              % [-]
 p.a_1 = 3.4;            % [-]   
 p.a_2 = 1;              % [-]
 p.V_0 = 0.03;           % [-]
-p.E_0 = 0.4;            % [-]
 
 % Oxygen model
-p.O2_0 = 0.02;          % [mM]
-p.alpha_O2 =  0.05;     % [-] Percentage of ATP production independent of O2
+p.alpha_O2 =  0.05;     % [-] Percentage of ATP production independent of O2 0.05;
 p.K_init_e = 2.9;       % [mM]
 p.Na_init_sa = 10;      % [mM]
 p.Na_init_d = 10;       % [mM]
 
 p.CBF_init = 3.2e-2;    % [-]3.2e-2
-p.O2_b = 4e-2;          % [mM]
-p.gamma_O2 = 0.1;      % [-] 0.1 
+p.gamma_O2 = 0.1;       % [-] 0.1 
 
 % NO pathway 
 p.m_c = 4;              % [-] 
@@ -434,8 +467,8 @@ p.gamma_cross = 17e-3;                              % [uM^-3 ms^-1]
 p.n_cross = 3;                                      % [-]
 
 % Mechanical Equation Constants
-p.eta = 1e7;                                        % [Pa ms]
-p.R_init = 20;                                      % [um]
+p.eta_R = 1e7;                                        % [Pa ms]
+p.R_init = 19;%20;                                      % [um]
 p.trans_p = 4000;                                   % [Pa]
 p.E_passive = 66e3;                                 % [Pa]
 p.E_active = 233e3;                                 % [Pa]
@@ -447,17 +480,23 @@ p.k_mlcp_c = 0.0327e-3;                             % [ms^-1]
 p.AA_max = 29;  % uM
 p.AA_m = 0.161;  % uM
 p.Ca0 = 0.1432;  % uM
-p.D_AA = 0.33;    % um^2/ms, model estimate
+p.D_AA = 0.033;    % um^2/ms, model estimate
 p.tau_AA = p.x_ki ^ 2 ./  (2 * p.D_AA); % Time constant for AA diffusion between astrocyte and SMC
 
 p.V_a = 0.212e-2;  % ms^-1  old value 0.212e-3
 p.K_a = 228.2;  % uM
 p.V_f = 0.0319e-2;  % ms^-1 old value 0.0319e-3
 p.K_f = 23.5;  % uM
-p.lambda_h = 2.0e-3 ;  % ms^-1  old value 0.139e-3
+p.lambda_h = 2.0e-3;  % ms^-1  old value 0.139e-3
 p.Hshift = 30;
 p.H0 = 0.126;
 p.NO_rest = 0.02047;
 p.R_NO = 0.02;
 
+%% Oxygen extraction fraction parameters
+% p.O2_b = 5.175;             % previously 4e-2 (from Chang2013); [mM] baseline capillary O2 concentration (not used anymore)
+p.O2_0 = 0.01;              % previously 0.02 (from Chang2013); [mM] baseline tissue O2 concentration
+p.g_OEF = 0.2;              % Ratio of tissue O2 to plasma O2 (0.01 / 0.053)
+p.E_0 = 0.4;                % [-] baseline OEF
+p.J_0 = 0.053;             % previously 0.032; [mM/s] steady state change in pump & background flux due to CBF
 end

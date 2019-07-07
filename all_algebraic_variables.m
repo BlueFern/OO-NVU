@@ -1,24 +1,34 @@
 %% Fluxes for the NVU system
-% Make sure to use .*, ./, and .^ instead of *, /, ^ (multiplication,
-% division and 
+% Make sure to use .*, ./, and .^ instead of *, /, ^ (multiplication, division and exponentiation)
 
 %% Neuron
 
-k_e = se(p,p.k_e_input); %1 ./ (1 + exp(-(p.a_e .* (p.k_e_input - p.theta_e)))) - 1 ./ (1 + exp(p.a_e .* p.theta_e));
-k_i = si(p,p.k_e_input); %1 ./ (1 + exp(-(p.a_i .* (p.k_i_input - p.theta_i)))) - 1 ./ (1 + exp(p.a_i .* p.theta_i));
+if p.Whiskerpad == 2 % Thalamic input
+    
+    T = T(t,p,input_data)';
+    arg_e = p.wee .* E_t - p.wie .* I_t + p.wte .* T; 
+    arg_i = p.wei .* E_t - p.wii .* I_t + p.wti .* T; 
+    f_arg_e = fe(p,arg_e);
+    f_arg_i = fi(p,arg_i);
+    
+else % Normal P,Q input
+    
+    k_e = se(p,p.k_e_input); %1 ./ (1 + exp(-(p.a_e .* (p.k_e_input - p.theta_e)))) - 1 ./ (1 + exp(p.a_e .* p.theta_e));
+    k_i = si(p,p.k_e_input); %1 ./ (1 + exp(-(p.a_i .* (p.k_i_input - p.theta_i)))) - 1 ./ (1 + exp(p.a_i .* p.theta_i));
 
-P = P(t,p,input_data);
-Q = Q(t,p,input_data);
-if size(E_t) ~= size(P) % Minor check to see if they are the same dimensions (if not then invert P/Q), only an issue when trying to plot elements as P/Q swap dimensions when using input_data for some reason
-    P = P';  % [-]           Excitatory cells response function input
-    Q = Q';  % [-]           Inhibitory cells response function input
+    P = P(t,p,input_data);
+    Q = Q(t,p,input_data);
+    if size(E_t) ~= size(P) % Minor check to see if they are the same dimensions (if not then invert P/Q), only an issue when trying to plot elements as P/Q swap dimensions when using input_data for some reason
+        P = P';  % [-]           Excitatory cells response function input
+        Q = Q';  % [-]           Inhibitory cells response function input
+    end
+
+    arg_e = p.c1 .* E_t - p.c2 .* I_t + P;  % [-]           Excitatory cells response function input
+    arg_i = p.c3 .* E_t - p.c4 .* I_t + Q;  % [-]           Inhibitory cells response function input
+
+    s_arg_e = se(p,arg_e); %1 ./ (1 + exp(-(p.a_e .* (arg_e - p.theta_e)))) - 1 ./ (1 + exp(p.a_e .* p.theta_e));
+    s_arg_i = si(p,arg_i); %1 ./ (1 + exp(-(p.a_i .* (arg_i - p.theta_i)))) - 1 ./ (1 + exp(p.a_i .* p.theta_i));
 end
-
-arg_e = p.c1 .* E_t - p.c2 .* I_t + P;  % [-]           Excitatory cells response function input
-arg_i = p.c3 .* E_t - p.c4 .* I_t + Q;  % [-]           Inhibitory cells response function input
-
-s_arg_e = se(p,arg_e); %1 ./ (1 + exp(-(p.a_e .* (arg_e - p.theta_e)))) - 1 ./ (1 + exp(p.a_e .* p.theta_e));
-s_arg_i = si(p,arg_i); %1 ./ (1 + exp(-(p.a_i .* (arg_i - p.theta_i)))) - 1 ./ (1 + exp(p.a_i .* p.theta_i));
 
 O2_p            = p.O2_0 * (1 - p.O2switch) + O2 * p.O2switch;  % [mM]  Oxygen concentration dependent on ATP                                   
 J_pump2         = 2 * (1 + p.O2_0 ./ (((1 - p.alpha_O2) * O2_p)  + p.alpha_O2 * p.O2_0)).^(-1); % [mM s^-1]       
@@ -28,19 +38,18 @@ P_02            = (J_pump2 - J_pump2_0 ) ./ ( J_pump2_O2_0 - J_pump2_0);   % [-]
 
 CBF             = p.CBF_init * (R.^4 / p.R_init^4);             % [-] Normalised cerebral blood flow
 % CBF             = p.CBF_init * (R.^4 / 22.41^4); % Actual baseline value so CBF/CBF_init = 1      
-
-J_O2_vascular   = CBF .* ((p.O2_b - O2) ./ (p.O2_b - p.O2_0)); % [mM s^-1]      Vascular supply of oxygen                                    
-J_O2_background = p.CBF_init * P_02 * (1 - p.gamma_O2);  % [mM s^-1]    Background oxygen consumption                                                                                 
+                            
+J_O2_background = p.J_0 * P_02 * (1 - p.gamma_O2);  % [mM s^-1]    Background oxygen consumption                                                                                 
 J_pump1_sa      = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 +  (p.Na_init_sa ./ Na_sa)) .^ (-3); % [mM s^-1]  Oxygen consumption in soma/axon pump
 J_pump1init_sa  = 0.0312;           % [mM s^-1]   Initial consumption in soma/axon pump    
 J_pump1_d       = (1 + (p.K_init_e ./ K_e)).^(-2) .* (1 + (p.Na_init_d ./ Na_d)).^(-3);   % [mM s^-1]  Oxygen consumption in dendrite pump
 J_pump1init_d   = 0.0312;           % [mM s^-1]   Initial consumption in dendrite pump             
-J_O2_pump       = p.CBF_init .* P_02 .* p.gamma_O2 .* ((J_pump1_sa + J_pump1_d) ./ (J_pump1init_sa + J_pump1init_d)); % [mM s^-1]    Total oxygen consumption of the NaK pumps  
+J_O2_pump       = p.J_0 .* P_02 .* p.gamma_O2 .* ((J_pump1_sa + J_pump1_d) ./ (J_pump1init_sa + J_pump1init_d)); % [mM s^-1]    Total oxygen consumption of the NaK pumps  
 
 % BOLD
 f_out           = CBV.^(1/p.d) + p.tau_TAT * (1/(p.tau_MTT + p.tau_TAT) .* ( CBF/p.CBF_init  - CBV.^(1/p.d) ));  % [-]   Buxton balloon model outflow                                     
-CMRO2           = J_O2_background + J_O2_pump;  % [mM s^-1]   Metabolic rate of oxygen in the neurons                                 
-CMRO2_init      = p.CBF_init * P_02;% [mM s^-1]  Initial metabolic rate of oxygen
+% CMRO2           = J_O2_background + J_O2_pump;  % [mM s^-1]   Metabolic rate of oxygen in the neurons                                 
+% CMRO2_init      = p.CBF_init * P_02;% [mM s^-1]  Initial metabolic rate of oxygen
 
 % NO pathway
 Glu = p.GluSwitch * 0.5 * p.Glu_max * ( 1 + tanh( (K_e - p.Ke_switch) / p.Glu_slope) );
@@ -49,14 +58,14 @@ w_NR2B = Glu ./ (p.K_mB + Glu);     % [-]
 I_Ca = (-4 * p.v_n * p.G_M * p.P_Ca_P_M * (p.Ca_ex / p.M)) / (1 + exp(-0.08 * (p.v_n + 20))) * (exp(2 * p.v_n / p.ph)) / (1 - exp(2 * p.v_n / p.ph));   % [fA]                                    
 I_Ca_tot = I_Ca .* (p.n_NR2A * w_NR2A + p.n_NR2B * w_NR2B);   % [fA]                                                 
 CaM = Ca_n / p.m_c;                 % [uM]        
-p_NO_n = p.NOswitch_NE * ( nNOS_act_n * p.V_max_NO_n * p.O2_n /  (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n) );
+p_NO_n = nNOS_act_n * p.V_max_NO_n * p.O2_n /  (p.K_mO2_n + p.O2_n) * p.LArg_n / (p.K_mArg_n + p.LArg_n);
 c_NO_n = p.k_O2_n * NO_n.^2 * p.O2_n;   
 tau_nk = p.x_nk ^ 2 ./  (2 * p.D_cNO);                          % [ms]
 d_NO_n = (NO_k - NO_n) ./ tau_nk;         
 
 % Flux from ECS to SC
 if p.gamma_switch == 0
-    dKedt = -p.beta_K_e * (K_e - p.K_eBase) + (p.alpha_K_e .* p.beta_K_e) .* ((E_t - I_t) ./ p.EI_relative);          % K_e derivative as neuron activation in Ostby            
+    dKedt = -p.beta_K_e * (K_e - p.K_eBase) + (p.alpha_K_e .* p.beta_K_e) .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin));          % K_e derivative as neuron activation in Ostby            
 else
     dKedt = - p.beta_K_e * (K_e - p.K_eBase) + Gamma(t,p,E_t,I_t); 
 end
@@ -127,7 +136,7 @@ J_SR_uptake_i = p.B_i * Ca_i.^2 ./ (p.c_b_i^2 + Ca_i.^2);   % SERCA pump
 J_CICR_i = p.C_i * s_i.^2 ./ (p.s_c_i^2 + s_i.^2) .* Ca_i.^4 ./ (p.c_c_i^4 + Ca_i.^4);
 J_extrusion_i = p.D_i * Ca_i .* (1 + (v_i - p.v_d) / p.R_d_i);
 J_SR_leak_i = p.L_i * s_i;
-J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i));
+J_VOCC_i = p.G_Ca_i .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_i)); %***
 J_NaCa_i = p.G_NaCa_i * Ca_i ./ (Ca_i + p.c_NaCa_i) .* (v_i - p.v_NaCa_i);
 
 h = 0.1 * R; 
@@ -183,9 +192,7 @@ c_NO_j = p.k_O2 .* NO_j.^2 .* O2_j;% consumption by oxygen
 J_lumen = - NO_j * 4 * p.D_cNO ./ (25.^2); 
 d_NO_j = (NO_i - NO_j) ./ tau_ij + J_lumen; 
 
-% W_wss = p.W_0 .* (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2) - 4 * p.delta_wss).^2 / (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2)); 
-W_wss = p.W_0 .* (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2) - 4 * p.delta_wss).^2 ./ (tau_wss + sqrt(16 .* p.delta_wss.^2 + tau_wss.^2)); 
-
+W_wss = p.W_0 * (tau_wss + sqrt(16 * p.delta_wss^2 + tau_wss.^2) - 4 * p.delta_wss).^2 ./ (tau_wss + sqrt(16 * p.delta_wss.^2 + tau_wss.^2)); 
 F_wss = 1 ./ (1 + p.alp .* exp(- W_wss)) - 1 ./ (1 + p.alp); 
 Act_eNOS_Ca = p.K_dis .* Ca_j ./ (p.K_eNOS + Ca_j); 
 Act_eNOS_wss = p.g_max .* F_wss;  
@@ -207,3 +214,18 @@ F_r = AMp + AM;
 E = p.E_passive + F_r * (p.E_active - p.E_passive);
 R_0 = p.R_init + F_r * (p.alpha - 1) * p.R_init;
 
+%% Oxygen extraction fraction & CMRO2 equations
+ 
+f_in_dim = CBF./(p.CBF_init);                                                      % inflow of blood (normalised CBF)
+
+f_in = f_in_dim./p.f_in0;
+
+if p.E_switch == 0  
+    OEF = 1 - (1 - p.E_0).^(1./f_in);                                       % Use simplified model of OEF based on Buxton 1997 (no dependency on tissue O2)
+else
+    E1 = 1-(1-p.E_0).^(1-p.g_OEF);
+    OEF = 1 - (1 - E1).^(1./(f_in.*(1 - p.g_OEF)));                         % Oxygen extraction fraction dependent on g = [tissue O2]/[plasma O2]
+end
+
+CMRO2 = f_in .* OEF ./ p.E_0;                                               % Cerebral metabolic rate of oxygen consumption
+J_O2_vascular   = CBF .* OEF ./ p.E_0;                                      % [mM s^-1] Vascular supply of oxygen, previously CBF .* ((p.O2_b - O2) ./ (p.O2_b - p.O2_0));   

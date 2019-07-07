@@ -7,9 +7,9 @@ function gamma = Gamma(t, p, E_t, I_t)
             endgamma = t_end + p.gamma_width;
             
             if      t < t_end
-                gamma = p.alpha_K_e * p.beta_K_e .* (abs(E_t - I_t) ./ p.EI_relative);
+                gamma = p.alpha_K_e * p.beta_K_e .* ((abs(E_t - I_t) - p.EImin)./ (p.EI_relative - p.EImin));
             elseif  t > endgamma
-                gamma = p.alpha_K_e * p.beta_K_e .* (abs(E_t - I_t) ./ p.EI_relative);
+                gamma = p.alpha_K_e * p.beta_K_e .* ((abs(E_t - I_t) - p.EImin) ./(p.EI_relative - p.EImin));
             else
                 gamma = (p.alpha_K_e .* p.beta_K_e) .* (endgamma - t)./(endgamma - t_end); % Decreasing from max (E-I)/EI_relative value (1) to zero at endgamma
 %                 gamma = (alpha_K_e .* beta_K_e) .* (0.5 - 0.5*tanh((t - pulse_width_P - 2400)/1400) ); % Sigmoidal
