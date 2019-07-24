@@ -1,6 +1,6 @@
 %% Initial conditions for the NVU model
 
-function u0 = initial_conditions(idx)
+function u0 = initial_conditions(idx,p)
 
 % Neuron
 u0(idx.E_t) = 0;            % [-]
@@ -63,8 +63,9 @@ u0(idx.AMp) = 0.0622;                                                   % [-]
 u0(idx.AM) = 0.2746; 
 u0(idx.R) = 22.44;
 
-% Set for steady state when all NOS production is turned off, loads from file (comment out if unwanted) 
-% load no_eNOS_u0.mat
-% u0 = no_eNOS_u0;
-
+% Set for steady state when eNOS production is turned off, loads from file 
+if (p.NOswitch_EC_WSS == 0) && (p.NOswitch_EC_CA == 0)
+    load no_eNOS_u0.mat
+    u0 = no_eNOS_u0;
+end
 end

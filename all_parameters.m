@@ -11,17 +11,19 @@ p.dt = .01e3;               % Time step (overwritten to be smaller if p.Whiskerp
 
 %% Commonly changed parameters - move any parameters needed here (don't duplicate)
 
-p.GABAswitch = 1;       % 0: no GABA, normal neuronal activity, 1: GABA (opens chlorine channels on AC and SMC) and no neuronal activity
+% Turn these on (1) for interneuron and off (0) for normal neuron
+p.GABAswitch = 0;       % 0: no GABA, normal neuronal activity, 1: GABA (opens chlorine channels on AC and SMC) and no neuronal activity
 p.NPYswitch = 0;        % 0: no NPY release, 1: NPY release (opens VOCCs and causes constriction)
+%
 
-p.GluSwitch = 1;        % Turn on/off glutamate input
-p.O2switch = 1;         % O2switch = 0 ATP is plentiful, O2switch = 1 ATP is limited (oxygen-limited regime)
 p.NOswitch_NE = 1;      % Turn on/off neuronal NO production
 p.NOswitch_EC_WSS = 1;  % Turn on/off WSS induced eNOS production
 p.NOswitch_EC_CA = 1;   % Turn on/off Ca2+ induced eNOS production
+p.GluSwitch = 1;        % Turn on/off glutamate input
+p.O2switch = 1;         % O2switch = 0 ATP is plentiful, O2switch = 1 ATP is limited (oxygen-limited regime)
 p.wallMech = 2.7;       % scaling factor for the wall mechanics
 p.LCpathway = 0;        % Locus coeruleus pathway used for Whiskerpad = 1,2,4
-p.E_switch = 1;         % E_switch = 0: use Buxton1997 model for OEF (no dependency on tissue O2 conc.), E_switch = 1: OEF dependent on tissue O2 (currently not working)***
+p.E_switch = 1;         % E_switch = 0: use Buxton1997 model for OEF (no dependency on tissue O2 conc.), E_switch = 1: OEF dependent on tissue O2 
 
 %% Whiskerpad: different cases
 p.Whiskerpad = 0;       % 0: Model with square input pulse
@@ -41,7 +43,7 @@ else
     p.Qinput = 0.0;
 end
 
-if p.GABAswitch == 1
+if (p.GABAswitch == 1) || (p.NPYswitch == 1)
     p.Pinput = 0.0; % no neuronal activity
     p.Qinput = 0.0;
 end
@@ -76,7 +78,7 @@ end
   
 % Alpha, beta and rest values adjusted for the different inputs
 if p.Whiskerpad == 0 || p.Whiskerpad == 3 || p.Whiskerpad == 5
-    p.alpha_K_e = 3.2;
+    p.alpha_K_e = 2.0;%3.2;
     p.beta_K_e = 4.2e-3;
     p.alpha_Na_sa = 4.23;
     p.beta_Na_sa = 0.39e-3;
@@ -88,8 +90,8 @@ if p.Whiskerpad == 0 || p.Whiskerpad == 3 || p.Whiskerpad == 5
     p.tau_e = 3;        
     p.tau_i = 3;           
 elseif p.Whiskerpad == 1
-    p.alpha_K_e = 3.5;
-    p.beta_K_e = 10e-3;
+    p.alpha_K_e = 2.2;%3.5;
+    p.beta_K_e = 4.2e-3;
     p.alpha_Na_sa = 4.23;
     p.beta_Na_sa = 0.65e-3;
     p.alpha_Na_d = -2.12;
@@ -100,8 +102,8 @@ elseif p.Whiskerpad == 1
     p.tau_e = 3;        
     p.tau_i = 3;    
 elseif p.Whiskerpad == 2 % Thalamic input
-    p.alpha_K_e = 3*3.2;
-    p.beta_K_e = 4.2e-3;
+    p.alpha_K_e = 7;%4.5;%3*3.2;
+    p.beta_K_e = 1.7e-3;%4.2e-3;
     p.alpha_Na_sa = 4.23;
     p.beta_Na_sa = 0.39e-3;
     p.alpha_Na_d = -2.12;
@@ -183,7 +185,7 @@ p.wti = 68.4;
 % Glutamate parameters
 p.Glu_max = 1846;       % [uM] (one vesicle, Santucci2008)
 p.Glu_slope = 0.1;      % [mM] Slope of sigmoidal (M.E.)
-p.Ke_switch = 5.5;      % [mM] Threshold past which glutamate vesicle is released (M.E.)                               
+p.Ke_switch = 5;      % [mM] Threshold past which glutamate vesicle is released (M.E.)                               
 
 % Elshin model constants
 p.k_syn = 11.5;         % [-] Coupling scaling factor, values can range between 1.06 to 14.95 according to estimation from experimental data of Ventura and Harris
@@ -487,7 +489,7 @@ p.k_mlcp_c = 0.0327e-3;                             % [ms^-1]
 p.AA_max = 29;  % uM
 p.AA_m = 0.161;  % uM
 p.Ca0 = 0.1432;  % uM
-p.D_AA = 0.033;    % um^2/ms, model estimate
+p.D_AA = .5*.033;    % um^2/ms, model estimate
 p.tau_AA = p.x_ki ^ 2 ./  (2 * p.D_AA); % Time constant for AA diffusion between astrocyte and SMC
 
 p.V_a = 0.212e-2;  % ms^-1  old value 0.212e-3
@@ -511,12 +513,12 @@ p.J_0 = 0.053;             % previously 0.032; [mM/s] steady state change in pum
 %% GABA parameters
 p.g_slope = 0.1; % [-] Slope of GABA sigmoidal
 p.g_midpoint = 0.6; % [-] Midpoint of GABA sigmoidal
-p.E_GABA = -75; %[mV] Reversal potential of GABA activated Cl channel
-p.G_GABA = .2 * p.G_Cl_i; % Maximum conductance of GABA activated Cl channel, based on SMC Cl leak channel conductance
+p.E_GABA = -75; % [mV] Reversal potential of GABA activated Cl channel
+p.G_GABA = .3 * p.G_Cl_i; % Maximum conductance of GABA activated Cl channel, based on SMC Cl leak channel conductance
 p.Glu_GABAmax = p.Glu_max; % [uM] Max amount of glutamate produced when GABA released, M.E. (but doesn't make much difference anyway)
 
 %% NPY parameters
-p.npy_increase = 0.15; % [-] proportion increase of VOCC conductance from baseline value due to NPY, e.g. 0.5 means 50% increase, M.E.
+p.npy_increase = 0.05; % [-] proportion increase of VOCC conductance from baseline value due to NPY, e.g. 0.05 means 5% increase, M.E.
 p.npy_slope = 0.1; % [-] Slope of NPY sigmoidal
 p.npy_midpoint = 0.6; % [-] Midpoint of NPY sigmoidal
 

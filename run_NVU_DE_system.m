@@ -1,4 +1,4 @@
-%% Run script for NVU_DE_system - version 3
+%% Run script for NVU_DE_system - version 3.?
 
 % To do:
 % sort out other whisker cases
@@ -11,11 +11,12 @@ tStart = tic;
 
 % Add the path to the functions subfolder so they can be used (P, Q, Gamma functions)
 addpath('./functions');
+addpath('./mat files');
 
 % Load indices, parameters and initial conditions
 idx = all_indices();
 p = all_parameters();
-u0 = initial_conditions(idx);
+u0 = initial_conditions(idx,p);
 
 % Set timespan and timestep for simulation [ms]
 tspan = 0:p.dt:p.Tend;
@@ -187,18 +188,7 @@ if p.lengthpulse == 16e3 && p.double_pulse == 0
     legend('HbO','HbR','HbT');
 end
 
-% Plot the model hemodynamics
-figure;
-hold all;
-plot(t_sec, HBO_N, 'r', 'LineWidth', 1)
-plot(t_sec, HBR_N, 'b', 'LineWidth', 1)
-plot(t_sec, HBT_N, 'g', 'LineWidth', 1)
-xlim([XLIM1 XLIM2])
-% ylim([0.87 1.2]);
-xlabel('Time [s]')
-% p1=patch([p.startpulse*1e-3 (p.startpulse + p.lengthpulse)*1e-3 (p.startpulse + p.lengthpulse)*1e-3 p.startpulse*1e-3],[0.7 0.7 1.3 1.3],'k');
-% set(p1,'FaceAlpha',0.05,'EdgeColor', 'none');
-legend('HbO','HbR','HbT');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Plot the 20-HETE variables
 % figure(23);
@@ -294,7 +284,7 @@ legend('HbO','HbR','HbT');
 % ylabel('CMRO2')
 % xlim([XLIM1 XLIM2])
 
-figure(30)
+figure(31)
 subplot(3,3,1)
 hold all
 plot(t_sec, J_GABA_k)
@@ -337,8 +327,27 @@ ylabel('20-HETE [\muM]')
 xlim([XLIM1 XLIM2])
 subplot(3,3,9)
 hold all
-plot(t_sec, (CBF - CBF_0) ./ CBF_0)
-ylabel('\Delta CBF')
+plot(t_sec, R)
+ylabel('Radius [\mum]')
 xlim([XLIM1 XLIM2])
 
+%% 
 
+% Plot the model hemodynamics
+% figure;
+% hold all;
+% plot(t_sec-100, HBO_N, 'r', 'LineWidth', 1)
+% plot(t_sec-100, HBR_N, 'b', 'LineWidth', 1)
+% plot(t_sec-100, HBT_N, 'g', 'LineWidth', 1)
+% xlim([-2 20])
+% % ylim([0.87 1.2]);
+% xlabel('Time [s]')
+% % p1=patch([p.startpulse*1e-3 (p.startpulse + p.lengthpulse)*1e-3 (p.startpulse + p.lengthpulse)*1e-3 p.startpulse*1e-3],[0.7 0.7 1.3 1.3],'k');
+% % set(p1,'FaceAlpha',0.05,'EdgeColor', 'none');
+% legend('HbO','HbR','HbT');
+% 
+% load './mat files/Hb_opto_postLNAME.mat'
+% hold all
+% plot(Timeopt4-5, HbOMicromolarchange/100+1, '-.r')
+% plot(Timeopt5-5, HbRMicromolarchange/100+1, '-.b')
+% plot(Timeopt6-5, HbTMicromolarchange/100+1, '-.g')

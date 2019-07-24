@@ -260,4 +260,3 @@ J_VOCC_i = g_VOCC .* (v_i - p.v_Ca1_i) ./ (1 + exp(-(v_i - p.v_Ca2_i) ./ p.R_Ca_
 
 
 
-

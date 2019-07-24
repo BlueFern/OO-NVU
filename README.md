@@ -1,12 +1,14 @@
-# OO-NVU - Version 3.2?
+# OO-NVU - Version 3
 Matlab implementation of the NVU model.
 
 Contains the following pathways:
-* Inhibitory interneuron GABA (vasodilation) and NPY (vasoconstriction) pathways
+* Excitatory/inhibitory neuron dynamics based on Wilson & Cowan (1972)
+* K+ pathway via K+ release from the neuron into the SC
 * Nitric oxide pathway via glutamate release from the neuron into the SC
 * Astrocytic calcium pathway via glutamate release from the neuron into the SC
 * TRPV4 calcium channel on the astrocytic endfoot
 * 20-HETE and Arachidonic Acid dynamics in the astroycte and SMC
+* Interneuron model
 
 How to Run 
 ----
@@ -17,6 +19,7 @@ The code is run in Matlab:
 * To adjust any differential equations see the file `NVU_DE_system.m`
 * To adjust initial conditions see the file `initial_conditions.m`
 * When adding any new state variables to `NVU_DE_system.m` these must also be added to `all_indices.m` and `set_variable_names.m`
+* To plot the experimental data, run `load_matdatafiles.m`
 
 Note that time is in milliseconds.
 
