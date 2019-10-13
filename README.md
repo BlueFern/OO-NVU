@@ -1,8 +1,9 @@
-# OO-NVU - Version 3
-Matlab implementation of the NVU model.
+# OO-NVU - Version 3.2
+Python implementation of the NVU model.
 
 Contains the following pathways:
 * Excitatory/inhibitory neuron dynamics based on Wilson & Cowan (1972)
+* GABA and NPY release from the neuron (inhibitory only) 
 * K+ pathway via K+ release from the neuron into the SC
 * Nitric oxide pathway via glutamate release from the neuron into the SC
 * Astrocytic calcium pathway via glutamate release from the neuron into the SC
@@ -11,13 +12,21 @@ Contains the following pathways:
 
 How to Run 
 ----
-The code is run in Matlab:
-* To solve the system use the script `run_NVU_DE_system.m`
-* To change any model parameters see the file `all_parameters.m`
-* To adjust any algebraic variables see the file `all_algebraic_variables.m`
-* To adjust any differential equations see the file `NVU_DE_system.m`
-* To adjust initial conditions see the file `initial_conditions.m`
-* When adding any new state variables to `NVU_DE_system.m` these must also be added to `all_indices.m` and `set_variable_names.m`
+The code is run in Python. All functions are commented. If using Spyder it is recommended that you set the following preferences:
+* To have plots open in new windows rather than in the console so they can be edited/saved, go to `Preferences->IPython Console->Graphics` and set `Graphics Backend` to `Automatic`
+* To show all variables in Variable explorer (including figures and data objects), go to `Preferences->Variable Explorer` and turn off `Exclude unsupported data types`
+
+The code is laid out as follows:
+* To solve the system and plot variables use the script `run.py`
+* To change any model parameters see the file `parameters.py` which is loaded as a module in `run.py` (via `import parameters as p`)
+* To adjust any algebraic variables see the file `algebraic_variables.py`
+* To adjust any differential equations see the file `ODEsystem.py`
+* To adjust model functions (e.g. time dependent input functions like P(t) or Q(t)) see the file `model_functions.py`
+* To adjust initial conditions see the file `ICs.py`
+* When adding any new state variables to `ODEsystem.py` these must also be added to `indices.py` and `state_variable_names.py`
+* The normalised hemodynamics variables are defined in `normalised_hemo.py` (solved separately from `ODEsystem.py` as they depend on the steady state conditions) 
+* Two custom plotting functions are defined in `plotting_functions.py` for plotting either state or algebraic variables either on the same graph or in subplots; examples of use are shown in `run.py`
+* Experimental data stored as mat files in the subfolder `./mat_files` can be extracted and plotted using custom functions defined in `import_mat_files.py`; examples of use are shown in `run.py`
 
 Note that time is in milliseconds.
 
@@ -28,4 +37,5 @@ For further information on the NVU model refer to the following papers:
 * Dormanns, K., Brown, R. G. G., & David, T. (2016). The role of nitric oxide in neurovascular coupling. Journal of Theoretical Biology, 394, 1–17. http://doi.org/10.1016/j.jtbi.2016.01.009
 * Dormanns, K., van Disseldorp, E. M. J., Brown, R. G., & David, T. (2015). Neurovascular coupling and the influence of luminal agonists via the endothelium. Journal of Theoretical Biology, 364, 49–70. http://doi.org/10.1016/j.jtbi.2014.08.029
 * Farr, H., & David, T. (2011). Models of neurovascular coupling via potassium and EET signalling. Journal of Theoretical Biology, 286(1), 13–23. http://doi.org/10.1016/j.jtbi.2011.07.006
+
 
