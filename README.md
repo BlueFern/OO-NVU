@@ -31,7 +31,7 @@ The code is laid out as follows:
 Note that time is in milliseconds.
 
 For further information on the NVU model refer to the following papers:
-* Wilson, H. R., & Cowan, J. D. (1972). Excitatory and inhibitory interactions in localized populations of model neurons. Biophysical Journal, 12, 1–24.
+* Wilson, H. R., & Cowan, J. D. (1972). Excitatory and inhibitory interactions in localized populations of model neurons. Biophysical Journal, 12, 1–24. https://doi.org/10.1016/S0006-3495(72)86068-5
 * Mathias, E., Kenny, A., Plank, M. J., & David, T. (2018). Integrated models of neurovascular coupling and BOLD signals: Responses for varying neural activations. NeuroImage, 174(March), 69–86. http://doi.org/10.1016/j.neuroimage.2018.03.010
 * Kenny, A., Plank, M. J., & David, T. (2018). The role of astrocytic calcium and TRPV4 channels in neurovascular coupling. Journal of Computational Neuroscience, 44(1), 97–114. http://doi.org/10.1007/s10827-017-0671-7
 * Dormanns, K., Brown, R. G. G., & David, T. (2016). The role of nitric oxide in neurovascular coupling. Journal of Theoretical Biology, 394, 1–17. http://doi.org/10.1016/j.jtbi.2016.01.009
